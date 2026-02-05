@@ -982,9 +982,9 @@ namespace Scythe.GameLogic
 			{
 			case Faction.Polania:
 				this.mechPriority[0] = 6;
-				this.mechPriority[1] = 8;
+				this.mechPriority[1] = 10;
 				this.mechPriority[2] = 4;
-				this.mechPriority[3] = 10;
+				this.mechPriority[3] = 8;
 				break;
 			case Faction.Nordic:
 				this.mechPriority[0] = 6;
@@ -993,10 +993,10 @@ namespace Scythe.GameLogic
 				this.mechPriority[3] = 10;
 				break;
 			case Faction.Rusviet:
-				this.mechPriority[0] = 8;
+				this.mechPriority[0] = 10;
 				this.mechPriority[1] = 6;
 				this.mechPriority[2] = 4;
-				this.mechPriority[3] = 10;
+				this.mechPriority[3] = 8;
 				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
 				{
 					this.mechPriority[0] = 10;
@@ -1006,10 +1006,10 @@ namespace Scythe.GameLogic
 				}
 				break;
 			case Faction.Crimea:
-				this.mechPriority[0] = 10;
+				this.mechPriority[0] = 8;
 				this.mechPriority[1] = 6;
 				this.mechPriority[2] = 4;
-				this.mechPriority[3] = 8;
+				this.mechPriority[3] = 10;
 				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
 				{
 					this.mechPriority[3] = 11;
@@ -1017,9 +1017,9 @@ namespace Scythe.GameLogic
 				break;
 			case Faction.Saxony:
 				this.mechPriority[0] = 6;
-				this.mechPriority[1] = 8;
+				this.mechPriority[1] = 10;
 				this.mechPriority[2] = 4;
-				this.mechPriority[3] = 10;
+				this.mechPriority[3] = 8;
 				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 				{
 					this.mechPriority[0] = 9;
@@ -1113,30 +1113,30 @@ namespace Scythe.GameLogic
 			if (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Polania)
 			{
 				this.recruitPriority[DownActionType.Enlist] = 10;
-				this.recruitPriority[DownActionType.Build] = 8;
-				this.recruitPriority[DownActionType.Deploy] = 6;
-				this.recruitPriority[DownActionType.Upgrade] = 4;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
 			{
-				this.recruitPriority[DownActionType.Build] = 10;
-				this.recruitPriority[DownActionType.Enlist] = 8;
+				this.recruitPriority[DownActionType.Build] = 8;
+				this.recruitPriority[DownActionType.Enlist] = 10;
 				this.recruitPriority[DownActionType.Deploy] = 6;
 				this.recruitPriority[DownActionType.Upgrade] = 4;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
 			{
 				this.recruitPriority[DownActionType.Enlist] = 10;
-				this.recruitPriority[DownActionType.Upgrade] = 8;
-				this.recruitPriority[DownActionType.Build] = 6;
-				this.recruitPriority[DownActionType.Deploy] = 4;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 			{
 				this.recruitPriority[DownActionType.Enlist] = 10;
 				this.recruitPriority[DownActionType.Upgrade] = 8;
-				this.recruitPriority[DownActionType.Build] = 6;
-				this.recruitPriority[DownActionType.Deploy] = 4;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 6;
 			}
 		}
 

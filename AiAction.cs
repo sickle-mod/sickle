@@ -1068,23 +1068,23 @@ namespace Scythe.GameLogic
 				switch (gainType)
 				{
 				case GainType.Coin:
-					return 200;
-				case GainType.Popularity:
 					return 150;
-				case GainType.Power:
+				case GainType.Popularity:
 					return 180;
+				case GainType.Power:
+					return 190;
 				case GainType.CombatCard:
 					return 160;
 				case GainType.Produce:
 					return 170;
 				case GainType.Move:
-					return 190;
+					return 200;
 				case GainType.Upgrade:
 					return 90;
 				case GainType.Mech:
 					return 80;
 				case GainType.Building:
-					return 60;
+					return 40;
 				case GainType.Recruit:
 					if (player.player.matFaction.mechs.Count >= 2)
 					{
@@ -1101,21 +1101,21 @@ namespace Scythe.GameLogic
 				case GainType.Coin:
 					return 140;
 				case GainType.Popularity:
-					return 160;
+					return 150;
 				case GainType.Power:
 					return 190;
 				case GainType.CombatCard:
 					return 170;
 				case GainType.Produce:
-					return 150;
+					return 160;
 				case GainType.Move:
 					return 180;
 				case GainType.Upgrade:
 					return 90;
 				case GainType.Mech:
-					return 60;
-				case GainType.Building:
 					return 80;
+				case GainType.Building:
+					return 50;
 				case GainType.Recruit:
 					return 70;
 				}
@@ -1140,7 +1140,7 @@ namespace Scythe.GameLogic
 				case GainType.Upgrade:
 					return 90;
 				case GainType.Mech:
-					return 70;
+					return 85;
 				case GainType.Building:
 					return 60;
 				case GainType.Recruit:
@@ -1173,7 +1173,7 @@ namespace Scythe.GameLogic
 					}
 					return 50;
 				case GainType.Building:
-					return 60;
+					return 40;
 				case GainType.Recruit:
 					return 70;
 				}
@@ -1200,7 +1200,7 @@ namespace Scythe.GameLogic
 				case GainType.Mech:
 					return 80;
 				case GainType.Building:
-					return 70;
+					return 40;
 				case GainType.Recruit:
 					if (player.strategicAnalysis.objectiveBalancedWorkforce)
 					{
