@@ -20,6 +20,12 @@ Sorry, you're out of luck. Maybe the official developer will implement these cha
 # File Descriptions
 Assembly-CSharp.dll This is the game code, compiled for use.
 
+# Cheat sheet
+Upgrade: AiAction.cs look for: UpgradePriorityAdvanced
+Deploy: AiStrategicAnalysisAdv.cs: look for public override void UpdateMechOrder(AiPlayer aiPlayer)
+Recruit: AiStrategicAnalysis.cs: Look for public void UpdateRecruitOrder(AiPlayer aiPlayer)
+Build: AiStrategicAnalysis.cs: Look for public void UpdateBuildingOrder(AiPlayer aiPlayer)
+
 # AiAction.cs — “How the AI executes actions”
 This file defines the core execution engine for AI actions.
 It does not decide which action to take — it executes the action that the AI logic has already chosen.
@@ -95,6 +101,32 @@ The AI tracks:
 - Whether the hex is safe
 This influences movement and priorities.
 
+# AiStrategicAnalysisAdv.cs — What this file does
+This file defines the advanced strategic analysis module used on Hard difficulty.
+It extends the basic analysis with much deeper planning, including objectives, multi‑stage movement logic, and faction/mat‑specific heuristics.
+Core responsibilities
+- Reads the AI’s objective cards and activates special behaviors (e.g., Balanced Workforce, Machine Over Muscle)
+- Computes:
+- Resource access
+- Resource demand
+- Resource priority (with many faction/mat overrides)
+- Determines:
+- Whether the AI can upgrade, deploy, build, or enlist
+- Whether it must move to build (Saxony Industrial)
+- Computes:
+- Worker movement targets
+- Mech movement targets
+- Objective‑related movement
+- Combat‑related movement
+- Secondary movement
+- Scatter behavior (spreading out units)
+- Determines mech unlock order (with faction/mat overrides)
+- Determines recruit one‑time bonus priority
+- Identifies objective areas on the map and sets targets
+In short
+AiStrategicAnalysisAdv is the AI’s “strategic brain”: it evaluates the board, sets priorities, chooses movement targets, and plans how to reach objectives.
+
+
 # AiPlayer.cs — What this file does
 This file defines the AI player entity.
 It is the central controller for an AI opponent’s turn, state, and decision execution.
@@ -125,30 +157,6 @@ Core responsibilities
 In short
 AiPlayer is the AI’s “brainstem”: it runs the turn, executes actions, handles combat, pays costs, and manages all in‑turn behavior.
 
-# AiStrategicAnalysisAdv.cs — What this file does
-This file defines the advanced strategic analysis module used on Hard difficulty.
-It extends the basic analysis with much deeper planning, including objectives, multi‑stage movement logic, and faction/mat‑specific heuristics.
-Core responsibilities
-- Reads the AI’s objective cards and activates special behaviors (e.g., Balanced Workforce, Machine Over Muscle)
-- Computes:
-- Resource access
-- Resource demand
-- Resource priority (with many faction/mat overrides)
-- Determines:
-- Whether the AI can upgrade, deploy, build, or enlist
-- Whether it must move to build (Saxony Industrial)
-- Computes:
-- Worker movement targets
-- Mech movement targets
-- Objective‑related movement
-- Combat‑related movement
-- Secondary movement
-- Scatter behavior (spreading out units)
-- Determines mech unlock order (with faction/mat overrides)
-- Determines recruit one‑time bonus priority
-- Identifies objective areas on the map and sets targets
-In short
-AiStrategicAnalysisAdv is the AI’s “strategic brain”: it evaluates the board, sets priorities, chooses movement targets, and plans how to reach objectives.
 
 # AiKickStart.cs — What this file does
 AiKickStart defines the AI’s opening script for the first several turns of the game.
