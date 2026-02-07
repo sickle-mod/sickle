@@ -21,10 +21,10 @@ Sorry, you're out of luck. Maybe the official developer will implement these cha
 Assembly-CSharp.dll This is the game code, compiled for use.
 
 # Cheat sheet
-Upgrade: AiAction.cs look for: UpgradePriorityAdvanced
-Deploy: AiStrategicAnalysisAdv.cs: look for public override void UpdateMechOrder(AiPlayer aiPlayer)
-Recruit: AiStrategicAnalysis.cs: Look for public void UpdateRecruitOrder(AiPlayer aiPlayer)
-Build: AiStrategicAnalysis.cs: Look for public void UpdateBuildingOrder(AiPlayer aiPlayer)
+Upgrade: AiAction.cs look for: UpgradePriorityAdvanced  
+Deploy: AiStrategicAnalysisAdv.cs: look for public override void UpdateMechOrder(AiPlayer aiPlayer)  
+Recruit: AiStrategicAnalysis.cs: Look for public void UpdateRecruitOrder(AiPlayer aiPlayer)  
+Build: AiStrategicAnalysis.cs: Look for public void UpdateBuildingOrder(AiPlayer aiPlayer)  
 
 # AiAction.cs — “How the AI executes actions”
 This file defines the core execution engine for AI actions.
