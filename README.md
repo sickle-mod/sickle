@@ -8,6 +8,16 @@ Sickle is a mod for Scythe Digital Edition to improve the performance of the AI
 
 I don't know if this AI will work with multiplayer; if it does, then it is probably the host's version of the AI that runs. Or, it may crash the game. Submit an Issue if the game crashes.
 
+# Special version--Friends list Clear
+Do you have too many friends on your friends list, and it isn't working properly? Use the version from the Friends-List-Clear branch.
+
+1. Take a backup of file: C:\Program Files (x86)\Steam\steamapps\common\Scythe Digital Edition\Scythe_Data\Managed\Assembly-CSharp.dll and move it elsewhere
+2. Download the Assembly-CSharp.dll from the Friends-List-Clear branch and save it to C:\Program Files (x86)\Steam\steamapps\common\Scythe Digital Edition\Scythe_Data\Managed
+3. Run a game, Play Online, and view your friends list
+4. This will clear your friends list.
+5. Put back the original file.
+
+
 # Bugs?
 Submit Issues to the Issues tab. 
 
