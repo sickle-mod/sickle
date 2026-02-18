@@ -1,0 +1,87 @@
+=== SCYTHE GAME LOG ===
+Date      : 2026-02-17 22:19:52
+Mode      : Singleplayer
+Hot Seat  : Yes
+
+--- PLAYERS ---
+   1. Crimea         / Industrial         | AI (Hard)      | Bot 1 Hard
+   2. Rusviet        / Patriotic          | Human          | Player 1
+
+--- ACTION LOG ---
+[Turn]  Faction        Placement Action                       Details
+--------------------------------------------------------------------------------------
+           >> "[Trade]"
+
+--- TURN 0 ---
+[   0]  Crimea         TOP      TradeResources               
+           PAY  PayCoin                    -1 Coin
+           >> "[Produce]"
+[   0]  Rusviet        TOP      Produce                      2 hex(es), 2 produced
+           >> "[Bolster]"
+
+--- TURN 1 ---
+[   1]  Crimea         TOP      BolsterCombatCard            +1 CombatCard
+           PAY  PayCoin                    -1 Coin
+           >> "[Upgrade]"
+[   1]  Crimea         BOTTOM   Upgrade                      Top:-CombatCard Bot:-oil
+           PAY  PayResource                -2 oil, -1 combatCard
+           GAIN GainCoin                   +3 Coin
+           >> "[Produce]"
+[   1]  Rusviet        TOP      Produce                      2 hex(es), 3 produced
+           >> "[Trade]"
+
+--- TURN 2 ---
+[   2]  Crimea         TOP      TradeResources               
+           PAY  PayCoin                    -1 Coin
+           >> "[Move units]"
+           >> "Moving Worker"
+[   2]  Rusviet        TOP      Move                         Worker#0
+           >> "Moving Character"
+[   2]  Rusviet        TOP      Move                         Character#0
+
+--- RESUMED 2026-02-17 22:20:35 (turn 2) ---
+           >> "[Trade]"
+
+--- TURN 2 ---
+[   2]  Rusviet        TOP      TradeResources               
+           PAY  PayCoin                    -1 Coin
+           >> "[Bolster]"
+
+--- TURN 3 ---
+[   3]  Crimea         TOP      BolsterCombatCard            +2 CombatCard
+           PAY  PayCoin                    -1 Coin
+           >> "[Upgrade]"
+[   3]  Crimea         BOTTOM   Upgrade                      Top:-Power Bot:-food
+           PAY  PayResource                -1 oil, -1 combatCard
+           GAIN GainCoin                   +3 Coin
+           >> "[Move units]"
+           >> "Moving Worker"
+[   3]  Rusviet        TOP      Move                         Worker#0
+           >> "Moving Character"
+[   3]  Rusviet        TOP      Move                         Character#0
+           >> "[Upgrade]"
+[   3]  Rusviet        BOTTOM   Upgrade                      Top:-Power Bot:-metal
+           PAY  PayResource                -2 oil
+           GAIN GainCoin                   +1 Coin
+           >> "[Trade]"
+
+--- TURN 4 ---
+[   4]  Crimea         TOP      TradeResources               
+           PAY  PayCoin                    -1 Coin
+           >> "[Enlist]"
+[   4]  Crimea         BOTTOM   Enlist                       Enlist -> +CombatCard
+           PAY  PayResource                -2 food, -1 combatCard
+           >> "[Produce]"
+[   4]  Rusviet        TOP      Produce                      2 hex(es), 5 produced
+           PAY  PayPower                   -1 Power
+[   4]  Rusviet        OTHER    GainStar                     Star: Workers
+[   4]  Rusviet        OTHER    GainStar                     Star: Objective
+           >> "[Bolster]"
+
+--- TURN 5 ---
+[   5]  Crimea         TOP      BolsterCombatCard            +2 CombatCard
+           PAY  PayCoin                    -1 Coin
+           >> "[Upgrade]"
+[   5]  Crimea         BOTTOM   Upgrade                      Top:-Move Bot:-food
+           PAY  PayResource                -1 oil, -1 combatCard
+           GAIN GainCoin                   +3 Coin
