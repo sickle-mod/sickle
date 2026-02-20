@@ -1,10 +1,11 @@
-# sickle
-Sickle is a mod for Scythe Digital Edition to improve the performance of the AI
+# Sickle
+Sickle is a mod for Scythe Digital Edition to improve the bots to make them more of a challenge.
 
-# How to use (Steam)
-1. Take a backup of file: C:\Program Files (x86)\Steam\steamapps\common\Scythe Digital Edition\Scythe_Data\Managed\Assembly-CSharp.dll and move it elsewhere
-2. Download the Assembly-CSharp.dll from the main branch and save it to C:\Program Files (x86)\Steam\steamapps\common\Scythe Digital Edition\Scythe_Data\Managed
-3. Run a game (be sure to use the "Hard" AI, I am not making changes to the Easy/Medium AI)
+# How to Install
+1. Download and run SickleInstaller.exe.
+2. This will install the Sickle Mod Updater and put shortcuts to it on your Desktop and Start Menu (no admin privileges required)
+3. Sickle Mod will Launch
+4. Click Install to install the mod. 
 
 I don't know if this AI will work with multiplayer; if it does, then it is probably the host's version of the AI that runs. Or, it may crash the game. Submit an Issue if the game crashes.
 
@@ -21,14 +22,14 @@ Do you have too many friends on your friends list, and it isn't working properly
 # Bugs?
 Submit Issues to the Issues tab. 
 
-# Not Steam?
-The file is *probably* the same, and goes to the same path ...\Scythe_Data\Managed\Assembly-CSharp.dll
-
 # Mobile
 Sorry, you're out of luck. Maybe the official developer will implement these changes into an official update! That would be welcome.
 
 # File Descriptions
-Assembly-CSharp.dll This is the game code, compiled for use.
+Assembly-CSharp.dll This is the game code.
+SickleInstaller.exe This installs/uninstalls/updates the mod.
+
+# Below is for people who want to contribute
 
 # Cheat sheet
 Upgrade: AiAction.cs look for: UpgradePriorityAdvanced  
