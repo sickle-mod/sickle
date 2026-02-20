@@ -6,511 +6,594 @@ using Scythe.GameLogic.Actions;
 
 namespace Scythe.GameLogic
 {
-    /// <summary>
-    /// Writes a structured game log to a .txt file on the user's Desktop.
-    ///
-    /// Lifetime: construct once (e.g. in GameManager.Init or GameController.Awake),
-    /// pass in the GameManager, then call Dispose() or let OnDestroy call it.
-    /// No Unity, no UI namespace dependencies.
-    ///
-    /// File: ScytheLog_[first8ofGameId].txt
-    /// If a save is resumed the same file is appended to, with a RESUMED marker.
-    ///
-    /// ── Output layout ────────────────────────────────────────────────────────
-    ///
-    ///   === SCYTHE GAME LOG ===
-    ///   Date      : 2026-02-17 14:30:22
-    ///   Game ID   : a3f2b1c9-...
-    ///   Mode      : Singleplayer
-    ///
-    ///   --- PLAYERS ---
-    ///    1. Rusviet     / Agricultural  | Human        | Kosynier
-    ///    2. Polania     / Militant      | AI (Medium)  | Bot 1
-    ///
-    ///   --- ACTION LOG ---
-    ///   --- TURN 1 ---
-    ///   [   1]  Rusviet        TOP     Move                       Character#0, Mech#1
-    ///            >> "Rusviet moved to hex (3,4)"
-    ///   [   1]  Rusviet        BOTTOM  Deploy                     Mech#2
-    ///            PAY  PayResource          -2 Metal
-    ///   ...
-    ///   === GAME OVER === (after 47 turns, 01:23:15)
-    ///
-    ///   --- FINAL SCORES ---
-    ///   Rank  Faction        Player           Total   Stars Pop Terr Res Struct Coins
-    ///   ...
-    /// </summary>
-    public class GameActionLogger : IDisposable
-    {
-        // ── Dependencies ──────────────────────────────────────────────────────
-        private readonly GameManager _gm;
-
-        // ── File state ────────────────────────────────────────────────────────
-        private readonly string       _filePath;
-        private readonly List<string> _pending  = new List<string>();
-        private          bool         _disposed;
-        private          int          _lastTurnSeen = -1;
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Construction / teardown
-        // ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Create the logger and immediately write the file header.
-        /// Call this after players have been added to GameManager.
-        /// </summary>
-        /// <param name="gameManager">The live GameManager for this game.</param>
-        /// <param name="gameId">
-        /// The Game.GetGameId() GUID string. Used as the filename key so that
-        /// a resumed save appends to the same file rather than creating a new one.
-        /// Pass null/empty to fall back to a timestamp key.
-        /// </param>
-        public GameActionLogger(GameManager gameManager, string gameId = null)
-        {
-            _gm = gameManager ?? throw new ArgumentNullException(nameof(gameManager));
-
-            string fileKey = !string.IsNullOrEmpty(gameId) && gameId.Length >= 8
-                ? gameId.Substring(0, 8)
-                : DateTime.Now.ToString("yyyyMMdd_HHmmss");
-
-            string temp = Path.GetTempPath();
-            _filePath = Path.Combine(temp, $"ScytheLog_{fileKey}.txt");
-
-            if (!File.Exists(_filePath))
-                WriteHeader();
-            else
-                WriteResumeMarker();
-
-            Subscribe();
-        }
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-            _disposed = true;
-            Unsubscribe();
-            FlushToDisk();
-        }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Event wiring
-        // ─────────────────────────────────────────────────────────────────────
-
-        private void Subscribe()
-        {
-            // Static event on ActionLog: fires every time a LogInfo is committed.
-            ActionLog.LogInfoCreated += OnLogInfoCreated;
-
-            // Instance events on GameManager:
-            _gm.ChangeTurn           += OnChangeTurn;       // start of each turn
-            _gm.ObtainActionInfo     += OnObtainActionInfo; // plain-text description per action
-            _gm.GameHasEnded         += OnGameEnded;        // singleplayer end
-            _gm.MultiplayerGameEnded += OnGameEnded;        // multiplayer end
-        }
-
-        private void Unsubscribe()
-        {
-            ActionLog.LogInfoCreated -= OnLogInfoCreated;
-            _gm.ChangeTurn           -= OnChangeTurn;
-            _gm.ObtainActionInfo     -= OnObtainActionInfo;
-            _gm.GameHasEnded         -= OnGameEnded;
-            _gm.MultiplayerGameEnded -= OnGameEnded;
-        }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Event handlers
-        // ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Primary data source. Fires every time ActionLog.CreateNewLog() commits
-        /// a structured LogInfo to its history list.
-        /// </summary>
-        private void OnLogInfoCreated(LogInfo logInfo, int index)
-        {
-            if (_disposed || logInfo == null) return;
-
-            MaybeEmitTurnDivider(_gm.TurnCount);
-            _pending.Add(FormatLogEntry(logInfo));
-
-            if (_pending.Count >= 20)
-                FlushToDisk();
-        }
-
-        /// <summary>
-        /// Fires for every action with the same plain-English string shown in the
-        /// UI's LastActionInfoPresenter. Strips the leading faction-prefix byte
-        /// (e.g. "^R") and appends as an indented annotation.
-        /// </summary>
-        private void OnObtainActionInfo(string actionInfo)
-        {
-            if (_disposed || string.IsNullOrEmpty(actionInfo)) return;
-
-            // Strip the ^X faction prefix that LastActionInfoPresenter.ParseMessage handles.
-            string clean = actionInfo.Length >= 2 && actionInfo[0] == '^'
-                ? actionInfo.Substring(2)
-                : actionInfo;
-
-            _pending.Add($"           >> \"{clean.Trim()}\"");
-
-            if (_pending.Count >= 20)
-                FlushToDisk();
-        }
-
-        /// <summary>
-        /// Fires at the start of each new turn. Emits a divider and hard-flushes
-        /// so at most one turn of data is lost in a crash.
-        /// </summary>
-        private void OnChangeTurn()
-        {
-            if (_disposed) return;
-            MaybeEmitTurnDivider(_gm.TurnCount);
-            FlushToDisk();
-        }
-
-        /// <summary>
-        /// Fires from GameManager.GameHasEnded (singleplayer) and
-        /// GameManager.MultiplayerGameEnded (multiplayer). GameLength is assigned
-        /// inside EndGame() just before either event fires, so it is available here.
-        /// </summary>
-        private void OnGameEnded()
-        {
-            if (_disposed) return;
-
-            string duration = _gm.GameLength != TimeSpan.Zero
-                ? _gm.GameLength.ToString(@"hh\:mm\:ss")
-                : "unknown";
-
-            _pending.Add("");
-            _pending.Add($"=== GAME OVER === (after {_gm.TurnCount} turns, {duration})");
-
-            // Final scores — only available after CalculateStats() has been called,
-            // which happens in GameManager.CheckStars() when a player places their
-            // 6th star. If somehow GameHasEnded fires before that we skip this block;
-            // the raw action log is still complete.
-            if (_gm.StatsCalculated)
-                AppendFinalScores(_gm.CalculateStats());
-
-            _pending.Add("");
-            FlushToDisk();
-
-            // Unsubscribe so we don't double-write if the event fires again.
-            Unsubscribe();
-        }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Public API
-        // ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>Force an immediate write of all buffered lines. Safe to call any time.</summary>
-        public void FlushToDisk()
-        {
-            if (_pending.Count == 0) return;
-            try
-            {
-                File.AppendAllLines(_filePath, _pending);
-                _pending.Clear();
-            }
-            catch (Exception ex)
-            {
-                // Log to whatever debug output is available without taking a hard
-                // dependency on UnityEngine.Debug.
-                System.Diagnostics.Debug.WriteLine($"[GameActionLogger] Write failed: {ex.Message}");
-            }
-        }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // File helpers
-        // ─────────────────────────────────────────────────────────────────────
-
-        private void WriteHeader()
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("=== SCYTHE GAME LOG ===");
-            sb.AppendLine($"Date      : {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-
-            string mode = _gm.IsMultiplayer ? "Multiplayer" :
-                          _gm.IsCampaign    ? "Campaign"    :
-                          _gm.IsChallenge   ? "Challenge"   : "Singleplayer";
-            sb.AppendLine($"Mode      : {mode}");
-            if (_gm.IsRanked)     sb.AppendLine("Ranked    : Yes");
-            if (_gm.IsHotSeat)    sb.AppendLine("Hot Seat  : Yes");
-
-            sb.AppendLine();
-            sb.AppendLine("--- PLAYERS ---");
-            AppendPlayerRoster(sb);
-
-            sb.AppendLine();
-            sb.AppendLine("--- ACTION LOG ---");
-            sb.AppendLine($"{"[Turn]",-7} {"Faction",-14} {"Placement",-8} {"Action",-28} Details");
-            sb.AppendLine(new string('-', 86));
-
-            TryWrite(() => File.WriteAllText(_filePath, sb.ToString()));
-        }
-
-        private void WriteResumeMarker()
-        {
-            string marker =
-                $"\n--- RESUMED {DateTime.Now:yyyy-MM-dd HH:mm:ss} " +
-                $"(turn {_gm.TurnCount}) ---\n";
-            TryWrite(() => File.AppendAllText(_filePath, marker));
-        }
-
-        private void AppendPlayerRoster(StringBuilder sb)
-        {
-            int slot = 1;
-            foreach (Player p in _gm.players)
-            {
-                string faction = p.matFaction?.faction.ToString() ?? "Unknown";
-
-                // matPlayer.matType is the canonical PlayerMatType enum.
-                // Filter out tutorial/challenge internal types to keep the log readable.
-                string mat = p.matPlayer != null
-                    ? FriendlyMatName(p.matPlayer.matType)
-                    : "Unknown";
-
-                string name = !string.IsNullOrEmpty(p.Name) ? p.Name : "(unnamed)";
-
-                // IsHuman + aiDifficulty gives the full picture for AI players.
-                string kind = p.IsHuman
-                    ? "Human"
-                    : $"AI ({p.aiDifficulty})";
-
-                sb.AppendLine($"  {slot,2}. {faction,-14} / {mat,-18} | {kind,-14} | {name}");
-                slot++;
-            }
-        }
-
-        private void AppendFinalScores(List<PlayerEndGameStats> stats)
-        {
-            if (stats == null || stats.Count == 0) return;
-
-            _pending.Add("");
-            _pending.Add("--- FINAL SCORES ---");
-            _pending.Add(
-                $"  {"Rank",-5} {"Faction",-14} {"Player",-16} {"Total",6}" +
-                $"  Stars  Pop  Terr  Res  Struct  Coins");
-            _pending.Add(new string('-', 78));
-
-            for (int i = 0; i < stats.Count; i++)
-            {
-                var s = stats[i];
-
-                // player reference is present in singleplayer; may be null in the
-                // multiplayer-deserialized path, where the standalone fields are used.
-                string faction, playerName;
-                int    pop;
-
-                if (s.player != null)
-                {
-                    faction    = s.player.matFaction?.faction.ToString() ?? "?";
-                    playerName = !string.IsNullOrEmpty(s.player.Name) ? s.player.Name : s.name;
-                    pop        = s.player.Popularity;
-                }
-                else
-                {
-                    faction    = ((Faction)s.faction).ToString();
-                    playerName = s.name;
-                    pop        = s.popularity;
-                }
-
-                _pending.Add(
-                    $"  {i + 1,-5} {faction,-14} {playerName,-16} {s.totalPoints,6}" +
-                    $"  {s.starPoints,5}  {pop,3}  {s.territoryPoints,4}" +
-                    $"  {s.resourcePoints,3}  {s.structurePoints,6}  {s.coinPoints,5}");
-            }
-        }
-
-        private void MaybeEmitTurnDivider(int turnNumber)
-        {
-            if (turnNumber == _lastTurnSeen) return;
-            _lastTurnSeen = turnNumber;
-            _pending.Add($"\n--- TURN {turnNumber} ---");
-        }
-
-        private static void TryWrite(Action write)
-        {
-            try   { write(); }
-            catch (Exception ex)
-            { System.Diagnostics.Debug.WriteLine($"[GameActionLogger] {ex.Message}"); }
-        }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Log entry formatting
-        // ─────────────────────────────────────────────────────────────────────
-
-        private string FormatLogEntry(LogInfo logInfo)
-        {
-            string faction   = logInfo.PlayerAssigned.ToString();
-            string placement = PlacementLabel(logInfo.ActionPlacement);
-            string action    = ActionLabel(logInfo);
-            string details   = DetailString(logInfo);
-
-            var sb = new StringBuilder();
-            sb.Append($"[{_gm.TurnCount,4}]  {faction,-14} {placement,-8} {action,-28} {details}");
-
-            // Cost lines indented below the main action.
-            if (logInfo.PayLogInfos != null)
-                foreach (var pay in logInfo.PayLogInfos)
-                    sb.Append($"\n           PAY  {ActionLabel(pay),-26} {DetailString(pay)}");
-
-            // Bonus gain lines (enlist bonuses, star rewards, etc.).
-            if (logInfo.AdditionalGain != null)
-                foreach (var gain in logInfo.AdditionalGain)
-                    sb.Append($"\n           GAIN {ActionLabel(gain),-26} {DetailString(gain)}");
-
-            return sb.ToString();
-        }
-
-        private static string PlacementLabel(ActionPositionType p) =>
-            p == ActionPositionType.Top                ? "TOP"         :
-            p == ActionPositionType.Down               ? "BOTTOM"      :
-            p == ActionPositionType.Combat             ? "COMBAT"      :
-            p == ActionPositionType.BuildingBonus      ? "BLDG BONUS"  :
-            p == ActionPositionType.OngoingRecruitBonus? "ENLIST BONUS":
-            p == ActionPositionType.Other              ? "OTHER"       :
-            p.ToString();
-
-        private static string ActionLabel(LogInfo logInfo)
-        {
-            if (logInfo is CombatLogInfo c)
-            {
-                string w = c.Winner?.matFaction?.faction.ToString()   ?? "?";
-                string d = c.Defeated?.matFaction?.faction.ToString() ?? "?";
-                return $"Combat ({w} beats {d})";
-            }
-            return logInfo.Type.ToString();
-        }
-
-        private static string DetailString(LogInfo logInfo)
-        {
-            try
-            {
-                switch (logInfo)
-                {
-                    case CombatLogInfo combat:
-                    {
-                        string hex  = combat.Battlefield != null
-                            ? $"Hex({combat.Battlefield.posX},{combat.Battlefield.posY})" : "?";
-                        string winP = $"W:{combat.WinnerPower.selectedPower}+{combat.WinnerPower.cardsPower}";
-                        string defP = $"D:{combat.DefeatedPower.selectedPower}+{combat.DefeatedPower.cardsPower}";
-                        string pop  = combat.LostPopularity != 0 ? $" pop-{combat.LostPopularity}" : "";
-                        string abl  = (combat.WinnerAbilityUsed || combat.DefeatedAbilityUsed)
-                            ? " [ability]" : "";
-                        return $"{hex} {winP} vs {defP}{pop}{abl}";
-                    }
-
-                    case PayNonboardResourceLogInfo payNon:
-                        // Resource = PayType (Coin/Popularity/Power/CombatCard), Amount = short
-                        return $"-{payNon.Amount} {payNon.Resource}";
-
-                    case PayResourceLogInfo payRes:
-                    {
-                        // Resources = Dictionary<ResourceType, int>
-                        var parts = new List<string>();
-                        foreach (var kv in payRes.Resources)
-                            if (kv.Value != 0) parts.Add($"-{kv.Value} {kv.Key}");
-                        return parts.Count > 0 ? string.Join(", ", parts) : "";
-                    }
-
-                    case WorkerLogInfo wkr:
-                        // WorkersAmount + optional Position
-                        return wkr.Position != null
-                            ? $"+{wkr.WorkersAmount} at Hex({wkr.Position.posX},{wkr.Position.posY})"
-                            : $"+{wkr.WorkersAmount}";
-
-                    case SneakPeakLogInfo sneak:
-                        return $"Spied: {sneak.SpiedFaction}";
-
-                    case GainNonboardResourceLogInfo gain:
-                        return $"+{gain.Amount} {gain.Gained}";
-
-                    case HexUnitResourceLogInfo hexLog
-                        when logInfo.Type == LogInfoType.Move ||
-                             logInfo.Type == LogInfoType.MoveCoins:
-                    {
-                        var names = new List<string>();
-                        foreach (var u in hexLog.Units)
-                            names.Add($"{u.UnitType}#{u.Id}");
-                        return names.Count > 0 ? string.Join(", ", names) : "";
-                    }
-
-                    case UpgradeLogInfo upg:
-                        // TopAction = GainType removed from top row (e.g. Power, Coin)
-                        // DownAction = PayType removed from bottom row (e.g. Oil, Metal)
-                        // Resource   = ResourceType spent
-                        return upg.DownAction != PayType.Coin
-                            ? $"Top:-{upg.TopAction} Bot:-{upg.Resource}"
-                            : "";
-
-                    case DeployLogInfo dep:
-                    {
-                        string hex = dep.Position != null
-                            ? $"Hex({dep.Position.posX},{dep.Position.posY})" : "";
-                        string mech = dep.DeployedMech != null
-                            ? $"Mech#{dep.DeployedMech.Id}" : "";
-                        string bonus = dep.MechBonus != 0 ? $" +{dep.MechBonus}bonus" : "";
-                        return $"{mech} {hex}{bonus}".Trim();
-                    }
-
-                    case BuildLogInfo bld:
-                    {
-                        string hex = bld.Position != null
-                            ? $"Hex({bld.Position.posX},{bld.Position.posY})" : "";
-                        string building = bld.PlacedBuilding != null
-                            ? bld.PlacedBuilding.buildingType.ToString() : "";
-                        return $"{building} {hex}".Trim();
-                    }
-
-                    case EnlistLogInfo enl:
-                        // TypeOfDownAction = which bottom row slot was enlisted
-                        // OneTimeBonus     = the one-time GainType reward
-                        return enl.TypeOfDownAction != DownActionType.Factory
-                            ? $"{enl.TypeOfDownAction} -> +{enl.OneTimeBonus}"
-                            : enl.TypeOfDownAction.ToString();
-
-                    case ProductionLogInfo prod:
-                    {
-                        int total = 0;
-                        foreach (var kv in prod.Hexes) total += kv.Value;
-                        string mill = prod.MillUsed ? " [mill]" : "";
-                        return $"{prod.Hexes.Count} hex(es), {total} produced{mill}";
-                    }
-
-                    case StarLogInfo star:
-                        return $"Star: {star.GainedStar}";
-
-                    case PassCoinLogInfo pass:
-                        // lowercase fields: from, to, amount
-                        return $"{pass.from} -> {pass.to}: {pass.amount} coins";
-
-                    default:
-                        return "";
-                }
-            }
-            catch { return ""; }
-        }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Utility
-        // ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Returns a player-facing name for the mat type, stripping out the many
-        /// tutorial/challenge internal variants that aren't meaningful in a log.
-        /// </summary>
-        private static string FriendlyMatName(PlayerMatType mat)
-        {
-            switch (mat)
-            {
-                case PlayerMatType.Industrial:   return "Industrial";
-                case PlayerMatType.Engineering:  return "Engineering";
-                case PlayerMatType.Patriotic:    return "Patriotic";
-                case PlayerMatType.Mechanical:   return "Mechanical";
-                case PlayerMatType.Agricultural: return "Agricultural";
-                case PlayerMatType.Militant:     return "Militant";
-                case PlayerMatType.Innovative:   return "Innovative";
-                default:                         return mat.ToString();
-            }
-        }
-    }
+	// Token: 0x020009E9 RID: 2537
+	public class GameActionLogger : IDisposable
+	{
+		// Token: 0x06004268 RID: 17000
+		public GameActionLogger(GameManager gameManager, string gameId = null)
+		{
+			if (gameManager == null)
+			{
+				throw new ArgumentNullException("gameManager");
+			}
+			this._gm = gameManager;
+			string text = ((!string.IsNullOrEmpty(gameId) && gameId.Length >= 8) ? gameId.Substring(0, 8) : DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+			string tempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SickleMod", "logs");
+			Directory.CreateDirectory(tempPath);
+			this._filePath = Path.Combine(tempPath, "ScytheLog_" + text + ".txt");
+			if (!File.Exists(this._filePath))
+			{
+				this.WriteHeader();
+			}
+			else
+			{
+				this.WriteResumeMarker();
+			}
+			this.Subscribe();
+		}
+
+		// Token: 0x06004269 RID: 17001
+		public void Dispose()
+		{
+			if (this._disposed)
+			{
+				return;
+			}
+			this._disposed = true;
+			this.Unsubscribe();
+			this.FlushToDisk();
+		}
+
+		// Token: 0x0600426A RID: 17002
+		private void Subscribe()
+		{
+			ActionLog.LogInfoCreated += this.OnLogInfoCreated;
+			this._gm.ChangeTurn += this.OnChangeTurn;
+			this._gm.ObtainActionInfo += this.OnObtainActionInfo;
+			this._gm.GameHasEnded += this.OnGameEnded;
+			this._gm.MultiplayerGameEnded += this.OnGameEnded;
+		}
+
+		// Token: 0x0600426B RID: 17003
+		private void Unsubscribe()
+		{
+			ActionLog.LogInfoCreated -= this.OnLogInfoCreated;
+			this._gm.ChangeTurn -= this.OnChangeTurn;
+			this._gm.ObtainActionInfo -= this.OnObtainActionInfo;
+			this._gm.GameHasEnded -= this.OnGameEnded;
+			this._gm.MultiplayerGameEnded -= this.OnGameEnded;
+		}
+
+		// Token: 0x0600426C RID: 17004
+		private void OnLogInfoCreated(LogInfo logInfo, int index)
+		{
+			if (this._disposed || logInfo == null)
+			{
+				return;
+			}
+			this.MaybeEmitTurnDivider(this._gm.TurnCount);
+			this._pending.Add(this.FormatLogEntry(logInfo));
+			if (this._pending.Count >= 20)
+			{
+				this.FlushToDisk();
+			}
+		}
+
+		// Token: 0x0600426D RID: 17005
+		private void OnObtainActionInfo(string actionInfo)
+		{
+			if (this._disposed || string.IsNullOrEmpty(actionInfo))
+			{
+				return;
+			}
+			string text = ((actionInfo.Length >= 2 && actionInfo[0] == '^') ? actionInfo.Substring(2) : actionInfo);
+			this._pending.Add("           >> \"" + text.Trim() + "\"");
+			if (this._pending.Count >= 20)
+			{
+				this.FlushToDisk();
+			}
+		}
+
+		// Token: 0x0600426E RID: 17006
+		private void OnChangeTurn()
+		{
+			if (this._disposed)
+			{
+				return;
+			}
+			this.MaybeEmitTurnDivider(this._gm.TurnCount);
+			this.FlushToDisk();
+		}
+
+		// Token: 0x0600426F RID: 17007
+		private void OnGameEnded()
+		{
+			if (this._disposed)
+			{
+				return;
+			}
+			string text = ((this._gm.GameLength != TimeSpan.Zero) ? this._gm.GameLength.ToString("hh\\:mm\\:ss") : "unknown");
+			this._pending.Add("");
+			this._pending.Add(string.Format("=== GAME OVER === (after {0} turns, {1})", this._gm.TurnCount, text));
+			if (this._gm.StatsCalculated)
+			{
+				this.AppendFinalScores(this._gm.CalculateStats());
+			}
+			this._pending.Add("");
+			this.FlushToDisk();
+			this.Unsubscribe();
+		}
+
+		// Token: 0x06004270 RID: 17008
+		public void FlushToDisk()
+		{
+			if (this._pending.Count == 0)
+			{
+				return;
+			}
+			try
+			{
+				File.AppendAllLines(this._filePath, this._pending);
+				this._pending.Clear();
+			}
+			catch (Exception)
+			{
+			}
+		}
+
+		// Token: 0x06004271 RID: 17009
+		private void WriteHeader()
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.AppendLine("=== SCYTHE GAME LOG ===");
+			sb.AppendLine(string.Format("Date      : {0:yyyy-MM-dd HH:mm:ss}", DateTime.Now));
+			string text = (this._gm.IsMultiplayer ? "Multiplayer" : (this._gm.IsCampaign ? "Campaign" : (this._gm.IsChallenge ? "Challenge" : "Singleplayer")));
+			sb.AppendLine("Mode      : " + text);
+			if (this._gm.IsRanked)
+			{
+				sb.AppendLine("Ranked    : Yes");
+			}
+			if (this._gm.IsHotSeat)
+			{
+				sb.AppendLine("Hot Seat  : Yes");
+			}
+			sb.AppendLine();
+			sb.AppendLine("--- PLAYERS ---");
+			this.AppendPlayerRoster(sb);
+			sb.AppendLine();
+			sb.AppendLine("--- ACTION LOG ---");
+			sb.AppendLine(string.Format("{0,-7} {1,-14} {2,-8} {3,-28} Details", new object[] { "[Turn]", "Faction", "Placement", "Action" }));
+			sb.AppendLine(new string('-', 86));
+			GameActionLogger.TryWrite(delegate
+			{
+				File.WriteAllText(this._filePath, sb.ToString());
+			});
+		}
+
+		// Token: 0x06004272 RID: 17010
+		private void WriteResumeMarker()
+		{
+			string marker = string.Format("\n--- RESUMED {0:yyyy-MM-dd HH:mm:ss} ", DateTime.Now) + string.Format("(turn {0}) ---\n", this._gm.TurnCount);
+			GameActionLogger.TryWrite(delegate
+			{
+				File.AppendAllText(this._filePath, marker);
+			});
+		}
+
+		// Token: 0x06004273 RID: 17011
+		private void AppendPlayerRoster(StringBuilder sb)
+		{
+			int num = 1;
+			foreach (Player player in this._gm.players)
+			{
+				MatFaction matFaction = player.matFaction;
+				string text = ((matFaction != null) ? matFaction.faction.ToString() : null) ?? "Unknown";
+				string text2 = ((player.matPlayer != null) ? GameActionLogger.FriendlyMatName(player.matPlayer.matType) : "Unknown");
+				string text3 = ((!string.IsNullOrEmpty(player.Name)) ? player.Name : "(unnamed)");
+				string text4 = (player.IsHuman ? "Human" : string.Format("AI ({0})", player.aiDifficulty));
+				sb.AppendLine(string.Format("  {0,2}. {1,-14} / {2,-18} | {3,-14} | {4}", new object[] { num, text, text2, text4, text3 }));
+				num++;
+			}
+		}
+
+		// Token: 0x06004274 RID: 17012
+		private void AppendFinalScores(List<PlayerEndGameStats> stats)
+		{
+			if (stats == null || stats.Count == 0)
+			{
+				return;
+			}
+			this._pending.Add("");
+			this._pending.Add("--- FINAL SCORES ---");
+			this._pending.Add(string.Format("  {0,-5} {1,-14} {2,-16} {3,6}", new object[] { "Rank", "Faction", "Player", "Total" }) + "  Stars  Pop  Terr  Res  Struct  Coins");
+			this._pending.Add(new string('-', 78));
+			for (int i = 0; i < stats.Count; i++)
+			{
+				PlayerEndGameStats playerEndGameStats = stats[i];
+				string text;
+				string text2;
+				int num;
+				if (playerEndGameStats.player != null)
+				{
+					MatFaction matFaction = playerEndGameStats.player.matFaction;
+					text = ((matFaction != null) ? matFaction.faction.ToString() : null) ?? "?";
+					text2 = ((!string.IsNullOrEmpty(playerEndGameStats.player.Name)) ? playerEndGameStats.player.Name : playerEndGameStats.name);
+					num = playerEndGameStats.player.Popularity;
+				}
+				else
+				{
+					Faction faction = (Faction)playerEndGameStats.faction;
+					text = faction.ToString();
+					text2 = playerEndGameStats.name;
+					num = playerEndGameStats.popularity;
+				}
+				this._pending.Add(string.Format("  {0,-5} {1,-14} {2,-16} {3,6}", new object[]
+				{
+					i + 1,
+					text,
+					text2,
+					playerEndGameStats.totalPoints
+				}) + string.Format("  {0,5}  {1,3}  {2,4}", playerEndGameStats.starPoints, num, playerEndGameStats.territoryPoints) + string.Format("  {0,3}  {1,6}  {2,5}", playerEndGameStats.resourcePoints, playerEndGameStats.structurePoints, playerEndGameStats.coinPoints));
+			}
+		}
+
+		// Token: 0x06004275 RID: 17013
+		private void MaybeEmitTurnDivider(int turnNumber)
+		{
+			if (turnNumber == this._lastTurnSeen)
+			{
+				return;
+			}
+			this._lastTurnSeen = turnNumber;
+			this._pending.Add(string.Format("\n--- TURN {0} ---", turnNumber));
+		}
+
+		// Token: 0x06004276 RID: 17014
+		private static void TryWrite(Action write)
+		{
+			try
+			{
+				write();
+			}
+			catch (Exception)
+			{
+			}
+		}
+
+		// Token: 0x06004277 RID: 17015
+		private string FormatLogEntry(LogInfo logInfo)
+		{
+			string text = logInfo.PlayerAssigned.ToString();
+			string text2 = GameActionLogger.PlacementLabel(logInfo.ActionPlacement);
+			string text3 = GameActionLogger.ActionLabel(logInfo);
+			string text4 = GameActionLogger.DetailString(logInfo);
+			StringBuilder stringBuilder = new StringBuilder();
+			stringBuilder.Append(string.Format("[{0,4}]  {1,-14} {2,-8} {3,-28} {4}", new object[]
+			{
+				this._gm.TurnCount,
+				text,
+				text2,
+				text3,
+				text4
+			}));
+			if (logInfo.PayLogInfos != null)
+			{
+				foreach (LogInfo logInfo2 in logInfo.PayLogInfos)
+				{
+					stringBuilder.Append(string.Format("\n           PAY  {0,-26} {1}", GameActionLogger.ActionLabel(logInfo2), GameActionLogger.DetailString(logInfo2)));
+				}
+			}
+			if (logInfo.AdditionalGain != null)
+			{
+				foreach (LogInfo logInfo3 in logInfo.AdditionalGain)
+				{
+					stringBuilder.Append(string.Format("\n           GAIN {0,-26} {1}", GameActionLogger.ActionLabel(logInfo3), GameActionLogger.DetailString(logInfo3)));
+				}
+			}
+			return stringBuilder.ToString();
+		}
+
+		// Token: 0x06004278 RID: 17016
+		private static string PlacementLabel(ActionPositionType p)
+		{
+			if (p == ActionPositionType.Top)
+			{
+				return "TOP";
+			}
+			if (p == ActionPositionType.Down)
+			{
+				return "BOTTOM";
+			}
+			if (p == ActionPositionType.Combat)
+			{
+				return "COMBAT";
+			}
+			if (p == ActionPositionType.BuildingBonus)
+			{
+				return "BLDG BONUS";
+			}
+			if (p == ActionPositionType.OngoingRecruitBonus)
+			{
+				return "ENLIST BONUS";
+			}
+			if (p != ActionPositionType.Other)
+			{
+				return p.ToString();
+			}
+			return "OTHER";
+		}
+
+		// Token: 0x06004279 RID: 17017
+		private static string ActionLabel(LogInfo logInfo)
+		{
+			CombatLogInfo combatLogInfo = logInfo as CombatLogInfo;
+			if (combatLogInfo != null)
+			{
+				Player winner = combatLogInfo.Winner;
+				string text;
+				if (winner == null)
+				{
+					text = null;
+				}
+				else
+				{
+					MatFaction matFaction = winner.matFaction;
+					text = ((matFaction != null) ? matFaction.faction.ToString() : null);
+				}
+				string text2 = text ?? "?";
+				Player defeated = combatLogInfo.Defeated;
+				string text3;
+				if (defeated == null)
+				{
+					text3 = null;
+				}
+				else
+				{
+					MatFaction matFaction2 = defeated.matFaction;
+					text3 = ((matFaction2 != null) ? matFaction2.faction.ToString() : null);
+				}
+				string text4 = text3 ?? "?";
+				return string.Concat(new string[] { "Combat (", text2, " beats ", text4, ")" });
+			}
+			return logInfo.Type.ToString();
+		}
+
+		// Token: 0x0600427A RID: 17018
+		private static string DetailString(LogInfo logInfo)
+		{
+			string text8;
+			try
+			{
+				CombatLogInfo combatLogInfo = logInfo as CombatLogInfo;
+				if (combatLogInfo == null)
+				{
+					PayNonboardResourceLogInfo payNonboardResourceLogInfo = logInfo as PayNonboardResourceLogInfo;
+					if (payNonboardResourceLogInfo == null)
+					{
+						PayResourceLogInfo payResourceLogInfo = logInfo as PayResourceLogInfo;
+						if (payResourceLogInfo == null)
+						{
+							WorkerLogInfo workerLogInfo = logInfo as WorkerLogInfo;
+							if (workerLogInfo == null)
+							{
+								SneakPeakLogInfo sneakPeakLogInfo = logInfo as SneakPeakLogInfo;
+								if (sneakPeakLogInfo == null)
+								{
+									GainNonboardResourceLogInfo gainNonboardResourceLogInfo = logInfo as GainNonboardResourceLogInfo;
+									if (gainNonboardResourceLogInfo == null)
+									{
+										HexUnitResourceLogInfo hexUnitResourceLogInfo = logInfo as HexUnitResourceLogInfo;
+										if (hexUnitResourceLogInfo == null)
+										{
+											UpgradeLogInfo upgradeLogInfo = logInfo as UpgradeLogInfo;
+											if (upgradeLogInfo != null)
+											{
+												return (upgradeLogInfo.DownAction != PayType.Coin) ? string.Format("Top:-{0} Bot:-{1}", upgradeLogInfo.TopAction, upgradeLogInfo.Resource) : "";
+											}
+											DeployLogInfo deployLogInfo = logInfo as DeployLogInfo;
+											if (deployLogInfo != null)
+											{
+												string text = ((deployLogInfo.Position != null) ? string.Format("Hex({0},{1})", deployLogInfo.Position.posX, deployLogInfo.Position.posY) : "");
+												string text14 = ((deployLogInfo.DeployedMech != null) ? string.Format("Mech#{0}", deployLogInfo.DeployedMech.Id) : "");
+												string text2 = ((deployLogInfo.MechBonus != 0) ? string.Format(" +{0}bonus", deployLogInfo.MechBonus) : "");
+												return (text14 + " " + text + text2).Trim();
+											}
+											BuildLogInfo buildLogInfo = logInfo as BuildLogInfo;
+											if (buildLogInfo != null)
+											{
+												string text3 = ((buildLogInfo.Position != null) ? string.Format("Hex({0},{1})", buildLogInfo.Position.posX, buildLogInfo.Position.posY) : "");
+												return (((buildLogInfo.PlacedBuilding != null) ? buildLogInfo.PlacedBuilding.buildingType.ToString() : "") + " " + text3).Trim();
+											}
+											EnlistLogInfo enlistLogInfo = logInfo as EnlistLogInfo;
+											if (enlistLogInfo != null)
+											{
+												return (enlistLogInfo.TypeOfDownAction != DownActionType.Factory) ? string.Format("{0} -> +{1}", enlistLogInfo.TypeOfDownAction, enlistLogInfo.OneTimeBonus) : enlistLogInfo.TypeOfDownAction.ToString();
+											}
+											ProductionLogInfo productionLogInfo = logInfo as ProductionLogInfo;
+											if (productionLogInfo != null)
+											{
+												int num = 0;
+												foreach (KeyValuePair<GameHex, int> keyValuePair in productionLogInfo.Hexes)
+												{
+													num += keyValuePair.Value;
+												}
+												string text4 = (productionLogInfo.MillUsed ? " [mill]" : "");
+												return string.Format("{0} hex(es), {1} produced{2}", productionLogInfo.Hexes.Count, num, text4);
+											}
+											StarLogInfo starLogInfo = logInfo as StarLogInfo;
+											if (starLogInfo != null)
+											{
+												return string.Format("Star: {0}", starLogInfo.GainedStar);
+											}
+											PassCoinLogInfo passCoinLogInfo = logInfo as PassCoinLogInfo;
+											if (passCoinLogInfo != null)
+											{
+												return string.Format("{0} -> {1}: {2} coins", passCoinLogInfo.from, passCoinLogInfo.to, passCoinLogInfo.amount);
+											}
+										}
+										else if (logInfo.Type == LogInfoType.Move || logInfo.Type == LogInfoType.MoveCoins)
+										{
+											if (hexUnitResourceLogInfo.Hexes.Count == 0)
+											{
+												return "";
+											}
+											List<string> list = new List<string>();
+											foreach (Unit unit in hexUnitResourceLogInfo.Units)
+											{
+												list.Add(string.Format("{0}#{1}", unit.UnitType, unit.Id));
+											}
+											string text5 = ((list.Count > 0) ? (string.Join(", ", list) + "  ") : "");
+											if (hexUnitResourceLogInfo.Hexes.Count == 1)
+											{
+												return text5 + GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[0]);
+											}
+											string text6 = GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[0]);
+											List<string> list2 = new List<string>();
+											for (int i = 1; i < hexUnitResourceLogInfo.Hexes.Count; i++)
+											{
+												list2.Add(GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[i]));
+											}
+											string text7 = string.Join(" & ", list2);
+											return text5 + text6 + " → " + text7;
+										}
+										text8 = "";
+									}
+									else
+									{
+										text8 = string.Format("+{0} {1}", gainNonboardResourceLogInfo.Amount, gainNonboardResourceLogInfo.Gained);
+									}
+								}
+								else
+								{
+									text8 = string.Format("Spied: {0}", sneakPeakLogInfo.SpiedFaction);
+								}
+							}
+							else
+							{
+								text8 = ((workerLogInfo.Position != null) ? string.Format("+{0} at Hex({1},{2})", workerLogInfo.WorkersAmount, workerLogInfo.Position.posX, workerLogInfo.Position.posY) : string.Format("+{0}", workerLogInfo.WorkersAmount));
+							}
+						}
+						else
+						{
+							List<string> list3 = new List<string>();
+							foreach (KeyValuePair<ResourceType, int> keyValuePair2 in payResourceLogInfo.Resources)
+							{
+								if (keyValuePair2.Value != 0)
+								{
+									list3.Add(string.Format("-{0} {1}", keyValuePair2.Value, keyValuePair2.Key));
+								}
+							}
+							text8 = ((list3.Count > 0) ? string.Join(", ", list3) : "");
+						}
+					}
+					else
+					{
+						text8 = string.Format("-{0} {1}", payNonboardResourceLogInfo.Amount, payNonboardResourceLogInfo.Resource);
+					}
+				}
+				else
+				{
+					string text9 = ((combatLogInfo.Battlefield != null) ? string.Format("Hex({0},{1})", combatLogInfo.Battlefield.posX, combatLogInfo.Battlefield.posY) : "?");
+					string text10 = string.Format("W:{0}+{1}", combatLogInfo.WinnerPower.selectedPower, combatLogInfo.WinnerPower.cardsPower);
+					string text11 = string.Format("D:{0}+{1}", combatLogInfo.DefeatedPower.selectedPower, combatLogInfo.DefeatedPower.cardsPower);
+					string text12 = ((combatLogInfo.LostPopularity != 0) ? string.Format(" pop-{0}", combatLogInfo.LostPopularity) : "");
+					string text13 = ((combatLogInfo.WinnerAbilityUsed || combatLogInfo.DefeatedAbilityUsed) ? " [ability]" : "");
+					text8 = string.Concat(new string[] { text9, " ", text10, " vs ", text11, text12, text13 });
+				}
+			}
+			catch
+			{
+				text8 = "";
+			}
+			return text8;
+		}
+
+		// Token: 0x0600427B RID: 17019
+		private static string FriendlyMatName(PlayerMatType mat)
+		{
+			switch (mat)
+			{
+			case PlayerMatType.Industrial:
+				return "Industrial";
+			case PlayerMatType.Engineering:
+				return "Engineering";
+			case PlayerMatType.Patriotic:
+				return "Patriotic";
+			case PlayerMatType.Mechanical:
+				return "Mechanical";
+			case PlayerMatType.Agricultural:
+				return "Agricultural";
+			case PlayerMatType.Militant:
+				return "Militant";
+			case PlayerMatType.Innovative:
+				return "Innovative";
+			default:
+				return mat.ToString();
+			}
+		}
+
+		// Token: 0x0600427C RID: 17020
+		private static string HexLabel(GameHex hex)
+		{
+			if (hex == null)
+			{
+				return "?";
+			}
+			StringBuilder stringBuilder = new StringBuilder();
+			stringBuilder.Append(string.Format("({0},{1})", hex.posX, hex.posY));
+			if (hex.hexType == HexType.capital && hex.factionBase != Faction.Polania)
+			{
+				stringBuilder.Append(string.Format("[{0}-capital]", hex.factionBase));
+			}
+			else
+			{
+				stringBuilder.Append(string.Format("[{0}]", hex.hexType));
+			}
+			if (hex.hasTunnel)
+			{
+				stringBuilder.Append("[tunnel]");
+			}
+			if (hex.hasEncounter && !hex.encounterUsed)
+			{
+				stringBuilder.Append("[encounter]");
+			}
+			if (hex.Building != null)
+			{
+				stringBuilder.Append(string.Format("[{0}]", hex.Building.buildingType));
+			}
+			if (hex.Token != null)
+			{
+				Player owner = hex.Token.Owner;
+				string text;
+				if (owner == null)
+				{
+					text = null;
+				}
+				else
+				{
+					MatFaction matFaction = owner.matFaction;
+					text = ((matFaction != null) ? matFaction.faction.ToString() : null);
+				}
+				string text2 = text ?? "?";
+				bool flag = hex.Token is TrapToken;
+				stringBuilder.Append(flag ? ("[trap:" + text2 + "]") : ("[flag:" + text2 + "]"));
+			}
+			return stringBuilder.ToString();
+		}
+
+		// Token: 0x04003345 RID: 13125
+		private readonly GameManager _gm;
+
+		// Token: 0x04003346 RID: 13126
+		private readonly string _filePath;
+
+		// Token: 0x04003347 RID: 13127
+		private readonly List<string> _pending = new List<string>();
+
+		// Token: 0x04003348 RID: 13128
+		private bool _disposed;
+
+		// Token: 0x04003349 RID: 13129
+		private int _lastTurnSeen = -1;
+	}
 }
