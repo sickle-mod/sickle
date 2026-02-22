@@ -263,34 +263,61 @@ namespace Scythe.GameLogic
 		// Token: 0x06004277 RID: 17015
 		private string FormatLogEntry(LogInfo logInfo)
 		{
-			string text = logInfo.PlayerAssigned.ToString();
-			string text2 = GameActionLogger.PlacementLabel(logInfo.ActionPlacement);
-			string text3 = GameActionLogger.ActionLabel(logInfo);
-			string text4 = GameActionLogger.DetailString(logInfo);
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append(string.Format("[{0,4}]  {1,-14} {2,-8} {3,-28} {4}", new object[]
+			string faction = logInfo.PlayerAssigned.ToString();
+			StringBuilder sb = new StringBuilder();
+			if (logInfo.ActionPlacement == ActionPositionType.Other)
 			{
-				this._gm.TurnCount,
-				text,
-				text2,
-				text3,
-				text4
-			}));
-			if (logInfo.PayLogInfos != null)
+				string otherDesc = GameActionLogger.OtherActionDescription(logInfo);
+				sb.Append(string.Format("[{0,4}]  {1,-14} {2}", this._gm.TurnCount, faction, otherDesc));
+			}
+			else
 			{
-				foreach (LogInfo logInfo2 in logInfo.PayLogInfos)
+				string placement = GameActionLogger.PlacementLabel(logInfo.ActionPlacement);
+				string action = GameActionLogger.ActionLabel(logInfo);
+				string detail = GameActionLogger.DetailString(logInfo);
+				if (logInfo.Type == LogInfoType.TradeResources && logInfo.AdditionalGain != null)
 				{
-					stringBuilder.Append(string.Format("\n           PAY  {0,-26} {1}", GameActionLogger.ActionLabel(logInfo2), GameActionLogger.DetailString(logInfo2)));
+					List<string> gained = new List<string>();
+					foreach (LogInfo logInfo2 in logInfo.AdditionalGain)
+					{
+						GainNonboardResourceLogInfo res = logInfo2 as GainNonboardResourceLogInfo;
+						if (res != null && res.Amount > 0)
+						{
+							gained.Add(string.Format("+{0} {1}", res.Amount, res.Gained));
+						}
+					}
+					if (gained.Count > 0)
+					{
+						detail = string.Join(", ", gained);
+					}
+				}
+				sb.Append(string.Format("[{0,4}]  {1,-14} {2,-8} {3,-28} {4}", new object[]
+				{
+					this._gm.TurnCount,
+					faction,
+					placement,
+					action,
+					detail
+				}));
+				if (logInfo.PayLogInfos != null)
+				{
+					foreach (LogInfo pay in logInfo.PayLogInfos)
+					{
+						sb.Append(string.Format("\n           PAY  {0,-26} {1}", GameActionLogger.ActionLabel(pay), GameActionLogger.DetailString(pay)));
+					}
+				}
+				if (logInfo.AdditionalGain != null)
+				{
+					foreach (LogInfo gain in logInfo.AdditionalGain)
+					{
+						if (logInfo.Type != LogInfoType.TradeResources || !(gain is GainNonboardResourceLogInfo))
+						{
+							sb.Append(string.Format("\n           GAIN {0,-26} {1}", GameActionLogger.ActionLabel(gain), GameActionLogger.DetailString(gain)));
+						}
+					}
 				}
 			}
-			if (logInfo.AdditionalGain != null)
-			{
-				foreach (LogInfo logInfo3 in logInfo.AdditionalGain)
-				{
-					stringBuilder.Append(string.Format("\n           GAIN {0,-26} {1}", GameActionLogger.ActionLabel(logInfo3), GameActionLogger.DetailString(logInfo3)));
-				}
-			}
-			return stringBuilder.ToString();
+			return sb.ToString();
 		}
 
 		// Token: 0x06004278 RID: 17016
@@ -361,7 +388,7 @@ namespace Scythe.GameLogic
 		// Token: 0x0600427A RID: 17018
 		private static string DetailString(LogInfo logInfo)
 		{
-			string text8;
+			string text7;
 			try
 			{
 				CombatLogInfo combatLogInfo = logInfo as CombatLogInfo;
@@ -388,15 +415,15 @@ namespace Scythe.GameLogic
 											UpgradeLogInfo upgradeLogInfo = logInfo as UpgradeLogInfo;
 											if (upgradeLogInfo != null)
 											{
-												return (upgradeLogInfo.DownAction != PayType.Coin) ? string.Format("Top:-{0} Bot:-{1}", upgradeLogInfo.TopAction, upgradeLogInfo.Resource) : "";
+												return (upgradeLogInfo.DownAction != PayType.Coin) ? string.Format("Upgrade: {0}, {1}", upgradeLogInfo.TopAction, GameActionLogger.UpgradeBottomName(upgradeLogInfo.Resource)) : "";
 											}
 											DeployLogInfo deployLogInfo = logInfo as DeployLogInfo;
 											if (deployLogInfo != null)
 											{
 												string text = ((deployLogInfo.Position != null) ? string.Format("Hex({0},{1})", deployLogInfo.Position.posX, deployLogInfo.Position.posY) : "");
-												string text14 = ((deployLogInfo.DeployedMech != null) ? string.Format("Mech#{0}", deployLogInfo.DeployedMech.Id) : "");
+												string text13 = ((deployLogInfo.DeployedMech != null) ? GameActionLogger.MechName(deployLogInfo.DeployedMech) : "");
 												string text2 = ((deployLogInfo.MechBonus != 0) ? string.Format(" +{0}bonus", deployLogInfo.MechBonus) : "");
-												return (text14 + " " + text + text2).Trim();
+												return (text13 + " " + text + text2).Trim();
 											}
 											BuildLogInfo buildLogInfo = logInfo as BuildLogInfo;
 											if (buildLogInfo != null)
@@ -413,12 +440,16 @@ namespace Scythe.GameLogic
 											if (productionLogInfo != null)
 											{
 												int num = 0;
+												List<string> hexDetails = new List<string>();
 												foreach (KeyValuePair<GameHex, int> keyValuePair in productionLogInfo.Hexes)
 												{
 													num += keyValuePair.Value;
+													GameHex hex = keyValuePair.Key;
+													string resource = GameActionLogger.HexTypeResource(hex.hexType);
+													string millTag = ((productionLogInfo.MillUsed && hex.Building != null && hex.Building.buildingType == BuildingType.Mill) ? "[mill]" : "");
+													hexDetails.Add(string.Format("({0},{1}){2}:{3}x{4}", new object[] { hex.posX, hex.posY, millTag, resource, keyValuePair.Value }));
 												}
-												string text4 = (productionLogInfo.MillUsed ? " [mill]" : "");
-												return string.Format("{0} hex(es), {1} produced{2}", productionLogInfo.Hexes.Count, num, text4);
+												return string.Format("{0} produced [{1}]", num, string.Join(", ", hexDetails));
 											}
 											StarLogInfo starLogInfo = logInfo as StarLogInfo;
 											if (starLogInfo != null)
@@ -440,37 +471,39 @@ namespace Scythe.GameLogic
 											List<string> list = new List<string>();
 											foreach (Unit unit in hexUnitResourceLogInfo.Units)
 											{
-												list.Add(string.Format("{0}#{1}", unit.UnitType, unit.Id));
+												Mech unitAsMech = unit as Mech;
+												string unitLabel = ((unitAsMech != null) ? GameActionLogger.MechName(unitAsMech) : string.Format("{0}#{1}", unit.UnitType, unit.Id));
+												list.Add(unitLabel);
 											}
-											string text5 = ((list.Count > 0) ? (string.Join(", ", list) + "  ") : "");
+											string text4 = ((list.Count > 0) ? (string.Join(", ", list) + "  ") : "");
 											if (hexUnitResourceLogInfo.Hexes.Count == 1)
 											{
-												return text5 + GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[0]);
+												return text4 + GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[0]);
 											}
-											string text6 = GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[0]);
+											string text5 = GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[0]);
 											List<string> list2 = new List<string>();
 											for (int i = 1; i < hexUnitResourceLogInfo.Hexes.Count; i++)
 											{
 												list2.Add(GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[i]));
 											}
-											string text7 = string.Join(" & ", list2);
-											return text5 + text6 + " → " + text7;
+											string text6 = string.Join(" & ", list2);
+											return text4 + text5 + " → " + text6;
 										}
-										text8 = "";
+										text7 = "";
 									}
 									else
 									{
-										text8 = string.Format("+{0} {1}", gainNonboardResourceLogInfo.Amount, gainNonboardResourceLogInfo.Gained);
+										text7 = string.Format("+{0} {1}", gainNonboardResourceLogInfo.Amount, gainNonboardResourceLogInfo.Gained);
 									}
 								}
 								else
 								{
-									text8 = string.Format("Spied: {0}", sneakPeakLogInfo.SpiedFaction);
+									text7 = string.Format("Spied: {0}", sneakPeakLogInfo.SpiedFaction);
 								}
 							}
 							else
 							{
-								text8 = ((workerLogInfo.Position != null) ? string.Format("+{0} at Hex({1},{2})", workerLogInfo.WorkersAmount, workerLogInfo.Position.posX, workerLogInfo.Position.posY) : string.Format("+{0}", workerLogInfo.WorkersAmount));
+								text7 = ((workerLogInfo.Position != null) ? string.Format("+{0} at Hex({1},{2})", workerLogInfo.WorkersAmount, workerLogInfo.Position.posX, workerLogInfo.Position.posY) : string.Format("+{0}", workerLogInfo.WorkersAmount));
 							}
 						}
 						else
@@ -483,29 +516,29 @@ namespace Scythe.GameLogic
 									list3.Add(string.Format("-{0} {1}", keyValuePair2.Value, keyValuePair2.Key));
 								}
 							}
-							text8 = ((list3.Count > 0) ? string.Join(", ", list3) : "");
+							text7 = ((list3.Count > 0) ? string.Join(", ", list3) : "");
 						}
 					}
 					else
 					{
-						text8 = string.Format("-{0} {1}", payNonboardResourceLogInfo.Amount, payNonboardResourceLogInfo.Resource);
+						text7 = string.Format("-{0} {1}", payNonboardResourceLogInfo.Amount, payNonboardResourceLogInfo.Resource);
 					}
 				}
 				else
 				{
-					string text9 = ((combatLogInfo.Battlefield != null) ? string.Format("Hex({0},{1})", combatLogInfo.Battlefield.posX, combatLogInfo.Battlefield.posY) : "?");
-					string text10 = string.Format("W:{0}+{1}", combatLogInfo.WinnerPower.selectedPower, combatLogInfo.WinnerPower.cardsPower);
-					string text11 = string.Format("D:{0}+{1}", combatLogInfo.DefeatedPower.selectedPower, combatLogInfo.DefeatedPower.cardsPower);
-					string text12 = ((combatLogInfo.LostPopularity != 0) ? string.Format(" pop-{0}", combatLogInfo.LostPopularity) : "");
-					string text13 = ((combatLogInfo.WinnerAbilityUsed || combatLogInfo.DefeatedAbilityUsed) ? " [ability]" : "");
-					text8 = string.Concat(new string[] { text9, " ", text10, " vs ", text11, text12, text13 });
+					string text8 = ((combatLogInfo.Battlefield != null) ? string.Format("Hex({0},{1})", combatLogInfo.Battlefield.posX, combatLogInfo.Battlefield.posY) : "?");
+					string text9 = string.Format("W:{0}+{1}", combatLogInfo.WinnerPower.selectedPower, combatLogInfo.WinnerPower.cardsPower);
+					string text10 = string.Format("D:{0}+{1}", combatLogInfo.DefeatedPower.selectedPower, combatLogInfo.DefeatedPower.cardsPower);
+					string text11 = ((combatLogInfo.LostPopularity != 0) ? string.Format(" pop-{0}", combatLogInfo.LostPopularity) : "");
+					string text12 = ((combatLogInfo.WinnerAbilityUsed || combatLogInfo.DefeatedAbilityUsed) ? " [ability]" : "");
+					text7 = string.Concat(new string[] { text8, " ", text9, " vs ", text10, text11, text12 });
 				}
 			}
 			catch
 			{
-				text8 = "";
+				text7 = "";
 			}
-			return text8;
+			return text7;
 		}
 
 		// Token: 0x0600427B RID: 17019
@@ -579,6 +612,230 @@ namespace Scythe.GameLogic
 				stringBuilder.Append(flag ? ("[trap:" + text2 + "]") : ("[flag:" + text2 + "]"));
 			}
 			return stringBuilder.ToString();
+		}
+
+		// Token: 0x06004291 RID: 17041
+		private static string OtherActionDescription(LogInfo logInfo)
+		{
+			if (logInfo.IsEncounter)
+			{
+				List<string> pays = new List<string>();
+				List<string> gains = new List<string>();
+				if (logInfo.PayLogInfos != null)
+				{
+					foreach (LogInfo p in logInfo.PayLogInfos)
+					{
+						pays.Add(GameActionLogger.DetailString(p));
+					}
+				}
+				if (logInfo.AdditionalGain != null)
+				{
+					foreach (LogInfo g in logInfo.AdditionalGain)
+					{
+						gains.Add(GameActionLogger.GainSummary(g));
+					}
+				}
+				string payPart = ((pays.Count > 0) ? string.Join(", ", pays) : "free");
+				string gainPart = ((gains.Count > 0) ? string.Join(", ", gains) : "");
+				string separator = ((gainPart.Length > 0) ? " → " : "");
+				return string.Format("Encounter: {0}{1}{2}", payPart, separator, gainPart);
+			}
+			StarLogInfo starLog = logInfo as StarLogInfo;
+			if (starLog != null)
+			{
+				return string.Format("★ Star: {0} ({1}/6)", starLog.GainedStar, starLog.starsUnlocked);
+			}
+			FactoryLogInfo factoryLog = logInfo as FactoryLogInfo;
+			if (factoryLog != null && logInfo.Type == LogInfoType.FactoryCardGain)
+			{
+				return string.Format("Factory Card #{0}", factoryLog.GainedFactoryCard.CardId);
+			}
+			if (logInfo.Type == LogInfoType.FactoryTopAction)
+			{
+				List<string> pays2 = new List<string>();
+				List<string> gains2 = new List<string>();
+				if (logInfo.PayLogInfos != null)
+				{
+					foreach (LogInfo p2 in logInfo.PayLogInfos)
+					{
+						pays2.Add(GameActionLogger.DetailString(p2));
+					}
+				}
+				if (logInfo.AdditionalGain != null)
+				{
+					foreach (LogInfo g2 in logInfo.AdditionalGain)
+					{
+						gains2.Add(GameActionLogger.GainSummary(g2));
+					}
+				}
+				string payPart2 = ((pays2.Count > 0) ? string.Join(", ", pays2) : "");
+				string gainPart2 = ((gains2.Count > 0) ? string.Join(", ", gains2) : "");
+				string middle = ((payPart2.Length > 0 && gainPart2.Length > 0) ? " → " : "");
+				return string.Format("Factory: {0}{1}{2}", payPart2, middle, gainPart2);
+			}
+			DeployLogInfo deployLog = logInfo as DeployLogInfo;
+			if (deployLog != null)
+			{
+				string mechName = ((deployLog.DeployedMech != null) ? GameActionLogger.MechName(deployLog.DeployedMech) : "?");
+				string pos = ((deployLog.Position != null) ? string.Format(" at ({0},{1})", deployLog.Position.posX, deployLog.Position.posY) : "");
+				string bonus = ((deployLog.MechBonus != 0) ? string.Format(" +{0}bonus", deployLog.MechBonus) : "");
+				return string.Format("Deploy {0}{1}{2}", mechName, pos, bonus);
+			}
+			if (logInfo.Type == LogInfoType.TradeResources)
+			{
+				List<string> pays3 = new List<string>();
+				List<string> gains3 = new List<string>();
+				if (logInfo.PayLogInfos != null)
+				{
+					foreach (LogInfo p3 in logInfo.PayLogInfos)
+					{
+						pays3.Add(GameActionLogger.DetailString(p3));
+					}
+				}
+				if (logInfo.AdditionalGain != null)
+				{
+					foreach (LogInfo logInfo2 in logInfo.AdditionalGain)
+					{
+						GainNonboardResourceLogInfo res = logInfo2 as GainNonboardResourceLogInfo;
+						if (res != null && res.Amount > 0)
+						{
+							gains3.Add(string.Format("+{0} {1}", res.Amount, res.Gained));
+						}
+					}
+				}
+				string payPart3 = ((pays3.Count > 0) ? string.Join(", ", pays3) : "");
+				string gainPart3 = ((gains3.Count > 0) ? string.Join(", ", gains3) : "");
+				string middle2 = ((payPart3.Length > 0 && gainPart3.Length > 0) ? " → " : "");
+				return string.Format("Trade: {0}{1}{2}", payPart3, middle2, gainPart3);
+			}
+			GainNonboardResourceLogInfo gainLog = logInfo as GainNonboardResourceLogInfo;
+			if (gainLog != null)
+			{
+				return string.Format("+{0} {1}", gainLog.Amount, gainLog.Gained);
+			}
+			return GameActionLogger.ActionLabel(logInfo) + " " + GameActionLogger.DetailString(logInfo);
+		}
+
+		// Token: 0x06004292 RID: 17042
+		private static string GainSummary(LogInfo g)
+		{
+			GainNonboardResourceLogInfo nr = g as GainNonboardResourceLogInfo;
+			if (nr != null)
+			{
+				return string.Format("+{0} {1}", nr.Amount, nr.Gained);
+			}
+			WorkerLogInfo wl = g as WorkerLogInfo;
+			if (wl != null)
+			{
+				if (wl.Position == null)
+				{
+					return string.Format("+{0} workers", wl.WorkersAmount);
+				}
+				return string.Format("+{0} workers at ({1},{2})", wl.WorkersAmount, wl.Position.posX, wl.Position.posY);
+			}
+			else
+			{
+				DeployLogInfo dl = g as DeployLogInfo;
+				if (dl != null)
+				{
+					return "Deploy " + ((dl.DeployedMech != null) ? GameActionLogger.MechName(dl.DeployedMech) : "mech");
+				}
+				BuildLogInfo bl = g as BuildLogInfo;
+				if (bl != null)
+				{
+					if (bl.PlacedBuilding == null)
+					{
+						return "Build";
+					}
+					return "Build " + bl.PlacedBuilding.buildingType.ToString();
+				}
+				else
+				{
+					UpgradeLogInfo ul = g as UpgradeLogInfo;
+					if (ul != null)
+					{
+						if (ul.DownAction == PayType.Coin)
+						{
+							return "Upgrade";
+						}
+						return string.Format("Upgrade: {0}, {1}", ul.TopAction, GameActionLogger.UpgradeBottomName(ul.Resource));
+					}
+					else
+					{
+						EnlistLogInfo el = g as EnlistLogInfo;
+						if (el == null)
+						{
+							return GameActionLogger.ActionLabel(g);
+						}
+						if (el.TypeOfDownAction == DownActionType.Factory)
+						{
+							return "Enlist";
+						}
+						return string.Format("Enlist {0}→+{1}", el.TypeOfDownAction, el.OneTimeBonus);
+					}
+				}
+			}
+		}
+
+		// Token: 0x06004297 RID: 17047
+		private static string UpgradeBottomName(ResourceType resource)
+		{
+			switch (resource)
+			{
+			case ResourceType.oil:
+				return "Upgrade";
+			case ResourceType.metal:
+				return "Mech";
+			case ResourceType.food:
+				return "Recruit";
+			case ResourceType.wood:
+				return "Building";
+			default:
+				return resource.ToString();
+			}
+		}
+
+		// Token: 0x06004298 RID: 17048
+		private static string HexTypeResource(HexType hexType)
+		{
+			switch (hexType)
+			{
+			case HexType.mountain:
+				return "metal";
+			case HexType.forest:
+				return "wood";
+			case (HexType)3:
+				break;
+			case HexType.farm:
+				return "food";
+			default:
+				if (hexType == HexType.tundra)
+				{
+					return "oil";
+				}
+				if (hexType == HexType.village)
+				{
+					return "workers";
+				}
+				break;
+			}
+			return hexType.ToString();
+		}
+
+		// Token: 0x06004299 RID: 17049
+		private static string MechName(Mech mech)
+		{
+			try
+			{
+				if (mech != null && mech.Owner != null && mech.Owner.matFaction != null && mech.Owner.matFaction.abilities != null && mech.Id < mech.Owner.matFaction.abilities.Count)
+				{
+					return mech.Owner.matFaction.abilities[mech.Id].ToString();
+				}
+			}
+			catch
+			{
+			}
+			return string.Format("Mech#{0}", (mech != null) ? mech.Id.ToString() : "?");
 		}
 
 		// Token: 0x04003345 RID: 13125
