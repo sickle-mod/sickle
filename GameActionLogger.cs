@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -6,10 +6,10 @@ using Scythe.GameLogic.Actions;
 
 namespace Scythe.GameLogic
 {
-	// Token: 0x020009E9 RID: 2537
+	// Token: 0x020009ED RID: 2541
 	public class GameActionLogger : IDisposable
 	{
-		// Token: 0x06004268 RID: 17000 RVA: 0x001680A8 File Offset: 0x001662A8
+		// Token: 0x06004275 RID: 17013 RVA: 0x00168A68 File Offset: 0x00166C68
 		public GameActionLogger(GameManager gameManager, string gameId = null)
 		{
 			if (gameManager == null)
@@ -32,7 +32,7 @@ namespace Scythe.GameLogic
 			this.Subscribe();
 		}
 
-		// Token: 0x06004269 RID: 17001 RVA: 0x00052778 File Offset: 0x00050978
+		// Token: 0x06004276 RID: 17014 RVA: 0x000527B2 File Offset: 0x000509B2
 		public void Dispose()
 		{
 			if (this._disposed)
@@ -44,7 +44,7 @@ namespace Scythe.GameLogic
 			this.FlushToDisk();
 		}
 
-		// Token: 0x0600426A RID: 17002 RVA: 0x0016816C File Offset: 0x0016636C
+		// Token: 0x06004277 RID: 17015 RVA: 0x00168B2C File Offset: 0x00166D2C
 		private void Subscribe()
 		{
 			ActionLog.LogInfoCreated += this.OnLogInfoCreated;
@@ -54,7 +54,7 @@ namespace Scythe.GameLogic
 			this._gm.MultiplayerGameEnded += this.OnGameEnded;
 		}
 
-		// Token: 0x0600426B RID: 17003 RVA: 0x001681E8 File Offset: 0x001663E8
+		// Token: 0x06004278 RID: 17016 RVA: 0x00168BA8 File Offset: 0x00166DA8
 		private void Unsubscribe()
 		{
 			ActionLog.LogInfoCreated -= this.OnLogInfoCreated;
@@ -64,7 +64,7 @@ namespace Scythe.GameLogic
 			this._gm.MultiplayerGameEnded -= this.OnGameEnded;
 		}
 
-		// Token: 0x0600426C RID: 17004 RVA: 0x00168264 File Offset: 0x00166464
+		// Token: 0x06004279 RID: 17017 RVA: 0x00168C24 File Offset: 0x00166E24
 		private void OnLogInfoCreated(LogInfo logInfo, int index)
 		{
 			if (this._disposed || logInfo == null)
@@ -79,7 +79,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x0600426D RID: 17005 RVA: 0x001682B8 File Offset: 0x001664B8
+		// Token: 0x0600427A RID: 17018 RVA: 0x00168C78 File Offset: 0x00166E78
 		private void OnObtainActionInfo(string actionInfo)
 		{
 			if (this._disposed || string.IsNullOrEmpty(actionInfo))
@@ -94,7 +94,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x0600426E RID: 17006 RVA: 0x00052796 File Offset: 0x00050996
+		// Token: 0x0600427B RID: 17019 RVA: 0x000527D0 File Offset: 0x000509D0
 		private void OnChangeTurn()
 		{
 			if (this._disposed)
@@ -105,7 +105,7 @@ namespace Scythe.GameLogic
 			this.FlushToDisk();
 		}
 
-		// Token: 0x0600426F RID: 17007 RVA: 0x0016832C File Offset: 0x0016652C
+		// Token: 0x0600427C RID: 17020 RVA: 0x00168CEC File Offset: 0x00166EEC
 		private void OnGameEnded()
 		{
 			if (this._disposed)
@@ -124,7 +124,7 @@ namespace Scythe.GameLogic
 			this.Unsubscribe();
 		}
 
-		// Token: 0x06004270 RID: 17008 RVA: 0x001683E8 File Offset: 0x001665E8
+		// Token: 0x0600427D RID: 17021 RVA: 0x00168DA8 File Offset: 0x00166FA8
 		public void FlushToDisk()
 		{
 			if (this._pending.Count == 0)
@@ -141,7 +141,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004271 RID: 17009 RVA: 0x00168438 File Offset: 0x00166638
+		// Token: 0x0600427E RID: 17022 RVA: 0x00168DF8 File Offset: 0x00166FF8
 		private void WriteHeader()
 		{
 			StringBuilder sb = new StringBuilder();
@@ -170,7 +170,7 @@ namespace Scythe.GameLogic
 			});
 		}
 
-		// Token: 0x06004272 RID: 17010 RVA: 0x001685CC File Offset: 0x001667CC
+		// Token: 0x0600427F RID: 17023 RVA: 0x00168F8C File Offset: 0x0016718C
 		private void WriteResumeMarker()
 		{
 			string marker = string.Format("\n--- RESUMED {0:yyyy-MM-dd HH:mm:ss} ", DateTime.Now) + string.Format("(turn {0}) ---\n", this._gm.TurnCount);
@@ -180,7 +180,7 @@ namespace Scythe.GameLogic
 			});
 		}
 
-		// Token: 0x06004273 RID: 17011 RVA: 0x00168630 File Offset: 0x00166830
+		// Token: 0x06004280 RID: 17024 RVA: 0x00168FF0 File Offset: 0x001671F0
 		private void AppendPlayerRoster(StringBuilder sb)
 		{
 			int num = 1;
@@ -196,7 +196,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004274 RID: 17012 RVA: 0x00168750 File Offset: 0x00166950
+		// Token: 0x06004281 RID: 17025 RVA: 0x00169110 File Offset: 0x00167310
 		private void AppendFinalScores(List<PlayerEndGameStats> stats)
 		{
 			if (stats == null || stats.Count == 0)
@@ -237,7 +237,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004275 RID: 17013 RVA: 0x000527B8 File Offset: 0x000509B8
+		// Token: 0x06004282 RID: 17026 RVA: 0x000527F2 File Offset: 0x000509F2
 		private void MaybeEmitTurnDivider(int turnNumber)
 		{
 			if (turnNumber == this._lastTurnSeen)
@@ -248,7 +248,7 @@ namespace Scythe.GameLogic
 			this._pending.Add(string.Format("\n--- TURN {0} ---", turnNumber));
 		}
 
-		// Token: 0x06004276 RID: 17014 RVA: 0x00168928 File Offset: 0x00166B28
+		// Token: 0x06004283 RID: 17027 RVA: 0x001692E8 File Offset: 0x001674E8
 		private static void TryWrite(Action write)
 		{
 			try
@@ -260,7 +260,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004277 RID: 17015 RVA: 0x00168950 File Offset: 0x00166B50
+		// Token: 0x06004284 RID: 17028 RVA: 0x00169310 File Offset: 0x00167510
 		private string FormatLogEntry(LogInfo logInfo)
 		{
 			string text = logInfo.PlayerAssigned.ToString();
@@ -320,7 +320,7 @@ namespace Scythe.GameLogic
 			return stringBuilder.ToString();
 		}
 
-		// Token: 0x06004278 RID: 17016 RVA: 0x00168B98 File Offset: 0x00166D98
+		// Token: 0x06004285 RID: 17029 RVA: 0x00169558 File Offset: 0x00167758
 		private static string PlacementLabel(ActionPositionType p)
 		{
 			if (p == ActionPositionType.Top)
@@ -350,7 +350,7 @@ namespace Scythe.GameLogic
 			return "OTHER";
 		}
 
-		// Token: 0x06004279 RID: 17017 RVA: 0x00168BF0 File Offset: 0x00166DF0
+		// Token: 0x06004286 RID: 17030 RVA: 0x001695B0 File Offset: 0x001677B0
 		private static string ActionLabel(LogInfo logInfo)
 		{
 			CombatLogInfo combatLogInfo = logInfo as CombatLogInfo;
@@ -385,7 +385,7 @@ namespace Scythe.GameLogic
 			return logInfo.Type.ToString();
 		}
 
-		// Token: 0x0600427A RID: 17018 RVA: 0x00168CC8 File Offset: 0x00166EC8
+		// Token: 0x06004287 RID: 17031 RVA: 0x00169688 File Offset: 0x00167888
 		private static string DetailString(LogInfo logInfo)
 		{
 			string text11;
@@ -464,49 +464,64 @@ namespace Scythe.GameLogic
 										}
 										if (logInfo.Type == LogInfoType.TradeResources)
 										{
-											Dictionary<ResourceType, int> totals = new Dictionary<ResourceType, int>();
-											foreach (Dictionary<ResourceType, int> resDict in hexUnitResourceLogInfo.Resources)
+											Dictionary<ResourceType, int> dictionary = new Dictionary<ResourceType, int>();
+											foreach (Dictionary<ResourceType, int> dictionary2 in hexUnitResourceLogInfo.Resources)
 											{
-												foreach (KeyValuePair<ResourceType, int> kv in resDict)
+												foreach (KeyValuePair<ResourceType, int> keyValuePair2 in dictionary2)
 												{
-													if (kv.Value <= 0) continue;
-													if (totals.ContainsKey(kv.Key)) totals[kv.Key] += kv.Value;
-													else totals[kv.Key] = kv.Value;
+													if (keyValuePair2.Value > 0)
+													{
+														if (dictionary.ContainsKey(keyValuePair2.Key))
+														{
+															Dictionary<ResourceType, int> dictionary3 = dictionary;
+															ResourceType key2 = keyValuePair2.Key;
+															dictionary3[key2] += keyValuePair2.Value;
+														}
+														else
+														{
+															dictionary[keyValuePair2.Key] = keyValuePair2.Value;
+														}
+													}
 												}
 											}
-											List<string> parts = new List<string>();
-											foreach (KeyValuePair<ResourceType, int> kv in totals)
-												parts.Add(string.Format("+{0} {1}", kv.Value, kv.Key));
-											return (parts.Count > 0) ? string.Join(", ", parts) : "";
+											List<string> list2 = new List<string>();
+											foreach (KeyValuePair<ResourceType, int> keyValuePair3 in dictionary)
+											{
+												list2.Add(string.Format("+{0} {1}", keyValuePair3.Value, keyValuePair3.Key));
+											}
+											return (list2.Count > 0) ? string.Join(", ", list2) : "";
 										}
-										else if (logInfo.Type == LogInfoType.Move || logInfo.Type == LogInfoType.MoveCoins)
+										if (logInfo.Type == LogInfoType.Move || logInfo.Type == LogInfoType.MoveCoins)
 										{
 											if (hexUnitResourceLogInfo.Hexes.Count == 0)
 											{
 												return "";
 											}
-											List<string> list2 = new List<string>();
+											List<string> list3 = new List<string>();
 											foreach (Unit unit in hexUnitResourceLogInfo.Units)
 											{
 												Mech mech = unit as Mech;
-												string text7 = ((mech != null) ? GameActionLogger.MechName(mech) : (unit.UnitType == UnitType.Character ? "Hero" : string.Format("{0}#{1}", unit.UnitType, unit.Id)));
-												list2.Add(text7);
+												string text7 = ((mech != null) ? GameActionLogger.MechName(mech) : ((unit.UnitType == UnitType.Character) ? "Hero" : string.Format("{0}#{1}", unit.UnitType, unit.Id)));
+												list3.Add(text7);
 											}
-											string text8 = ((list2.Count > 0) ? (string.Join(", ", list2) + "  ") : "");
+											string text8 = ((list3.Count > 0) ? (string.Join(", ", list3) + "  ") : "");
 											if (hexUnitResourceLogInfo.Hexes.Count == 1)
 											{
 												return text8 + GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[0]);
 											}
 											string text9 = GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[0]);
-											List<string> list3 = new List<string>();
+											List<string> list4 = new List<string>();
 											for (int i = 1; i < hexUnitResourceLogInfo.Hexes.Count; i++)
 											{
-												list3.Add(GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[i]));
+												list4.Add(GameActionLogger.HexLabel(hexUnitResourceLogInfo.Hexes[i]));
 											}
-											string text10 = string.Join(" & ", list3);
+											string text10 = string.Join(" & ", list4);
 											return text8 + text9 + " → " + text10;
 										}
-										text11 = "";
+										else
+										{
+											text11 = "";
+										}
 									}
 									else
 									{
@@ -525,15 +540,15 @@ namespace Scythe.GameLogic
 						}
 						else
 						{
-							List<string> list4 = new List<string>();
-							foreach (KeyValuePair<ResourceType, int> keyValuePair2 in payResourceLogInfo.Resources)
+							List<string> list5 = new List<string>();
+							foreach (KeyValuePair<ResourceType, int> keyValuePair4 in payResourceLogInfo.Resources)
 							{
-								if (keyValuePair2.Value != 0)
+								if (keyValuePair4.Value != 0)
 								{
-									list4.Add(string.Format("-{0} {1}", keyValuePair2.Value, keyValuePair2.Key));
+									list5.Add(string.Format("-{0} {1}", keyValuePair4.Value, keyValuePair4.Key));
 								}
 							}
-							text11 = ((list4.Count > 0) ? string.Join(", ", list4) : "");
+							text11 = ((list5.Count > 0) ? string.Join(", ", list5) : "");
 						}
 					}
 					else
@@ -558,7 +573,7 @@ namespace Scythe.GameLogic
 			return text11;
 		}
 
-		// Token: 0x0600427B RID: 17019 RVA: 0x001694E4 File Offset: 0x001676E4
+		// Token: 0x06004288 RID: 17032 RVA: 0x0016A040 File Offset: 0x00168240
 		private static string FriendlyMatName(PlayerMatType mat)
 		{
 			switch (mat)
@@ -582,7 +597,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x0600427C RID: 17020 RVA: 0x0016954C File Offset: 0x0016774C
+		// Token: 0x06004289 RID: 17033 RVA: 0x0016A0A8 File Offset: 0x001682A8
 		private static string HexLabel(GameHex hex)
 		{
 			if (hex == null)
@@ -631,7 +646,7 @@ namespace Scythe.GameLogic
 			return stringBuilder.ToString();
 		}
 
-		// Token: 0x0600427D RID: 17021 RVA: 0x001696C0 File Offset: 0x001678C0
+		// Token: 0x0600428A RID: 17034 RVA: 0x0016A21C File Offset: 0x0016841C
 		private static string OtherActionDescription(LogInfo logInfo)
 		{
 			if (logInfo.IsEncounter)
@@ -655,6 +670,11 @@ namespace Scythe.GameLogic
 				string text = ((list.Count > 0) ? string.Join(", ", list) : "free");
 				string text2 = ((list2.Count > 0) ? string.Join(", ", list2) : "");
 				string text3 = ((text2.Length > 0) ? " → " : "");
+				
+				if (logInfo.EncounterCardId > 0)
+				{
+					return string.Format("Encounter [Card #{0}]: {1}{2}{3}", logInfo.EncounterCardId, text, text3, text2);
+				}
 				return string.Format("Encounter: {0}{1}{2}", text, text3, text2);
 			}
 			StarLogInfo starLogInfo = logInfo as StarLogInfo;
@@ -733,7 +753,7 @@ namespace Scythe.GameLogic
 			return GameActionLogger.ActionLabel(logInfo) + " " + GameActionLogger.DetailString(logInfo);
 		}
 
-		// Token: 0x0600427E RID: 17022 RVA: 0x00169BC0 File Offset: 0x00167DC0
+		// Token: 0x0600428B RID: 17035 RVA: 0x0016A71C File Offset: 0x0016891C
 		private static string GainSummary(LogInfo g)
 		{
 			GainNonboardResourceLogInfo gainNonboardResourceLogInfo = g as GainNonboardResourceLogInfo;
@@ -794,7 +814,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x0600427F RID: 17023 RVA: 0x000527E6 File Offset: 0x000509E6
+		// Token: 0x0600428C RID: 17036 RVA: 0x00052820 File Offset: 0x00050A20
 		private static string UpgradeBottomName(ResourceType resource)
 		{
 			switch (resource)
@@ -812,7 +832,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004280 RID: 17024 RVA: 0x00169D44 File Offset: 0x00167F44
+		// Token: 0x0600428D RID: 17037 RVA: 0x0016A8A0 File Offset: 0x00168AA0
 		private static string HexTypeResource(HexType hexType)
 		{
 			switch (hexType)
@@ -839,7 +859,7 @@ namespace Scythe.GameLogic
 			return hexType.ToString();
 		}
 
-		// Token: 0x06004281 RID: 17025 RVA: 0x00169DA0 File Offset: 0x00167FA0
+		// Token: 0x0600428E RID: 17038 RVA: 0x0016A8FC File Offset: 0x00168AFC
 		private static string MechName(Mech mech)
 		{
 			try
@@ -855,19 +875,19 @@ namespace Scythe.GameLogic
 			return string.Format("Mech#{0}", (mech != null) ? mech.Id.ToString() : "?");
 		}
 
-		// Token: 0x04003345 RID: 13125
+		// Token: 0x0400334D RID: 13133
 		private readonly GameManager _gm;
 
-		// Token: 0x04003346 RID: 13126
+		// Token: 0x0400334E RID: 13134
 		private readonly string _filePath;
 
-		// Token: 0x04003347 RID: 13127
+		// Token: 0x0400334F RID: 13135
 		private readonly List<string> _pending = new List<string>();
 
-		// Token: 0x04003348 RID: 13128
+		// Token: 0x04003350 RID: 13136
 		private bool _disposed;
 
-		// Token: 0x04003349 RID: 13129
+		// Token: 0x04003351 RID: 13137
 		private int _lastTurnSeen = -1;
 	}
 }

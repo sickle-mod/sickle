@@ -1,20 +1,20 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Scythe.GameLogic.Actions;
 
 namespace Scythe.GameLogic
 {
-	// Token: 0x020005A1 RID: 1441
+	// Token: 0x020005A5 RID: 1445
 	public class AiStrategicAnalysis
 	{
-		// Token: 0x06002DB0 RID: 11696 RVA: 0x0010CC8C File Offset: 0x0010AE8C
+		// Token: 0x06002DC7 RID: 11719 RVA: 0x00110418 File Offset: 0x0010E618
 		public AiStrategicAnalysis(GameManager gameManager)
 		{
 			this.gameManager = gameManager;
 		}
 
-		// Token: 0x06002DB1 RID: 11697 RVA: 0x0010CE88 File Offset: 0x0010B088
+		// Token: 0x06002DC8 RID: 11720 RVA: 0x00110614 File Offset: 0x0010E814
 		public virtual void Run(AiPlayer aiPlayer, int priMoveToProduction1, int priMoveToProduction2, int priMoveToEncounter, int priMoveToFight, int priMoveToBuild)
 		{
 			this.preferredDeployPosition = null;
@@ -43,9 +43,10 @@ namespace Scythe.GameLogic
 			this.UpdateBuildingOrder(aiPlayer);
 			this.UpdateMechOrder(aiPlayer);
 			this.UpdateRecruitOrder(aiPlayer);
+			this.UpdateRecruitOneTimeOrder(aiPlayer);
 		}
 
-		// Token: 0x06002DB2 RID: 11698 RVA: 0x0010D08C File Offset: 0x0010B28C
+		// Token: 0x06002DC9 RID: 11721 RVA: 0x00110818 File Offset: 0x0010EA18
 		protected void UpdateProduceLoop(AiPlayer aiPlayer)
 		{
 			int amount = (int)aiPlayer.AiTopActions[GainType.Produce].downAction.GetPayAction(0).Amount;
@@ -69,7 +70,7 @@ namespace Scythe.GameLogic
 			this.produceLoopPresent = amount <= this.resourceAccess[resourceType] && aiPlayer.AiTopActions[GainType.Produce].downAction.GetGainAction(0).GainAvaliable();
 		}
 
-		// Token: 0x06002DB3 RID: 11699 RVA: 0x0010D12C File Offset: 0x0010B32C
+		// Token: 0x06002DCA RID: 11722 RVA: 0x001108B8 File Offset: 0x0010EAB8
 		protected void UpdateTradeLoop(AiPlayer aiPlayer)
 		{
 			int amount = (int)aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetPayAction(0).Amount;
@@ -96,7 +97,7 @@ namespace Scythe.GameLogic
 			this.tradeLoopPresent = amount <= 2 && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable();
 		}
 
-		// Token: 0x06002DB4 RID: 11700 RVA: 0x0010D2AC File Offset: 0x0010B4AC
+		// Token: 0x06002DCB RID: 11723 RVA: 0x00110A38 File Offset: 0x0010EC38
 		protected void UpdateResourceAccess(AiPlayer aiPlayer)
 		{
 			this.resourceAccess[ResourceType.oil] = 0;
@@ -119,7 +120,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DB5 RID: 11701 RVA: 0x0010D378 File Offset: 0x0010B578
+		// Token: 0x06002DCC RID: 11724 RVA: 0x00110B04 File Offset: 0x0010ED04
 		protected void UpdateResourceDemand(AiPlayer aiPlayer)
 		{
 			this.resourceCostSingleAction[ResourceType.oil] = (int)aiPlayer.AiActions[aiPlayer.gainUpgradeActionPosition[0]].downAction.GetPayAction(0).Amount;
@@ -137,7 +138,7 @@ namespace Scythe.GameLogic
 			this.resourceDemandTotal[ResourceType.food] = num4 - dictionary[ResourceType.food];
 		}
 
-		// Token: 0x06002DB6 RID: 11702 RVA: 0x0010D544 File Offset: 0x0010B744
+		// Token: 0x06002DCD RID: 11725 RVA: 0x00110CD0 File Offset: 0x0010EED0
 		protected virtual void UpdateResourceDemandPriority(AiPlayer aiPlayer, Dictionary<ResourceType, int> resourceDemand)
 		{
 			this.resourceDemandPriority[ResourceType.oil] = 5;
@@ -240,7 +241,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DB7 RID: 11703 RVA: 0x0004486D File Offset: 0x00042A6D
+		// Token: 0x06002DCE RID: 11726 RVA: 0x0004485D File Offset: 0x00042A5D
 		public static ResourceType ResourceProduced(HexType hex)
 		{
 			switch (hex)
@@ -263,7 +264,7 @@ namespace Scythe.GameLogic
 			return ResourceType.combatCard;
 		}
 
-		// Token: 0x06002DB8 RID: 11704 RVA: 0x0010D928 File Offset: 0x0010BB28
+		// Token: 0x06002DCF RID: 11727 RVA: 0x001110B8 File Offset: 0x0010F2B8
 		protected bool HasNeighbourTunel(AiPlayer aiPlayer, GameHex hex)
 		{
 			Dictionary<GameHex, int> dictionary;
@@ -278,7 +279,7 @@ namespace Scythe.GameLogic
 			return false;
 		}
 
-		// Token: 0x06002DB9 RID: 11705 RVA: 0x0010D9B0 File Offset: 0x0010BBB0
+		// Token: 0x06002DD0 RID: 11728 RVA: 0x00111140 File Offset: 0x0010F340
 		protected virtual float ResourcePriority(AiPlayer aiPlayer, GameHex hex)
 		{
 			if (this.resourceDemandPriority.ContainsKey(AiStrategicAnalysis.ResourceProduced(hex.hexType)))
@@ -294,7 +295,16 @@ namespace Scythe.GameLogic
 				}
 				if (this.gottaMoveToBuild && hex.Building == null)
 				{
-					num += 100f;
+					float num2 = 100f;
+					if (aiPlayer.strategicAnalysis.buildingNext == BuildingType.Mill && hex.hexType == HexType.village)
+					{
+						num2 -= 500f;
+						if (aiPlayer.player.matPlayer.workers.Count >= 4)
+						{
+							num2 -= 1000f;
+						}
+					}
+					num += num2;
 				}
 				return num;
 			}
@@ -305,7 +315,7 @@ namespace Scythe.GameLogic
 			return 0f;
 		}
 
-		// Token: 0x06002DBA RID: 11706 RVA: 0x0010DB20 File Offset: 0x0010BD20
+		// Token: 0x06002DD1 RID: 11729 RVA: 0x001112B0 File Offset: 0x0010F4B0
 		protected virtual void UpdateUselessWorkers4Production(AiPlayer aiPlayer)
 		{
 			this.uselessWorkers4Production.Clear();
@@ -390,7 +400,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DBB RID: 11707 RVA: 0x0010E000 File Offset: 0x0010C200
+		// Token: 0x06002DD2 RID: 11730 RVA: 0x00111790 File Offset: 0x0010F990
 		protected void UpdateEncounterAndFactory(AiPlayer aiPlayer)
 		{
 			this.gameManager.gameBoard.MoveRange(aiPlayer.player.character, 3, out this.characterDistance);
@@ -409,7 +419,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DBC RID: 11708 RVA: 0x0010E140 File Offset: 0x0010C340
+		// Token: 0x06002DD3 RID: 11731 RVA: 0x001118D0 File Offset: 0x0010FAD0
 		protected virtual float isWorthAttacking(GameHex hex, AiPlayer aiPlayer)
 		{
 			if (aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Crimea)
@@ -420,141 +430,108 @@ namespace Scythe.GameLogic
 			{
 				return 1f;
 			}
-			
-			// Calculate defender's potential combat power
-			int defenderUnits = hex.GetOwnerMechs().Count<Mech>();
+			int num = hex.GetOwnerMechs().Count<Mech>();
 			if (hex.HasOwnerCharacter())
 			{
-				defenderUnits++;
+				num++;
 			}
-			// Rusviet People's Army: +1 card if workers present and ability unlocked
 			if (hex.Owner.matFaction.faction == Faction.Rusviet && hex.Owner.matFaction.SkillUnlocked[2] && hex.GetOwnerWorkers().Count<Worker>() > 0)
 			{
-				defenderUnits++;
+				num++;
 			}
-			// Limit to available combat cards
-			int defenderCombatCards = defenderUnits;
-			if (defenderCombatCards > hex.Owner.combatCards.Count<CombatCard>())
+			int num2 = num;
+			if (num2 > hex.Owner.combatCards.Count<CombatCard>())
 			{
-				defenderCombatCards = hex.Owner.combatCards.Count<CombatCard>();
+				num2 = hex.Owner.combatCards.Count<CombatCard>();
 			}
-			
-			// Calculate defender's total potential combat power
-			int defenderMaxPower = Math.Min(7, hex.Owner.Power); // Can spend max 7 power
-			defenderMaxPower += defenderCombatCards * 5; // Each combat card adds up to 5
-			
-			// Add mech ability bonuses for defender
+			int num3 = Math.Min(7, hex.Owner.Power);
+			num3 += num2 * 5;
 			if (hex.Owner.matFaction.faction == Faction.Albion && hex.Owner.matFaction.SkillUnlocked[1])
 			{
-				defenderMaxPower += 2; // Shield: +2 power when defending
+				num3 += 2;
 			}
-			if (hex.Owner.matFaction.faction == Faction.Togawa && hex.Owner.matFaction.SkillUnlocked[2])
+			if (hex.Owner.matFaction.faction == Faction.Togawa && hex.Owner.matFaction.SkillUnlocked[2] && hex.GetOwnerWorkers().Count == 0 && (hex.GetOwnerMechs().Count > 0 || hex.HasOwnerCharacter()))
 			{
-				// Ronin: +2 power when alone (no workers)
-				if (hex.GetOwnerWorkers().Count == 0 && (hex.GetOwnerMechs().Count > 0 || hex.HasOwnerCharacter()))
-				{
-					defenderMaxPower += 2;
-				}
+				num3 += 2;
 			}
-			
-			// Calculate attacker's potential units
-			int attackerUnits = 0;
+			int num4 = 0;
 			for (int i = 0; i < this.enemyCanBeAttackedBy[hex].Count; i++)
 			{
 				if (!this.movePriority.ContainsKey(this.enemyCanBeAttackedBy[hex][i]))
 				{
-					attackerUnits++;
+					num4++;
 				}
 			}
-			if (attackerUnits > 2)
+			if (num4 > 2)
 			{
-				attackerUnits = 2; // Max 2 units can attack (or 3 with upgrade, but keeping conservative)
+				num4 = 2;
 			}
-			// Limit to available combat cards
-			int attackerCombatCards = attackerUnits;
-			if (attackerCombatCards > aiPlayer.player.combatCards.Count)
+			int num5 = num4;
+			if (num5 > aiPlayer.player.combatCards.Count)
 			{
-				attackerCombatCards = aiPlayer.player.combatCards.Count;
+				num5 = aiPlayer.player.combatCards.Count;
 			}
-			
-			// Calculate attacker's total potential combat power
-			int attackerMaxPower = Math.Min(7, aiPlayer.player.Power);
-			attackerMaxPower += attackerCombatCards * 5;
-			
-			// Add mech ability bonuses for attacker
+			int num6 = Math.Min(7, aiPlayer.player.Power);
+			num6 += num5 * 5;
 			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matFaction.SkillUnlocked[2])
 			{
-				defenderMaxPower -= 2; // Artillery: opponent loses 2 power
+				num3 -= 2;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matFaction.SkillUnlocked[0])
 			{
-				defenderMaxPower -= 2; // Sword: opponent loses 2 power when attacking
+				num3 -= 2;
 			}
-			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matFaction.SkillUnlocked[2])
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matFaction.SkillUnlocked[2] && (hex.hasTunnel || (hex.Building != null && hex.Building.buildingType == BuildingType.Mine)))
 			{
-				// Disarm: opponent loses 2 power on tunnel/mine hex
-				if (hex.hasTunnel || (hex.Building != null && hex.Building.buildingType == BuildingType.Mine))
-				{
-					defenderMaxPower -= 2;
-				}
+				num3 -= 2;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matFaction.SkillUnlocked[2])
 			{
-				attackerCombatCards++; // Scout: steal 1 combat card
+				num5++;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matFaction.SkillUnlocked[2])
 			{
-				// People's Army: can play extra card if attacker has workers
-				// For simplicity, assuming potential for +1 card if workers available
-				attackerCombatCards++;
+				num5++;
 			}
-			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matFaction.SkillUnlocked[0])
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa)
 			{
-				// Swordsman: extra card in lake battles
-				// Not calculating this since we don't know if attack is from lake
+				bool flag = aiPlayer.player.matFaction.SkillUnlocked[0];
 			}
-			
-			// Recalculate with ability bonuses
-			attackerMaxPower = Math.Min(7, aiPlayer.player.Power);
-			attackerMaxPower += Math.Min(attackerCombatCards, aiPlayer.player.combatCards.Count) * 5;
-			
-			// Don't attack if defender can bring more power to bear
-			if (defenderMaxPower > attackerMaxPower + 5)
+			num6 = Math.Min(7, aiPlayer.player.Power);
+			num6 += Math.Min(num5, aiPlayer.player.combatCards.Count) * 5;
+			if (num3 > num6 + 5)
 			{
 				return 0f;
 			}
-			
-			// Original logic for tie-breaking
-			if (defenderCombatCards > attackerCombatCards)
+			if (num2 > num5)
 			{
 				return 0f;
 			}
-			if (defenderCombatCards == attackerCombatCards && hex.Owner.Power >= aiPlayer.player.Power && hex.Owner.combatCards.Count >= aiPlayer.player.combatCards.Count)
+			if (num2 == num5 && hex.Owner.Power >= aiPlayer.player.Power && hex.Owner.combatCards.Count >= aiPlayer.player.combatCards.Count)
 			{
 				return 0f;
 			}
-			
-			float num3 = (float)(hex.GetResourceCount() / 2);
+			float num7 = (float)(hex.GetResourceCount() / 2);
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
 			{
-				num3 += 1.5f - 1.5f * (float)hex.GetOwnerWorkers().Count;
+				num7 += 1.5f - 1.5f * (float)hex.GetOwnerWorkers().Count;
 			}
 			else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matFaction.SkillUnlocked[2])
 			{
-				num3 += (float)(hex.GetOwnerWorkers().Count / 8);
+				num7 += (float)(hex.GetOwnerWorkers().Count / 8);
 			}
 			else
 			{
-				num3 += (float)(2 - hex.GetOwnerWorkers().Count);
+				num7 += (float)(2 - hex.GetOwnerWorkers().Count);
 			}
-			if (num3 > 0f && this.enemyCanBeAttackedBy[hex].Count<Unit>() > 1)
+			if (num7 > 0f && this.enemyCanBeAttackedBy[hex].Count<Unit>() > 1)
 			{
-				num3 += 10f;
+				num7 += 10f;
 			}
-			return num3;
+			return num7;
 		}
 
-		// Token: 0x06002DBD RID: 11709 RVA: 0x0010E3B0 File Offset: 0x0010C5B0
+		// Token: 0x06002DD4 RID: 11732 RVA: 0x00111D5C File Offset: 0x0010FF5C
 		protected void UpdateMoveRangeAll(AiPlayer aiPlayer)
 		{
 			this.moveRangeAll.Clear();
@@ -575,7 +552,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DBE RID: 11710 RVA: 0x0010E4EC File Offset: 0x0010C6EC
+		// Token: 0x06002DD5 RID: 11733 RVA: 0x00111E98 File Offset: 0x00110098
 		protected virtual void UpdateMoveTargets(AiPlayer aiPlayer, int priProduce1, int priProduce2, int priEncounter, int priFight, int priBuildSpot)
 		{
 			this.movePriority.Clear();
@@ -646,7 +623,7 @@ namespace Scythe.GameLogic
 					GameHex gameHex6 = null;
 					if (aiPlayer.player.matFaction.SkillUnlocked[3] && aiPlayer.player.matFaction.faction == Faction.Saxony && (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical || aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural))
 					{
-						if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+						if (aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial)
 						{
 							using (Dictionary<GameHex, int>.KeyCollection.Enumerator enumerator3 = this.moveRange[mech2].Keys.GetEnumerator())
 							{
@@ -658,47 +635,41 @@ namespace Scythe.GameLogic
 										gameHex5 = gameHex7;
 									}
 								}
-								goto IL_0622;
+								goto IL_053B;
 							}
+							goto IL_073A;
 						}
-						goto IL_053E;
-						IL_0622:
-						if (gameHex5 == null)
+						foreach (GameHex gameHex8 in this.moveRange[mech2].Keys)
 						{
-							goto IL_0732;
-						}
-						ResourceType resourceType = AiStrategicAnalysis.ResourceProduced(gameHex5.hexType);
-						int num2 = this.resourceCostSingleAction[resourceType];
-						if (this.moveMechPassengers[mech2].Count <= num2)
-						{
-							goto IL_0732;
-						}
-						Dictionary<GameHex, int> dictionary3;
-						this.gameManager.gameBoard.MoveRange(mech2, gameHex5, 1, out dictionary3);
-						foreach (GameHex gameHex8 in dictionary3.Keys)
-						{
-							if (this.ResourcePriority(aiPlayer, gameHex8) > 0f && (gameHex8.Owner == null || gameHex8.Owner == aiPlayer.player) && gameHex8.hexType != gameHex5.hexType && AiStrategicAnalysis.ResourceProduced(gameHex8.hexType) != ResourceType.combatCard && this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex8.hexType)] == 0 && (gameHex6 == null || this.ResourcePriority(aiPlayer, gameHex8) > this.ResourcePriority(aiPlayer, gameHex6)))
+							if (this.ResourcePriority(aiPlayer, gameHex8) > 0f && (gameHex8.Owner == null || gameHex8.Owner == aiPlayer.player) && this.moveRange[mech2][gameHex8] == 1 && AiStrategicAnalysis.ResourceProduced(gameHex8.hexType) != ResourceType.combatCard && (gameHex5 == null || this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex8.hexType)] <= this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex5.hexType)]) && (gameHex5 == null || this.ResourcePriority(aiPlayer, gameHex8) > this.ResourcePriority(aiPlayer, gameHex5)))
 							{
-								gameHex6 = gameHex8;
+								gameHex5 = gameHex8;
 							}
 						}
-						if (gameHex6 != null)
+						IL_053B:
+						if (gameHex5 != null)
 						{
-							flag = true;
-							goto IL_0732;
-						}
-						goto IL_0732;
-						IL_053E:
-						foreach (GameHex gameHex9 in this.moveRange[mech2].Keys)
-						{
-							if (this.ResourcePriority(aiPlayer, gameHex9) > 0f && (gameHex9.Owner == null || gameHex9.Owner == aiPlayer.player) && this.moveRange[mech2][gameHex9] == 1 && AiStrategicAnalysis.ResourceProduced(gameHex9.hexType) != ResourceType.combatCard && (gameHex5 == null || this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex9.hexType)] <= this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex5.hexType)]) && (gameHex5 == null || this.ResourcePriority(aiPlayer, gameHex9) > this.ResourcePriority(aiPlayer, gameHex5)))
+							ResourceType resourceType = AiStrategicAnalysis.ResourceProduced(gameHex5.hexType);
+							int num2 = this.resourceCostSingleAction[resourceType];
+							if (this.moveMechPassengers[mech2].Count > num2)
 							{
-								gameHex5 = gameHex9;
+								Dictionary<GameHex, int> dictionary3;
+								this.gameManager.gameBoard.MoveRange(mech2, gameHex5, 1, out dictionary3);
+								foreach (GameHex gameHex9 in dictionary3.Keys)
+								{
+									if (this.ResourcePriority(aiPlayer, gameHex9) > 0f && (gameHex9.Owner == null || gameHex9.Owner == aiPlayer.player) && gameHex9.hexType != gameHex5.hexType && AiStrategicAnalysis.ResourceProduced(gameHex9.hexType) != ResourceType.combatCard && this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex9.hexType)] == 0 && (gameHex6 == null || this.ResourcePriority(aiPlayer, gameHex9) > this.ResourcePriority(aiPlayer, gameHex6)))
+									{
+										gameHex6 = gameHex9;
+									}
+								}
+								if (gameHex6 != null)
+								{
+									flag = true;
+								}
 							}
 						}
-						goto IL_0622;
 					}
-					IL_0732:
+					IL_073A:
 					if (flag)
 					{
 						this.movePriority.Add(mech2, (this.moveMechPassengers[mech2].Count < 2) ? priProduce1 : (priProduce2 + 2));
@@ -736,18 +707,18 @@ namespace Scythe.GameLogic
 				float num3 = 0f;
 				if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 				{
-					using (Dictionary<GameHex, List<Unit>>.KeyCollection.Enumerator enumerator5 = this.enemyCanBeAttackedBy.Keys.GetEnumerator())
+					using (Dictionary<GameHex, List<Unit>>.KeyCollection.Enumerator enumerator6 = this.enemyCanBeAttackedBy.Keys.GetEnumerator())
 					{
-						while (enumerator5.MoveNext())
+						while (enumerator6.MoveNext())
 						{
-							GameHex gameHex11 = enumerator5.Current;
+							GameHex gameHex11 = enumerator6.Current;
 							if (this.isWorthAttacking(gameHex11, aiPlayer) > num3 && aiPlayer.CombatPreparation(true, gameHex11, gameHex11.Owner))
 							{
 								gameHex10 = gameHex11;
 								num3 = this.isWorthAttacking(gameHex11, aiPlayer);
 							}
 						}
-						goto IL_0A4A;
+						goto IL_0A52;
 					}
 				}
 				foreach (GameHex gameHex12 in this.enemyCanBeAttackedBy.Keys)
@@ -757,80 +728,78 @@ namespace Scythe.GameLogic
 						gameHex10 = gameHex12;
 					}
 				}
-				IL_0A4A:
+				IL_0A52:
 				if (gameHex10 != null)
 				{
-					// Max units that can move to combat equals the Move action's current amount
-					// (2 normally, 3 if the move top-bar upgrade has been taken)
-					GainMove gainMove = (GainMove)aiPlayer.AiTopActions[GainType.Move].GetTopGainAction();
-					int maxUnitsForCombat = (int)gainMove.Amount;
-					int unitsAdded = 0;
-					
-					// Gather available combat units (mechs and hero only — workers don't fight)
-					List<Unit> combatUnits = new List<Unit>();
-					foreach (Unit potentialUnit in this.enemyCanBeAttackedBy[gameHex10])
+					int amount = (int)((GainMove)aiPlayer.AiTopActions[GainType.Move].GetTopGainAction()).Amount;
+					int num4 = 0;
+					List<Unit> list = new List<Unit>();
+					foreach (Unit unit in this.enemyCanBeAttackedBy[gameHex10])
 					{
-						if (!this.movePriority.ContainsKey(potentialUnit) &&
-						    (potentialUnit.UnitType == UnitType.Mech || potentialUnit.UnitType == UnitType.Character))
+						if (!this.movePriority.ContainsKey(unit) && (unit.UnitType == UnitType.Mech || unit.UnitType == UnitType.Character))
 						{
-							combatUnits.Add(potentialUnit);
+							list.Add(unit);
 						}
 					}
-					
-					// Sort: Character first, then Mechs
-					combatUnits.Sort((a, b) => {
-						if (a.UnitType == b.UnitType) return 0;
-						if (a.UnitType == UnitType.Character) return -1;
-						if (b.UnitType == UnitType.Character) return 1;
+					list.Sort(delegate(Unit a, Unit b)
+					{
+						if (a.UnitType == b.UnitType)
+						{
+							return 0;
+						}
+						if (a.UnitType == UnitType.Character)
+						{
+							return -1;
+						}
+						if (b.UnitType == UnitType.Character)
+						{
+							return 1;
+						}
 						return 0;
 					});
-					
-					// Add combat units up to the move limit
-					Unit leadUnit = null;
-					foreach (Unit unit in combatUnits)
+					Unit unit2 = null;
+					foreach (Unit unit3 in list)
 					{
-						if (unitsAdded >= maxUnitsForCombat) break;
-						
-						this.movePriority.Add(unit, priFight);
-						this.moveTarget.Add(unit, new List<GameHex> { gameHex10 });
-						this.moveDistance.Add(unit, this.moveRange[unit][gameHex10]);
-						if (leadUnit == null) leadUnit = unit;
-						unitsAdded++;
-					}
-					
-					// Rusviet People's Army (Mech 3): bring one worker on the lead unit
-					// for an extra combat card, but only if a mech is carrying them
-					if (leadUnit != null &&
-					    leadUnit.UnitType == UnitType.Mech &&
-					    aiPlayer.player.matFaction.abilities.Contains(AbilityPerk.PeoplesArmy) &&
-					    aiPlayer.player.matFaction.SkillUnlocked[2])
-					{
-						Worker passenger = null;
-						foreach (Worker w in leadUnit.position.GetOwnerWorkers())
+						if (num4 >= amount)
 						{
-							// Make sure this worker isn't already assigned to another mech
-							bool alreadyAssigned = false;
-							foreach (Mech m in this.moveMechPassengers.Keys)
+							break;
+						}
+						this.movePriority.Add(unit3, priFight);
+						this.moveTarget.Add(unit3, new List<GameHex> { gameHex10 });
+						this.moveDistance.Add(unit3, this.moveRange[unit3][gameHex10]);
+						if (unit2 == null)
+						{
+							unit2 = unit3;
+						}
+						num4++;
+					}
+					if (unit2 != null && unit2.UnitType == UnitType.Mech && aiPlayer.player.matFaction.abilities.Contains(AbilityPerk.PeoplesArmy) && aiPlayer.player.matFaction.SkillUnlocked[2])
+					{
+						Worker worker = null;
+						foreach (Worker worker2 in unit2.position.GetOwnerWorkers())
+						{
+							bool flag2 = false;
+							foreach (Mech mech5 in this.moveMechPassengers.Keys)
 							{
-								if (this.moveMechPassengers[m].Contains(w))
+								if (this.moveMechPassengers[mech5].Contains(worker2))
 								{
-									alreadyAssigned = true;
+									flag2 = true;
 									break;
 								}
 							}
-							if (!alreadyAssigned)
+							if (!flag2)
 							{
-								passenger = w;
+								worker = worker2;
 								break;
 							}
 						}
-						if (passenger != null)
+						if (worker != null)
 						{
-							if (!this.moveMechPassengers.ContainsKey((Mech)leadUnit))
+							if (!this.moveMechPassengers.ContainsKey((Mech)unit2))
 							{
-								this.moveMechPassengers.Add((Mech)leadUnit, new List<Worker>());
+								this.moveMechPassengers.Add((Mech)unit2, new List<Worker>());
 							}
-							this.moveMechPassengers[(Mech)leadUnit].Add(passenger);
+							this.moveMechPassengers[(Mech)unit2].Add(worker);
 						}
 					}
 				}
@@ -838,48 +807,48 @@ namespace Scythe.GameLogic
 			if (aiPlayer.player.matPlayer.workers.Count < this.workerCountTarget)
 			{
 				this.workersInaVillage = 0;
-				foreach (Worker worker4 in aiPlayer.player.matPlayer.workers)
+				foreach (Worker worker3 in aiPlayer.player.matPlayer.workers)
 				{
-					if (worker4.position.hexType == HexType.village)
+					if (worker3.position.hexType == HexType.village)
 					{
 						this.workersInaVillage++;
 					}
-					if (worker4.position.hexType != HexType.capital)
+					if (worker3.position.hexType != HexType.capital)
 					{
 						this.workersOutOfBase++;
 					}
 				}
 				if (this.workersInaVillage == 0)
 				{
-					Worker worker5 = null;
+					Worker worker4 = null;
 					GameHex gameHex13 = null;
-					foreach (Worker worker6 in aiPlayer.player.matPlayer.workers)
+					foreach (Worker worker5 in aiPlayer.player.matPlayer.workers)
 					{
-						if (worker6.position != null && (worker5 == null || this.ResourcePriority(aiPlayer, worker6.position) < this.ResourcePriority(aiPlayer, worker5.position)))
+						if (worker5.position != null && (worker4 == null || this.ResourcePriority(aiPlayer, worker5.position) < this.ResourcePriority(aiPlayer, worker4.position)))
 						{
-							foreach (GameHex gameHex14 in worker6.position.GetFieldsAccessible(worker6, false))
+							foreach (GameHex gameHex14 in worker5.position.GetFieldsAccessible(worker5, false))
 							{
 								if (gameHex14.hexType == HexType.village)
 								{
-									worker5 = worker6;
+									worker4 = worker5;
 									gameHex13 = gameHex14;
 								}
 							}
 						}
 					}
-					if (worker5 != null)
+					if (worker4 != null)
 					{
-						if (!this.movePriority.ContainsKey(worker5))
+						if (!this.movePriority.ContainsKey(worker4))
 						{
-							this.movePriority.Add(worker5, priProduce2 + 1);
-							this.moveTarget.Add(worker5, new List<GameHex> { gameHex13 });
-							this.moveDistance.Add(worker5, 1);
+							this.movePriority.Add(worker4, priProduce2 + 1);
+							this.moveTarget.Add(worker4, new List<GameHex> { gameHex13 });
+							this.moveDistance.Add(worker4, 1);
 						}
 						else
 						{
-							this.movePriority[worker5] = priProduce2 + 1;
-							this.moveTarget[worker5] = new List<GameHex> { gameHex13 };
-							this.moveDistance[worker5] = 1;
+							this.movePriority[worker4] = priProduce2 + 1;
+							this.moveTarget[worker4] = new List<GameHex> { gameHex13 };
+							this.moveDistance[worker4] = 1;
 						}
 					}
 				}
@@ -993,18 +962,18 @@ namespace Scythe.GameLogic
 				}
 				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && this.resourceCostSingleAction[ResourceType.food] <= 2 && this.resourceAccess[ResourceType.food] >= 2)
 				{
-					Worker worker7 = null;
-					foreach (Worker worker8 in aiPlayer.player.matPlayer.workers)
+					Worker worker6 = null;
+					foreach (Worker worker7 in aiPlayer.player.matPlayer.workers)
 					{
-						if (worker8.position.hexType == HexType.farm && !this.moveTarget.ContainsKey(worker8))
+						if (worker7.position.hexType == HexType.farm && !this.moveTarget.ContainsKey(worker7))
 						{
-							worker7 = worker8;
+							worker6 = worker7;
 						}
 					}
-					if (worker7 != null)
+					if (worker6 != null)
 					{
 						Dictionary<GameHex, int> dictionary9;
-						this.gameManager.gameBoard.MoveRange(worker7, 1, out dictionary9);
+						this.gameManager.gameBoard.MoveRange(worker6, 1, out dictionary9);
 						GameHex gameHex20 = null;
 						foreach (GameHex gameHex21 in dictionary9.Keys)
 						{
@@ -1015,19 +984,19 @@ namespace Scythe.GameLogic
 						}
 						if (gameHex20 != null)
 						{
-							this.movePriority.Add(worker7, 1);
-							this.moveTarget.Add(worker7, new List<GameHex> { gameHex20 });
-							this.moveDistance.Add(worker7, 1);
+							this.movePriority.Add(worker6, 1);
+							this.moveTarget.Add(worker6, new List<GameHex> { gameHex20 });
+							this.moveDistance.Add(worker6, 1);
 						}
 					}
 				}
 			}
-			foreach (Unit unit3 in this.moveRangeAll.Keys)
+			foreach (Unit unit4 in this.moveRangeAll.Keys)
 			{
-				if (unit3.position.hexType == HexType.capital && !this.movePriority.ContainsKey(unit3))
+				if (unit4.position.hexType == HexType.capital && !this.movePriority.ContainsKey(unit4))
 				{
 					GameHex gameHex22 = null;
-					foreach (GameHex gameHex23 in this.moveRangeAll[unit3].Keys)
+					foreach (GameHex gameHex23 in this.moveRangeAll[unit4].Keys)
 					{
 						if (gameHex23.hexType != HexType.capital && (gameHex23.Owner == null || gameHex23.Owner == aiPlayer.player) && (gameHex22 == null || gameHex22.Owner != null))
 						{
@@ -1036,11 +1005,23 @@ namespace Scythe.GameLogic
 					}
 					if (gameHex22 != null)
 					{
-						this.movePriority.Add(unit3, 1);
-						this.moveTarget.Add(unit3, new List<GameHex> { gameHex22 });
-						this.moveDistance.Add(unit3, this.moveRangeAll[unit3][gameHex22]);
+						this.movePriority.Add(unit4, 1);
+						this.moveTarget.Add(unit4, new List<GameHex> { gameHex22 });
+						this.moveDistance.Add(unit4, this.moveRangeAll[unit4][gameHex22]);
 					}
 				}
+			}
+			if (aiPlayer.player.matPlayer.matPlayerSectionsCount <= 4 && this.factoryDistance <= (int)aiPlayer.player.character.MaxMoveCount && !this.movePriority.ContainsKey(aiPlayer.player.character) && (this.gameManager.gameBoard.factory.Owner == aiPlayer.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0))
+			{
+				this.movePriority.Add(aiPlayer.player.character, priEncounter + 35);
+				this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { this.gameManager.gameBoard.factory });
+				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance[this.gameManager.gameBoard.factory]);
+			}
+			else if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null && this.characterDistance[this.encounterNearestHex] <= (int)aiPlayer.player.character.MaxMoveCount)
+			{
+				this.movePriority.Add(aiPlayer.player.character, priEncounter);
+				this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { this.encounterNearestHex });
+				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance[this.encounterNearestHex]);
 			}
 			foreach (KeyValuePair<Unit, int> keyValuePair2 in this.movePriority)
 			{
@@ -1054,7 +1035,7 @@ namespace Scythe.GameLogic
 			this.movePriorityHighest = -1;
 		}
 
-		// Token: 0x06002DBF RID: 11711 RVA: 0x00110290 File Offset: 0x0010E490
+		// Token: 0x06002DD6 RID: 11734 RVA: 0x00113B38 File Offset: 0x00111D38
 		public virtual void UpdateMechOrder(AiPlayer aiPlayer)
 		{
 			int num = -1;
@@ -1124,7 +1105,7 @@ namespace Scythe.GameLogic
 			this.mechNext = num;
 		}
 
-		// Token: 0x06002DC0 RID: 11712 RVA: 0x00110514 File Offset: 0x0010E714
+		// Token: 0x06002DD7 RID: 11735 RVA: 0x00113DC0 File Offset: 0x00111FC0
 		public void UpdateBuildingOrder(AiPlayer aiPlayer)
 		{
 			BuildingType buildingType = BuildingType.Mine;
@@ -1187,353 +1168,425 @@ namespace Scythe.GameLogic
 			this.buildingNext = buildingType;
 		}
 
-		// Token: 0x06002DC1 RID: 11713 RVA: 0x001108F4 File Offset: 0x0010EAF4
-	public void UpdateRecruitOrder(AiPlayer aiPlayer)
-	{
-		if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+		// Token: 0x06002DD8 RID: 11736 RVA: 0x001141A0 File Offset: 0x001123A0
+		public void UpdateRecruitOrder(AiPlayer aiPlayer)
 		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 8;
+				this.recruitPriority[DownActionType.Deploy] = 6;
+				this.recruitPriority[DownActionType.Upgrade] = 4;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 8;
+				this.recruitPriority[DownActionType.Deploy] = 6;
+				this.recruitPriority[DownActionType.Upgrade] = 4;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 6;
+				this.recruitPriority[DownActionType.Upgrade] = 8;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Build] = 4;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+			}
 		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+
+		public virtual void UpdateRecruitOneTimeOrder(AiPlayer aiPlayer)
 		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 8;
-			this.recruitPriority[DownActionType.Deploy] = 6;
-			this.recruitPriority[DownActionType.Upgrade] = 4;
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType != PlayerMatType.Patriotic)
+			{
+				this.recruitOneTimePriority[GainType.Power] = 20;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
+			{
+				this.recruitOneTimePriority[GainType.Power] = 20;
+				this.recruitOneTimePriority[GainType.CombatCard] = 20;
+			}
+			else if (aiPlayer.player.stars.Values.Sum() >= 5 && aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2)
+			{
+				this.recruitOneTimePriority[GainType.Power] = 50;
+				this.recruitOneTimePriority[GainType.CombatCard] = 50;
+			}
+			else if (aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2)
+			{
+				this.recruitOneTimePriority[GainType.Power] = 20;
+			}
 		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 8;
-			this.recruitPriority[DownActionType.Deploy] = 6;
-			this.recruitPriority[DownActionType.Upgrade] = 4;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 6;
-			this.recruitPriority[DownActionType.Upgrade] = 8;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-		else if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
-		{
-			this.recruitPriority[DownActionType.Enlist] = 10;
-			this.recruitPriority[DownActionType.Build] = 4;
-			this.recruitPriority[DownActionType.Deploy] = 8;
-			this.recruitPriority[DownActionType.Upgrade] = 6;
-		}
-	}
+
+		// Token: 0x06002DD9 RID: 11737 RVA: 0x00044886 File Offset: 0x00042A86
 		public virtual void UpdateWorkerCountTarget(AiPlayer aiPlayer)
 		{
 			this.workerCountTarget = 5;
@@ -1543,7 +1596,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x04001EF8 RID: 7928
+		// Token: 0x04001EFE RID: 7934
 		public Dictionary<ResourceType, int> resourceAccess = new Dictionary<ResourceType, int>
 		{
 			{
@@ -1564,7 +1617,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001EF9 RID: 7929
+		// Token: 0x04001EFF RID: 7935
 		public Dictionary<ResourceType, int> resourceCostSingleAction = new Dictionary<ResourceType, int>
 		{
 			{
@@ -1585,7 +1638,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001EFA RID: 7930
+		// Token: 0x04001F00 RID: 7936
 		public Dictionary<ResourceType, int> resourceDemandTotal = new Dictionary<ResourceType, int>
 		{
 			{
@@ -1606,7 +1659,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001EFB RID: 7931
+		// Token: 0x04001F01 RID: 7937
 		public Dictionary<ResourceType, int> resourceDemandPriority = new Dictionary<ResourceType, int>
 		{
 			{
@@ -1627,76 +1680,76 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001EFC RID: 7932
+		// Token: 0x04001F02 RID: 7938
 		public ResourceType resourceHighestPriority;
 
-		// Token: 0x04001EFD RID: 7933
+		// Token: 0x04001F03 RID: 7939
 		public ResourceType resourceHighestPriorityNoProduce;
 
-		// Token: 0x04001EFE RID: 7934
+		// Token: 0x04001F04 RID: 7940
 		public bool canUpgrade;
 
-		// Token: 0x04001EFF RID: 7935
+		// Token: 0x04001F05 RID: 7941
 		public bool canDeploy;
 
-		// Token: 0x04001F00 RID: 7936
+		// Token: 0x04001F06 RID: 7942
 		public bool canBuild;
 
-		// Token: 0x04001F01 RID: 7937
+		// Token: 0x04001F07 RID: 7943
 		public bool canEnlist;
 
-		// Token: 0x04001F02 RID: 7938
+		// Token: 0x04001F08 RID: 7944
 		public List<Worker> uselessWorkers4Production = new List<Worker>();
 
-		// Token: 0x04001F03 RID: 7939
+		// Token: 0x04001F09 RID: 7945
 		public Dictionary<Worker, GameHex> uselessWorkersTargets = new Dictionary<Worker, GameHex>();
 
-		// Token: 0x04001F04 RID: 7940
+		// Token: 0x04001F0A RID: 7946
 		public Dictionary<GameHex, int> characterDistance;
 
-		// Token: 0x04001F05 RID: 7941
+		// Token: 0x04001F0B RID: 7947
 		public GameHex encounterNearestHex;
 
-		// Token: 0x04001F06 RID: 7942
+		// Token: 0x04001F0C RID: 7948
 		public int factoryDistance;
 
-		// Token: 0x04001F07 RID: 7943
+		// Token: 0x04001F0D RID: 7949
 		public Dictionary<Unit, Dictionary<GameHex, int>> moveRange = new Dictionary<Unit, Dictionary<GameHex, int>>();
 
-		// Token: 0x04001F08 RID: 7944
+		// Token: 0x04001F0E RID: 7950
 		public Dictionary<Unit, Dictionary<GameHex, int>> moveRangeAll = new Dictionary<Unit, Dictionary<GameHex, int>>();
 
-		// Token: 0x04001F09 RID: 7945
+		// Token: 0x04001F0F RID: 7951
 		public Dictionary<GameHex, List<Unit>> enemyCanBeAttackedBy = new Dictionary<GameHex, List<Unit>>();
 
-		// Token: 0x04001F0A RID: 7946
+		// Token: 0x04001F10 RID: 7952
 		public Dictionary<Unit, int> movePriority = new Dictionary<Unit, int>();
 
-		// Token: 0x04001F0B RID: 7947
+		// Token: 0x04001F11 RID: 7953
 		public SortedList<int, Unit> movePrioritySorted = new SortedList<int, Unit>(new InvertedComparer());
 
-		// Token: 0x04001F0C RID: 7948
+		// Token: 0x04001F12 RID: 7954
 		public Dictionary<Unit, List<GameHex>> moveTarget = new Dictionary<Unit, List<GameHex>>();
 
-		// Token: 0x04001F0D RID: 7949
+		// Token: 0x04001F13 RID: 7955
 		public Dictionary<Unit, int> moveDistance = new Dictionary<Unit, int>();
 
-		// Token: 0x04001F0E RID: 7950
+		// Token: 0x04001F14 RID: 7956
 		public Dictionary<Mech, List<Worker>> moveMechPassengers = new Dictionary<Mech, List<Worker>>();
 
-		// Token: 0x04001F0F RID: 7951
+		// Token: 0x04001F15 RID: 7957
 		public int movePriorityHighest;
 
-		// Token: 0x04001F10 RID: 7952
+		// Token: 0x04001F16 RID: 7958
 		public int workerCountTarget = 3;
 
-		// Token: 0x04001F11 RID: 7953
+		// Token: 0x04001F17 RID: 7959
 		public int workersInaVillage;
 
-		// Token: 0x04001F12 RID: 7954
+		// Token: 0x04001F18 RID: 7960
 		public int workersOutOfBase;
 
-		// Token: 0x04001F13 RID: 7955
+		// Token: 0x04001F19 RID: 7961
 		public Dictionary<int, int> mechPriority = new Dictionary<int, int>
 		{
 			{ 0, 10 },
@@ -1705,7 +1758,7 @@ namespace Scythe.GameLogic
 			{ 3, 7 }
 		};
 
-		// Token: 0x04001F14 RID: 7956
+		// Token: 0x04001F1A RID: 7962
 		public Dictionary<BuildingType, int> buildingPriority = new Dictionary<BuildingType, int>
 		{
 			{
@@ -1726,7 +1779,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F15 RID: 7957
+		// Token: 0x04001F1B RID: 7963
 		public Dictionary<DownActionType, int> recruitPriority = new Dictionary<DownActionType, int>
 		{
 			{
@@ -1747,7 +1800,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F16 RID: 7958
+		// Token: 0x04001F1C RID: 7964
 		public Dictionary<GainType, int> recruitOneTimePriority = new Dictionary<GainType, int>
 		{
 			{
@@ -1768,34 +1821,34 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F17 RID: 7959
+		// Token: 0x04001F1D RID: 7965
 		public int mechNext;
 
-		// Token: 0x04001F18 RID: 7960
+		// Token: 0x04001F1E RID: 7966
 		public BuildingType buildingNext;
 
-		// Token: 0x04001F19 RID: 7961
+		// Token: 0x04001F1F RID: 7967
 		public bool produceLoopPresent;
 
-		// Token: 0x04001F1A RID: 7962
+		// Token: 0x04001F20 RID: 7968
 		public bool tradeLoopPresent;
 
-		// Token: 0x04001F1B RID: 7963
+		// Token: 0x04001F21 RID: 7969
 		public ResourceType tradeLoopResource = ResourceType.combatCard;
 
-		// Token: 0x04001F1C RID: 7964
+		// Token: 0x04001F22 RID: 7970
 		public GameHex preferredDeployPosition;
 
-		// Token: 0x04001F1D RID: 7965
+		// Token: 0x04001F23 RID: 7971
 		public bool gottaMoveToBuild;
 
-		// Token: 0x04001F1E RID: 7966
+		// Token: 0x04001F24 RID: 7972
 		public bool objectiveBalancedWorkforce;
 
-		// Token: 0x04001F1F RID: 7967
+		// Token: 0x04001F25 RID: 7973
 		public bool objectiveMachineOverMuscle;
 
-		// Token: 0x04001F20 RID: 7968
+		// Token: 0x04001F26 RID: 7974
 		protected GameManager gameManager;
 	}
 }

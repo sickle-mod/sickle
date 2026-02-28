@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Scythe.GameLogic.Actions;
 using Scythe.Multiplayer.Messages;
@@ -652,8 +652,8 @@ namespace Scythe.GameLogic
 				int num2;
 				if (battlefield.Owner == this.player)
 				{
-					num = battlefield.GetOwnerMechs().Count + ((battlefield.HasOwnerCharacter() > false) ? 1 : 0);
-					num2 = battlefield.GetEnemyMechs().Count + ((battlefield.HasEnemyCharacter() > false) ? 1 : 0);
+					num = battlefield.GetOwnerMechs().Count + (battlefield.HasOwnerCharacter() ? 1 : 0);
+					num2 = battlefield.GetEnemyMechs().Count + (battlefield.HasEnemyCharacter() ? 1 : 0);
 					if (this.player.matFaction.abilities.Contains(AbilityPerk.PeoplesArmy) && this.player.matFaction.SkillUnlocked[2] && battlefield.GetOwnerWorkers().Count > 0)
 					{
 						num++;
@@ -665,8 +665,8 @@ namespace Scythe.GameLogic
 				}
 				else
 				{
-					num = battlefield.GetEnemyMechs().Count + ((battlefield.HasEnemyCharacter() > false) ? 1 : 0);
-					num2 = battlefield.GetOwnerMechs().Count + ((battlefield.HasOwnerCharacter() > false) ? 1 : 0);
+					num = battlefield.GetEnemyMechs().Count + (battlefield.HasEnemyCharacter() ? 1 : 0);
+					num2 = battlefield.GetOwnerMechs().Count + (battlefield.HasOwnerCharacter() ? 1 : 0);
 					if (this.player.matFaction.abilities.Contains(AbilityPerk.PeoplesArmy) && this.player.matFaction.SkillUnlocked[2] && battlefield.GetEnemyWorkers().Count > 0)
 					{
 						num++;
@@ -1090,8 +1090,79 @@ namespace Scythe.GameLogic
 				this.gameManager.OnActionSent(new EncounterCardMessage(encounterCard.CardId.ToString(), (int)this.player.matFaction.faction));
 				bool option1Acceptable = this.IsEncounterOptionAcceptable(encounterCard, 1);
 				bool option2Acceptable = this.IsEncounterOptionAcceptable(encounterCard, 2);
+				bool is4Oil = false;
+				for (int k = 0; k < encounterCard.GetAction(2).gainActionsCount; k++)
+				{
+					GainAction gainAction = encounterCard.GetAction(2).GetGainAction(k);
+					if (gainAction is GainResource)
+					{
+						GainResource gainObj = (GainResource)gainAction;
+						if (gainObj.ResourceToGain == ResourceType.oil && gainObj.Amount == 4) is4Oil = true;
+					}
+				}
+
 				int chosenOption = 0;
-				if (this.player.matFaction.factionPerk != AbilityPerk.Meander && option1Acceptable)
+				if (this.player.matFaction.factionPerk != AbilityPerk.Meander && option2Acceptable && this.player.Popularity >= 3 && this.player.Popularity <= 5)
+				{
+					if (encounterCard.CardId == 14 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Mechs) == 0)
+					{
+						chosenOption = 2;
+					}
+					else if (encounterCard.CardId == 23 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0)
+					{
+						chosenOption = 2;
+					}
+					else if ((encounterCard.CardId == 6 || encounterCard.CardId == 8 || encounterCard.CardId == 16) && this.player.GetNumberOfStars(StarType.Recruits) == 0)
+					{
+						chosenOption = 2;
+					}
+					else if ((encounterCard.CardId == 4 || encounterCard.CardId == 3 || encounterCard.CardId == 27) && this.player.GetNumberOfStars(StarType.Mechs) == 0)
+					{
+						chosenOption = 2;
+					}
+					else if (is4Oil && this.player.GetNumberOfStars(StarType.Upgrades) == 0 && (this.player.matPlayer.matType == PlayerMatType.Industrial || this.player.matPlayer.matType == PlayerMatType.Patriotic || this.player.matPlayer.matType == PlayerMatType.Agricultural || this.player.matPlayer.matType == PlayerMatType.Engineering))
+					{
+						chosenOption = 2;
+					}
+					else if ((encounterCard.CardId == 19 || encounterCard.CardId == 21) && this.player.stars[StarType.Combat] < 2)
+					{
+						chosenOption = 2;
+					}
+					else if (encounterCard.CardId == 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0 && this.player.GetNumberOfStars(StarType.Mechs) == 0)
+					{
+						chosenOption = 2;
+					}
+					else if (encounterCard.CardId == 15 && (this.player.GetNumberOfStars(StarType.Recruits) == 0 || this.player.GetNumberOfStars(StarType.Mechs) == 0))
+					{
+						chosenOption = 2;
+					}
+				}
+				
+				if (chosenOption == 0 && this.player.matFaction.faction == Faction.Saxony)
+				{
+					bool flag = false;
+					if (option1Acceptable)
+					{
+						for (int k = 0; k < encounterCard.GetAction(1).gainActionsCount; k++)
+						{
+							GainType gainType = encounterCard.GetAction(1).GetGainAction(k).GetGainType();
+							if (gainType == GainType.Power || gainType == GainType.CombatCard) flag = true;
+						}
+						if (flag) chosenOption = 1;
+					}
+					if (!flag && option2Acceptable)
+					{
+						for (int k = 0; k < encounterCard.GetAction(2).gainActionsCount; k++)
+						{
+							GainType gainType = encounterCard.GetAction(2).GetGainAction(k).GetGainType();
+							if (gainType == GainType.Power || gainType == GainType.CombatCard) flag = true;
+						}
+						if (flag) chosenOption = 2;
+					}
+					if (!flag && option1Acceptable) chosenOption = 1;
+					else if (!flag && option2Acceptable) chosenOption = 2;
+				}
+				else if (this.player.matFaction.factionPerk != AbilityPerk.Meander && option1Acceptable)
 				{
 					chosenOption = 1;
 				}
@@ -1131,7 +1202,48 @@ namespace Scythe.GameLogic
 				if (this.player.matFaction.factionPerk == AbilityPerk.Meander && (!this.gameManager.IsMultiplayer || this.gameManager.PlayerOwner == null))
 				{
 					int secondOption = -1;
-					if (option1Acceptable)
+					if (option1Acceptable && option2Acceptable)
+					{
+						bool option2Special = false;
+						if (this.player.Popularity >= 3 && this.player.Popularity <= 5)
+						{
+							if (encounterCard.CardId == 14 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Mechs) == 0) option2Special = true;
+							else if (encounterCard.CardId == 23 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0) option2Special = true;
+							else if ((encounterCard.CardId == 6 || encounterCard.CardId == 8 || encounterCard.CardId == 16) && this.player.GetNumberOfStars(StarType.Recruits) == 0) option2Special = true;
+							else if ((encounterCard.CardId == 4 || encounterCard.CardId == 3 || encounterCard.CardId == 27) && this.player.GetNumberOfStars(StarType.Mechs) == 0) option2Special = true;
+							else if (is4Oil && this.player.GetNumberOfStars(StarType.Upgrades) == 0) option2Special = true;
+							else if ((encounterCard.CardId == 19 || encounterCard.CardId == 21) && this.player.stars[StarType.Combat] < 2) option2Special = true;
+							else if (encounterCard.CardId == 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0 && this.player.GetNumberOfStars(StarType.Mechs) == 0) option2Special = true;
+							else if (encounterCard.CardId == 15 && (this.player.GetNumberOfStars(StarType.Recruits) == 0 || this.player.GetNumberOfStars(StarType.Mechs) == 0)) option2Special = true;
+						}
+						
+						if (option2Special) secondOption = 2;
+						else
+						{
+							int score1 = 0;
+							int score2 = 0;
+							for (int k = 0; k < encounterCard.GetAction(1).gainActionsCount; k++)
+							{
+								GainType gainType = encounterCard.GetAction(1).GetGainAction(k).GetGainType();
+								if (gainType == GainType.Mech) score1 += 150;
+								else if (gainType == GainType.Power) score1 += 120;
+								else if (gainType == GainType.CombatCard) score1 += 100;
+								else if (gainType == GainType.Produce) score1 += 100;
+								else score1 += 50;
+							}
+							for (int k = 0; k < encounterCard.GetAction(2).gainActionsCount; k++)
+							{
+								GainType gainType = encounterCard.GetAction(2).GetGainAction(k).GetGainType();
+								if (gainType == GainType.Mech) score2 += 150;
+								else if (gainType == GainType.Power) score2 += 120;
+								else if (gainType == GainType.CombatCard) score2 += 100;
+								else if (gainType == GainType.Produce) score2 += 100;
+								else score2 += 50;
+							}
+							secondOption = (score2 > score1) ? 2 : 1;
+						}
+					}
+					else if (option1Acceptable)
 					{
 						secondOption = 1;
 					}
@@ -1213,7 +1325,11 @@ namespace Scythe.GameLogic
 		// Token: 0x06002D8D RID: 11661
 		private void StarPower(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			if (this.player.GetNumberOfStars(StarType.Power) == 0 && this.CanPlayTopAction(GainType.Power))
+			bool shouldKeepGainingPower = false;
+			if (this.player.GetNumberOfStars(StarType.Combat) < 2) shouldKeepGainingPower = true;
+			if (this.player.matFaction.faction == Faction.Saxony) shouldKeepGainingPower = true;
+
+			if ((this.player.GetNumberOfStars(StarType.Power) == 0 || shouldKeepGainingPower) && this.CanPlayTopAction(GainType.Power))
 			{
 				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Power], "Star Power"));
 			}
@@ -1313,31 +1429,25 @@ namespace Scythe.GameLogic
 			{
 				return options[0];
 			}
-			if (this.AiActions[options[0]].topAction.Type == TopActionType.Bolster && this.player.matFaction.faction == Faction.Saxony && this.player.matPlayer.matType == PlayerMatType.Industrial)
+			if (this.AiActions[options[0]].topAction.Type == TopActionType.Bolster && this.player.matFaction.faction == Faction.Saxony)
 			{
 				int num = options[0];
 				int num2 = options[1];
-				if (this.player.Power < 1)
+				if (this.player.Power <= this.player.combatCards.Count * 2)
 				{
 					return num;
 				}
-				if (this.player.combatCards.Count < 2)
-				{
-					return num2;
-				}
+				return num2;
 			}
-			if (this.AiActions[options[0]].topAction.Type == TopActionType.Trade && this.player.matFaction.faction == Faction.Saxony && this.player.matPlayer.matType == PlayerMatType.Industrial)
+			if (this.AiActions[options[0]].topAction.Type == TopActionType.Trade && this.player.matFaction.faction == Faction.Saxony)
 			{
 				int num3 = options[0];
 				int num4 = options[1];
-				if (this.player.Popularity == 18)
-				{
-					return num3;
-				}
 				if (this.TradeResourceType() == ResourceType.combatCard)
 				{
 					return num4;
 				}
+				return num3;
 			}
 			return options[0];
 		}
@@ -1522,22 +1632,22 @@ namespace Scythe.GameLogic
 			switch (this.player.matFaction.faction)
 			{
 			case Faction.Polania:
-				this.strategicAnalysis.Run(this, 130, 134, 158, num, 145);
+				this.strategicAnalysis.Run(this, 130, 134, 180, num, 145);
 				return;
 			case Faction.Nordic:
-				this.strategicAnalysis.Run(this, 102, 134, 104, num, 145);
+				this.strategicAnalysis.Run(this, 102, 134, 125, num, 145);
 				return;
 			case Faction.Rusviet:
-				this.strategicAnalysis.Run(this, 130, 134, 104, num, 145);
+				this.strategicAnalysis.Run(this, 130, 134, 125, num, 145);
 				return;
 			case Faction.Crimea:
-				this.strategicAnalysis.Run(this, 102, 134, 104, num, 145);
+				this.strategicAnalysis.Run(this, 102, 134, 125, num, 145);
 				return;
 			case Faction.Saxony:
-				this.strategicAnalysis.Run(this, 130, 134, 104, num, 145);
+				this.strategicAnalysis.Run(this, 130, 134, 125, num, 145);
 				return;
 			}
-			this.strategicAnalysis.Run(this, 130, 130, 104, num, 145);
+			this.strategicAnalysis.Run(this, 130, 130, 125, num, 145);
 		}
 
 		// Token: 0x06002DA2 RID: 11682
