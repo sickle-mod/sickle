@@ -1700,23 +1700,54 @@ namespace Scythe.GameLogic
 			sortedList.Clear();
 			Dictionary<DownActionType, int> dictionary = new Dictionary<DownActionType, int>
 			{
-				{
-					DownActionType.Upgrade,
-					206
-				},
-				{
-					DownActionType.Deploy,
-					202
-				},
-				{
-					DownActionType.Build,
-					200
-				},
-				{
-					DownActionType.Enlist,
-					204
-				}
+				{ DownActionType.Upgrade, 206 },
+				{ DownActionType.Deploy, 202 },
+				{ DownActionType.Build, 200 },
+				{ DownActionType.Enlist, 204 }
 			};
+			int starPowerPriority = 112; // Base power priority
+			
+			switch (this.player.matPlayer.matType)
+			{
+				case PlayerMatType.Industrial:
+					dictionary[DownActionType.Deploy] = 210;
+					starPowerPriority = 208;
+					dictionary[DownActionType.Upgrade] = 206;
+					dictionary[DownActionType.Enlist] = 200;
+					break;
+				case PlayerMatType.Patriotic:
+				case PlayerMatType.Mechanical:
+					starPowerPriority = 210;
+					dictionary[DownActionType.Deploy] = 208;
+					dictionary[DownActionType.Enlist] = 206;
+					dictionary[DownActionType.Upgrade] = 200;
+					break;
+				case PlayerMatType.Engineering:
+					dictionary[DownActionType.Upgrade] = 210;
+					dictionary[DownActionType.Deploy] = 208;
+					dictionary[DownActionType.Enlist] = 206;
+					starPowerPriority = 200;
+					break;
+				case PlayerMatType.Agricultural:
+					starPowerPriority = 210;
+					dictionary[DownActionType.Enlist] = 208;
+					dictionary[DownActionType.Deploy] = 206;
+					dictionary[DownActionType.Upgrade] = 200;
+					break;
+				case PlayerMatType.Innovative:
+					dictionary[DownActionType.Upgrade] = 210;
+					dictionary[DownActionType.Enlist] = 208;
+					dictionary[DownActionType.Deploy] = 206;
+					starPowerPriority = 200;
+					break;
+				case PlayerMatType.Militant:
+					dictionary[DownActionType.Deploy] = 210;
+					dictionary[DownActionType.Enlist] = 208;
+					dictionary[DownActionType.Upgrade] = 206;
+					starPowerPriority = 200;
+					break;
+			}
+
 			if (this.player.matPlayer.UpgradesDone >= 3)
 			{
 				if (this.player.matPlayer.matType == PlayerMatType.Industrial)
@@ -1886,7 +1917,7 @@ namespace Scythe.GameLogic
 				this.ProduceForDemand(sortedList, 132);
 				this.MoveByAnalysisPriority(sortedList);
 				this.TradeForResource(sortedList, 120);
-				this.StarPower(sortedList, 112);
+				this.StarPower(sortedList, starPowerPriority);
 				this.StarPopularity(sortedList, 110);
 				this.RandomAllowed(sortedList, 100);
 				if ((this.player.matFaction.faction == Faction.Nordic && this.player.matPlayer.matType == PlayerMatType.Industrial) || (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Patriotic) || (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Agricultural))
@@ -1903,6 +1934,36 @@ namespace Scythe.GameLogic
 				this.MovePreparation(sortedList);
 				this.ProducePreparation(sortedList);
 			}
+			SortedList<int, AiRecipe> filteredList = new SortedList<int, AiRecipe>(new InvertedComparer());
+			foreach (KeyValuePair<int, AiRecipe> kvp in sortedList)
+			{
+				int priority = kvp.Key;
+				AiAction action = kvp.Value.action;
+				
+				if (action.matSectionId == 4 && this.player.Power >= 1 && this.player.Popularity >= 1 && this.player.Coins >= 1)
+				{
+					priority += 200;
+				}
+				
+				if (action.topAction != null)
+				{
+					for (int pIndex = 0; pIndex < action.topAction.GetNumberOfPayActions(); pIndex++)
+					{
+						PayType payType = action.topAction.GetPayAction(pIndex).GetPayType();
+						int amount = (int)action.topAction.GetPayAction(pIndex).GetAmount();
+						if (payType == PayType.Power && this.player.Power - amount < 1) priority -= 1000;
+						if (payType == PayType.Popularity && this.player.Popularity - amount < 1) priority -= 1000;
+						if (payType == PayType.Coin && this.player.Coins - amount < 1) priority -= 1000;
+					}
+				}
+				
+				while (filteredList.ContainsKey(priority))
+				{
+					priority--;
+				}
+				filteredList.Add(priority, kvp.Value);
+			}
+			sortedList = filteredList;
 			this.Log(sortedList);
 			return sortedList.Values[0];
 		}

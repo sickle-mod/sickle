@@ -539,6 +539,23 @@ namespace Scythe.GameLogic
 		// Token: 0x06002C8C RID: 11404 RVA: 0x000F85E8 File Offset: 0x000F67E8
 		private int UpgradePriorityBasic(GainType gainType, AiPlayer player)
 		{
+			if (player.player.matFaction.faction == Faction.Nordic && player.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				switch (gainType)
+				{
+				case GainType.Move: return 200;
+				case GainType.Power: return 190;
+				case GainType.Mech: return 200;
+				case GainType.Coin: return 140;
+				case GainType.Popularity: return 150;
+				case GainType.CombatCard: return 160;
+				case GainType.Produce: return 170;
+				case GainType.Upgrade: return 90;
+				case GainType.Building: return 80;
+				case GainType.Recruit: return 70;
+				}
+				return 1;
+			}
 			if (player.player.matFaction.faction == Faction.Saxony && player.player.matPlayer.matType == PlayerMatType.Patriotic)
 			{
 				switch (gainType)
@@ -1109,6 +1126,23 @@ namespace Scythe.GameLogic
 		// Token: 0x06002C92 RID: 11410 RVA: 0x000F94E8 File Offset: 0x000F76E8
 		private int UpgradePriorityAdvanced(GainType gainType, AiPlayer player)
 		{
+			if (player.player.matFaction.faction == Faction.Nordic && player.player.matPlayer.matType == PlayerMatType.Agricultural)
+			{
+				switch (gainType)
+				{
+				case GainType.Move: return 200;
+				case GainType.Power: return 190;
+				case GainType.Mech: return 200;
+				case GainType.Coin: return 140;
+				case GainType.Popularity: return 150;
+				case GainType.CombatCard: return 160;
+				case GainType.Produce: return 170;
+				case GainType.Upgrade: return 90;
+				case GainType.Building: return 80;
+				case GainType.Recruit: return 70;
+				}
+				return 1;
+			}
 			if (player.player.matFaction.faction == Faction.Polania && player.player.matPlayer.matType == PlayerMatType.Industrial)
 			{
 				switch (gainType)

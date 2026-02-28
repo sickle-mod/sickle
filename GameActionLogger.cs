@@ -802,6 +802,13 @@ namespace Scythe.GameLogic
 						EnlistLogInfo enlistLogInfo = g as EnlistLogInfo;
 						if (enlistLogInfo == null)
 						{
+							string detail = GameActionLogger.DetailString(g).Trim();
+							if (!string.IsNullOrEmpty(detail))
+							{
+								if (g.Type == LogInfoType.TradeResources || g.Type == LogInfoType.Produce)
+									return detail;
+								return GameActionLogger.ActionLabel(g) + " " + detail;
+							}
 							return GameActionLogger.ActionLabel(g);
 						}
 						if (enlistLogInfo.TypeOfDownAction == DownActionType.Factory)
