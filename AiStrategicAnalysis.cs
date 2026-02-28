@@ -5,16 +5,16 @@ using Scythe.GameLogic.Actions;
 
 namespace Scythe.GameLogic
 {
-	// Token: 0x020005A5 RID: 1445
+	// Token: 0x020005AE RID: 1454
 	public class AiStrategicAnalysis
 	{
-		// Token: 0x06002DC7 RID: 11719 RVA: 0x00110418 File Offset: 0x0010E618
+		// Token: 0x06002DFC RID: 11772 RVA: 0x00112574 File Offset: 0x00110774
 		public AiStrategicAnalysis(GameManager gameManager)
 		{
 			this.gameManager = gameManager;
 		}
 
-		// Token: 0x06002DC8 RID: 11720 RVA: 0x00110614 File Offset: 0x0010E814
+		// Token: 0x06002DFD RID: 11773 RVA: 0x00112770 File Offset: 0x00110970
 		public virtual void Run(AiPlayer aiPlayer, int priMoveToProduction1, int priMoveToProduction2, int priMoveToEncounter, int priMoveToFight, int priMoveToBuild)
 		{
 			this.preferredDeployPosition = null;
@@ -46,7 +46,7 @@ namespace Scythe.GameLogic
 			this.UpdateRecruitOneTimeOrder(aiPlayer);
 		}
 
-		// Token: 0x06002DC9 RID: 11721 RVA: 0x00110818 File Offset: 0x0010EA18
+		// Token: 0x06002DFE RID: 11774 RVA: 0x0011297C File Offset: 0x00110B7C
 		protected void UpdateProduceLoop(AiPlayer aiPlayer)
 		{
 			int amount = (int)aiPlayer.AiTopActions[GainType.Produce].downAction.GetPayAction(0).Amount;
@@ -70,7 +70,7 @@ namespace Scythe.GameLogic
 			this.produceLoopPresent = amount <= this.resourceAccess[resourceType] && aiPlayer.AiTopActions[GainType.Produce].downAction.GetGainAction(0).GainAvaliable();
 		}
 
-		// Token: 0x06002DCA RID: 11722 RVA: 0x001108B8 File Offset: 0x0010EAB8
+		// Token: 0x06002DFF RID: 11775 RVA: 0x00112A1C File Offset: 0x00110C1C
 		protected void UpdateTradeLoop(AiPlayer aiPlayer)
 		{
 			int amount = (int)aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetPayAction(0).Amount;
@@ -97,7 +97,7 @@ namespace Scythe.GameLogic
 			this.tradeLoopPresent = amount <= 2 && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable();
 		}
 
-		// Token: 0x06002DCB RID: 11723 RVA: 0x00110A38 File Offset: 0x0010EC38
+		// Token: 0x06002E00 RID: 11776 RVA: 0x00112B9C File Offset: 0x00110D9C
 		protected void UpdateResourceAccess(AiPlayer aiPlayer)
 		{
 			this.resourceAccess[ResourceType.oil] = 0;
@@ -120,7 +120,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DCC RID: 11724 RVA: 0x00110B04 File Offset: 0x0010ED04
+		// Token: 0x06002E01 RID: 11777 RVA: 0x00112C68 File Offset: 0x00110E68
 		protected void UpdateResourceDemand(AiPlayer aiPlayer)
 		{
 			this.resourceCostSingleAction[ResourceType.oil] = (int)aiPlayer.AiActions[aiPlayer.gainUpgradeActionPosition[0]].downAction.GetPayAction(0).Amount;
@@ -138,7 +138,7 @@ namespace Scythe.GameLogic
 			this.resourceDemandTotal[ResourceType.food] = num4 - dictionary[ResourceType.food];
 		}
 
-		// Token: 0x06002DCD RID: 11725 RVA: 0x00110CD0 File Offset: 0x0010EED0
+		// Token: 0x06002E02 RID: 11778 RVA: 0x00112E34 File Offset: 0x00111034
 		protected virtual void UpdateResourceDemandPriority(AiPlayer aiPlayer, Dictionary<ResourceType, int> resourceDemand)
 		{
 			this.resourceDemandPriority[ResourceType.oil] = 5;
@@ -241,7 +241,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DCE RID: 11726 RVA: 0x0004485D File Offset: 0x00042A5D
+		// Token: 0x06002E03 RID: 11779 RVA: 0x000448CA File Offset: 0x00042ACA
 		public static ResourceType ResourceProduced(HexType hex)
 		{
 			switch (hex)
@@ -264,7 +264,7 @@ namespace Scythe.GameLogic
 			return ResourceType.combatCard;
 		}
 
-		// Token: 0x06002DCF RID: 11727 RVA: 0x001110B8 File Offset: 0x0010F2B8
+		// Token: 0x06002E04 RID: 11780 RVA: 0x0011321C File Offset: 0x0011141C
 		protected bool HasNeighbourTunel(AiPlayer aiPlayer, GameHex hex)
 		{
 			Dictionary<GameHex, int> dictionary;
@@ -279,7 +279,7 @@ namespace Scythe.GameLogic
 			return false;
 		}
 
-		// Token: 0x06002DD0 RID: 11728 RVA: 0x00111140 File Offset: 0x0010F340
+		// Token: 0x06002E05 RID: 11781 RVA: 0x001132A4 File Offset: 0x001114A4
 		protected virtual float ResourcePriority(AiPlayer aiPlayer, GameHex hex)
 		{
 			if (this.resourceDemandPriority.ContainsKey(AiStrategicAnalysis.ResourceProduced(hex.hexType)))
@@ -315,7 +315,7 @@ namespace Scythe.GameLogic
 			return 0f;
 		}
 
-		// Token: 0x06002DD1 RID: 11729 RVA: 0x001112B0 File Offset: 0x0010F4B0
+		// Token: 0x06002E06 RID: 11782 RVA: 0x00113454 File Offset: 0x00111654
 		protected virtual void UpdateUselessWorkers4Production(AiPlayer aiPlayer)
 		{
 			this.uselessWorkers4Production.Clear();
@@ -400,7 +400,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DD2 RID: 11730 RVA: 0x00111790 File Offset: 0x0010F990
+		// Token: 0x06002E07 RID: 11783 RVA: 0x00113934 File Offset: 0x00111B34
 		protected void UpdateEncounterAndFactory(AiPlayer aiPlayer)
 		{
 			this.gameManager.gameBoard.MoveRange(aiPlayer.player.character, 3, out this.characterDistance);
@@ -419,7 +419,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DD3 RID: 11731 RVA: 0x001118D0 File Offset: 0x0010FAD0
+		// Token: 0x06002E08 RID: 11784 RVA: 0x00113A74 File Offset: 0x00111C74
 		protected virtual float isWorthAttacking(GameHex hex, AiPlayer aiPlayer)
 		{
 			if (aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Crimea)
@@ -531,7 +531,7 @@ namespace Scythe.GameLogic
 			return num7;
 		}
 
-		// Token: 0x06002DD4 RID: 11732 RVA: 0x00111D5C File Offset: 0x0010FF5C
+		// Token: 0x06002E09 RID: 11785 RVA: 0x00113F00 File Offset: 0x00112100
 		protected void UpdateMoveRangeAll(AiPlayer aiPlayer)
 		{
 			this.moveRangeAll.Clear();
@@ -552,7 +552,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DD5 RID: 11733 RVA: 0x00111E98 File Offset: 0x00110098
+		// Token: 0x06002E0A RID: 11786 RVA: 0x0011403C File Offset: 0x0011223C
 		protected virtual void UpdateMoveTargets(AiPlayer aiPlayer, int priProduce1, int priProduce2, int priEncounter, int priFight, int priBuildSpot)
 		{
 			this.movePriority.Clear();
@@ -625,51 +625,58 @@ namespace Scythe.GameLogic
 					{
 						if (aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial)
 						{
-							using (Dictionary<GameHex, int>.KeyCollection.Enumerator enumerator3 = this.moveRange[mech2].Keys.GetEnumerator())
+							using (Dictionary<GameHex, int>.KeyCollection.Enumerator enumerator5 = this.moveRange[mech2].Keys.GetEnumerator())
 							{
-								while (enumerator3.MoveNext())
+								while (enumerator5.MoveNext())
 								{
-									GameHex gameHex7 = enumerator3.Current;
+									GameHex gameHex7 = enumerator5.Current;
 									if (this.ResourcePriority(aiPlayer, gameHex7) > 0f && (gameHex7.Owner == null || gameHex7.Owner == aiPlayer.player) && this.moveRange[mech2][gameHex7] == 1 && AiStrategicAnalysis.ResourceProduced(gameHex7.hexType) != ResourceType.combatCard && (gameHex5 == null || this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex7.hexType)] <= this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex5.hexType)]) && (gameHex5 == null || this.ResourcePriority(aiPlayer, gameHex7) > this.ResourcePriority(aiPlayer, gameHex5)))
 									{
 										gameHex5 = gameHex7;
 									}
 								}
-								goto IL_053B;
+								goto IL_061F;
 							}
-							goto IL_073A;
+							goto IL_053B;
 						}
-						foreach (GameHex gameHex8 in this.moveRange[mech2].Keys)
+						goto IL_053B;
+						IL_061F:
+						if (gameHex5 == null)
 						{
-							if (this.ResourcePriority(aiPlayer, gameHex8) > 0f && (gameHex8.Owner == null || gameHex8.Owner == aiPlayer.player) && this.moveRange[mech2][gameHex8] == 1 && AiStrategicAnalysis.ResourceProduced(gameHex8.hexType) != ResourceType.combatCard && (gameHex5 == null || this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex8.hexType)] <= this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex5.hexType)]) && (gameHex5 == null || this.ResourcePriority(aiPlayer, gameHex8) > this.ResourcePriority(aiPlayer, gameHex5)))
+							goto IL_072F;
+						}
+						ResourceType resourceType = AiStrategicAnalysis.ResourceProduced(gameHex5.hexType);
+						int num2 = this.resourceCostSingleAction[resourceType];
+						if (this.moveMechPassengers[mech2].Count <= num2)
+						{
+							goto IL_072F;
+						}
+						Dictionary<GameHex, int> dictionary3;
+						this.gameManager.gameBoard.MoveRange(mech2, gameHex5, 1, out dictionary3);
+						foreach (GameHex gameHex8 in dictionary3.Keys)
+						{
+							if (this.ResourcePriority(aiPlayer, gameHex8) > 0f && (gameHex8.Owner == null || gameHex8.Owner == aiPlayer.player) && gameHex8.hexType != gameHex5.hexType && AiStrategicAnalysis.ResourceProduced(gameHex8.hexType) != ResourceType.combatCard && this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex8.hexType)] == 0 && (gameHex6 == null || this.ResourcePriority(aiPlayer, gameHex8) > this.ResourcePriority(aiPlayer, gameHex6)))
 							{
-								gameHex5 = gameHex8;
+								gameHex6 = gameHex8;
 							}
 						}
+						if (gameHex6 != null)
+						{
+							flag = true;
+							goto IL_072F;
+						}
+						goto IL_072F;
 						IL_053B:
-						if (gameHex5 != null)
+						foreach (GameHex gameHex9 in this.moveRange[mech2].Keys)
 						{
-							ResourceType resourceType = AiStrategicAnalysis.ResourceProduced(gameHex5.hexType);
-							int num2 = this.resourceCostSingleAction[resourceType];
-							if (this.moveMechPassengers[mech2].Count > num2)
+							if (this.ResourcePriority(aiPlayer, gameHex9) > 0f && (gameHex9.Owner == null || gameHex9.Owner == aiPlayer.player) && this.moveRange[mech2][gameHex9] == 1 && AiStrategicAnalysis.ResourceProduced(gameHex9.hexType) != ResourceType.combatCard && (gameHex5 == null || this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex9.hexType)] <= this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex5.hexType)]) && (gameHex5 == null || this.ResourcePriority(aiPlayer, gameHex9) > this.ResourcePriority(aiPlayer, gameHex5)))
 							{
-								Dictionary<GameHex, int> dictionary3;
-								this.gameManager.gameBoard.MoveRange(mech2, gameHex5, 1, out dictionary3);
-								foreach (GameHex gameHex9 in dictionary3.Keys)
-								{
-									if (this.ResourcePriority(aiPlayer, gameHex9) > 0f && (gameHex9.Owner == null || gameHex9.Owner == aiPlayer.player) && gameHex9.hexType != gameHex5.hexType && AiStrategicAnalysis.ResourceProduced(gameHex9.hexType) != ResourceType.combatCard && this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex9.hexType)] == 0 && (gameHex6 == null || this.ResourcePriority(aiPlayer, gameHex9) > this.ResourcePriority(aiPlayer, gameHex6)))
-									{
-										gameHex6 = gameHex9;
-									}
-								}
-								if (gameHex6 != null)
-								{
-									flag = true;
-								}
+								gameHex5 = gameHex9;
 							}
 						}
+						goto IL_061F;
 					}
-					IL_073A:
+					IL_072F:
 					if (flag)
 					{
 						this.movePriority.Add(mech2, (this.moveMechPassengers[mech2].Count < 2) ? priProduce1 : (priProduce2 + 2));
@@ -718,7 +725,7 @@ namespace Scythe.GameLogic
 								num3 = this.isWorthAttacking(gameHex11, aiPlayer);
 							}
 						}
-						goto IL_0A52;
+						goto IL_0A47;
 					}
 				}
 				foreach (GameHex gameHex12 in this.enemyCanBeAttackedBy.Keys)
@@ -728,7 +735,7 @@ namespace Scythe.GameLogic
 						gameHex10 = gameHex12;
 					}
 				}
-				IL_0A52:
+				IL_0A47:
 				if (gameHex10 != null)
 				{
 					int amount = (int)((GainMove)aiPlayer.AiTopActions[GainType.Move].GetTopGainAction()).Amount;
@@ -1035,7 +1042,7 @@ namespace Scythe.GameLogic
 			this.movePriorityHighest = -1;
 		}
 
-		// Token: 0x06002DD6 RID: 11734 RVA: 0x00113B38 File Offset: 0x00111D38
+		// Token: 0x06002E0B RID: 11787 RVA: 0x00115E84 File Offset: 0x00114084
 		public virtual void UpdateMechOrder(AiPlayer aiPlayer)
 		{
 			int num = -1;
@@ -1105,7 +1112,7 @@ namespace Scythe.GameLogic
 			this.mechNext = num;
 		}
 
-		// Token: 0x06002DD7 RID: 11735 RVA: 0x00113DC0 File Offset: 0x00111FC0
+		// Token: 0x06002E0C RID: 11788 RVA: 0x0011610C File Offset: 0x0011430C
 		public void UpdateBuildingOrder(AiPlayer aiPlayer)
 		{
 			BuildingType buildingType = BuildingType.Mine;
@@ -1168,7 +1175,7 @@ namespace Scythe.GameLogic
 			this.buildingNext = buildingType;
 		}
 
-		// Token: 0x06002DD8 RID: 11736 RVA: 0x001141A0 File Offset: 0x001123A0
+		// Token: 0x06002E0D RID: 11789 RVA: 0x001164EC File Offset: 0x001146EC
 		public void UpdateRecruitOrder(AiPlayer aiPlayer)
 		{
 			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
@@ -1564,6 +1571,17 @@ namespace Scythe.GameLogic
 			}
 		}
 
+		// Token: 0x06002E0E RID: 11790 RVA: 0x000448F3 File Offset: 0x00042AF3
+		public virtual void UpdateWorkerCountTarget(AiPlayer aiPlayer)
+		{
+			this.workerCountTarget = 5;
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && aiPlayer.TradeResourceType() == ResourceType.combatCard)
+			{
+				this.workerCountTarget = 8;
+			}
+		}
+
+		// Token: 0x06002E0F RID: 11791 RVA: 0x00117688 File Offset: 0x00115888
 		public virtual void UpdateRecruitOneTimeOrder(AiPlayer aiPlayer)
 		{
 			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType != PlayerMatType.Patriotic)
@@ -1574,29 +1592,15 @@ namespace Scythe.GameLogic
 			{
 				this.recruitOneTimePriority[GainType.Power] = 20;
 				this.recruitOneTimePriority[GainType.CombatCard] = 20;
+				return;
 			}
-			else if (aiPlayer.player.stars.Values.Sum() >= 5 && aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2)
-			{
-				this.recruitOneTimePriority[GainType.Power] = 50;
-				this.recruitOneTimePriority[GainType.CombatCard] = 50;
-			}
-			else if (aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2)
+			if (aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2)
 			{
 				this.recruitOneTimePriority[GainType.Power] = 20;
 			}
 		}
 
-		// Token: 0x06002DD9 RID: 11737 RVA: 0x00044886 File Offset: 0x00042A86
-		public virtual void UpdateWorkerCountTarget(AiPlayer aiPlayer)
-		{
-			this.workerCountTarget = 5;
-			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && aiPlayer.TradeResourceType() == ResourceType.combatCard)
-			{
-				this.workerCountTarget = 8;
-			}
-		}
-
-		// Token: 0x04001EFE RID: 7934
+		// Token: 0x04001F17 RID: 7959
 		public Dictionary<ResourceType, int> resourceAccess = new Dictionary<ResourceType, int>
 		{
 			{
@@ -1617,7 +1621,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001EFF RID: 7935
+		// Token: 0x04001F18 RID: 7960
 		public Dictionary<ResourceType, int> resourceCostSingleAction = new Dictionary<ResourceType, int>
 		{
 			{
@@ -1638,7 +1642,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F00 RID: 7936
+		// Token: 0x04001F19 RID: 7961
 		public Dictionary<ResourceType, int> resourceDemandTotal = new Dictionary<ResourceType, int>
 		{
 			{
@@ -1659,7 +1663,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F01 RID: 7937
+		// Token: 0x04001F1A RID: 7962
 		public Dictionary<ResourceType, int> resourceDemandPriority = new Dictionary<ResourceType, int>
 		{
 			{
@@ -1680,76 +1684,76 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F02 RID: 7938
+		// Token: 0x04001F1B RID: 7963
 		public ResourceType resourceHighestPriority;
 
-		// Token: 0x04001F03 RID: 7939
+		// Token: 0x04001F1C RID: 7964
 		public ResourceType resourceHighestPriorityNoProduce;
 
-		// Token: 0x04001F04 RID: 7940
+		// Token: 0x04001F1D RID: 7965
 		public bool canUpgrade;
 
-		// Token: 0x04001F05 RID: 7941
+		// Token: 0x04001F1E RID: 7966
 		public bool canDeploy;
 
-		// Token: 0x04001F06 RID: 7942
+		// Token: 0x04001F1F RID: 7967
 		public bool canBuild;
 
-		// Token: 0x04001F07 RID: 7943
+		// Token: 0x04001F20 RID: 7968
 		public bool canEnlist;
 
-		// Token: 0x04001F08 RID: 7944
+		// Token: 0x04001F21 RID: 7969
 		public List<Worker> uselessWorkers4Production = new List<Worker>();
 
-		// Token: 0x04001F09 RID: 7945
+		// Token: 0x04001F22 RID: 7970
 		public Dictionary<Worker, GameHex> uselessWorkersTargets = new Dictionary<Worker, GameHex>();
 
-		// Token: 0x04001F0A RID: 7946
+		// Token: 0x04001F23 RID: 7971
 		public Dictionary<GameHex, int> characterDistance;
 
-		// Token: 0x04001F0B RID: 7947
+		// Token: 0x04001F24 RID: 7972
 		public GameHex encounterNearestHex;
 
-		// Token: 0x04001F0C RID: 7948
+		// Token: 0x04001F25 RID: 7973
 		public int factoryDistance;
 
-		// Token: 0x04001F0D RID: 7949
+		// Token: 0x04001F26 RID: 7974
 		public Dictionary<Unit, Dictionary<GameHex, int>> moveRange = new Dictionary<Unit, Dictionary<GameHex, int>>();
 
-		// Token: 0x04001F0E RID: 7950
+		// Token: 0x04001F27 RID: 7975
 		public Dictionary<Unit, Dictionary<GameHex, int>> moveRangeAll = new Dictionary<Unit, Dictionary<GameHex, int>>();
 
-		// Token: 0x04001F0F RID: 7951
+		// Token: 0x04001F28 RID: 7976
 		public Dictionary<GameHex, List<Unit>> enemyCanBeAttackedBy = new Dictionary<GameHex, List<Unit>>();
 
-		// Token: 0x04001F10 RID: 7952
+		// Token: 0x04001F29 RID: 7977
 		public Dictionary<Unit, int> movePriority = new Dictionary<Unit, int>();
 
-		// Token: 0x04001F11 RID: 7953
+		// Token: 0x04001F2A RID: 7978
 		public SortedList<int, Unit> movePrioritySorted = new SortedList<int, Unit>(new InvertedComparer());
 
-		// Token: 0x04001F12 RID: 7954
+		// Token: 0x04001F2B RID: 7979
 		public Dictionary<Unit, List<GameHex>> moveTarget = new Dictionary<Unit, List<GameHex>>();
 
-		// Token: 0x04001F13 RID: 7955
+		// Token: 0x04001F2C RID: 7980
 		public Dictionary<Unit, int> moveDistance = new Dictionary<Unit, int>();
 
-		// Token: 0x04001F14 RID: 7956
+		// Token: 0x04001F2D RID: 7981
 		public Dictionary<Mech, List<Worker>> moveMechPassengers = new Dictionary<Mech, List<Worker>>();
 
-		// Token: 0x04001F15 RID: 7957
+		// Token: 0x04001F2E RID: 7982
 		public int movePriorityHighest;
 
-		// Token: 0x04001F16 RID: 7958
+		// Token: 0x04001F2F RID: 7983
 		public int workerCountTarget = 3;
 
-		// Token: 0x04001F17 RID: 7959
+		// Token: 0x04001F30 RID: 7984
 		public int workersInaVillage;
 
-		// Token: 0x04001F18 RID: 7960
+		// Token: 0x04001F31 RID: 7985
 		public int workersOutOfBase;
 
-		// Token: 0x04001F19 RID: 7961
+		// Token: 0x04001F32 RID: 7986
 		public Dictionary<int, int> mechPriority = new Dictionary<int, int>
 		{
 			{ 0, 10 },
@@ -1758,7 +1762,7 @@ namespace Scythe.GameLogic
 			{ 3, 7 }
 		};
 
-		// Token: 0x04001F1A RID: 7962
+		// Token: 0x04001F33 RID: 7987
 		public Dictionary<BuildingType, int> buildingPriority = new Dictionary<BuildingType, int>
 		{
 			{
@@ -1779,7 +1783,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F1B RID: 7963
+		// Token: 0x04001F34 RID: 7988
 		public Dictionary<DownActionType, int> recruitPriority = new Dictionary<DownActionType, int>
 		{
 			{
@@ -1800,7 +1804,7 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F1C RID: 7964
+		// Token: 0x04001F35 RID: 7989
 		public Dictionary<GainType, int> recruitOneTimePriority = new Dictionary<GainType, int>
 		{
 			{
@@ -1821,34 +1825,34 @@ namespace Scythe.GameLogic
 			}
 		};
 
-		// Token: 0x04001F1D RID: 7965
+		// Token: 0x04001F36 RID: 7990
 		public int mechNext;
 
-		// Token: 0x04001F1E RID: 7966
+		// Token: 0x04001F37 RID: 7991
 		public BuildingType buildingNext;
 
-		// Token: 0x04001F1F RID: 7967
+		// Token: 0x04001F38 RID: 7992
 		public bool produceLoopPresent;
 
-		// Token: 0x04001F20 RID: 7968
+		// Token: 0x04001F39 RID: 7993
 		public bool tradeLoopPresent;
 
-		// Token: 0x04001F21 RID: 7969
+		// Token: 0x04001F3A RID: 7994
 		public ResourceType tradeLoopResource = ResourceType.combatCard;
 
-		// Token: 0x04001F22 RID: 7970
+		// Token: 0x04001F3B RID: 7995
 		public GameHex preferredDeployPosition;
 
-		// Token: 0x04001F23 RID: 7971
+		// Token: 0x04001F3C RID: 7996
 		public bool gottaMoveToBuild;
 
-		// Token: 0x04001F24 RID: 7972
+		// Token: 0x04001F3D RID: 7997
 		public bool objectiveBalancedWorkforce;
 
-		// Token: 0x04001F25 RID: 7973
+		// Token: 0x04001F3E RID: 7998
 		public bool objectiveMachineOverMuscle;
 
-		// Token: 0x04001F26 RID: 7974
+		// Token: 0x04001F3F RID: 7999
 		protected GameManager gameManager;
 	}
 }
