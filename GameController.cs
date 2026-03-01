@@ -26,67 +26,67 @@ namespace Scythe.UI
 	public class GameController : MonoBehaviour
 	{
 		// Token: 0x170002F0 RID: 752
-		// (get) Token: 0x0600229B RID: 8859 RVA: 0x0003E271 File Offset: 0x0003C471
-		// (set) Token: 0x0600229C RID: 8860 RVA: 0x0003E278 File Offset: 0x0003C478
+		// (get) Token: 0x0600229B RID: 8859 RVA: 0x0003E288 File Offset: 0x0003C488
+		// (set) Token: 0x0600229C RID: 8860 RVA: 0x0003E28F File Offset: 0x0003C48F
 		public static HashSet<UnitPresenter> FocusUnit { get; private set; }
 
 		// Token: 0x170002F1 RID: 753
-		// (get) Token: 0x0600229D RID: 8861 RVA: 0x0003E280 File Offset: 0x0003C480
-		// (set) Token: 0x0600229E RID: 8862 RVA: 0x0003E287 File Offset: 0x0003C487
+		// (get) Token: 0x0600229D RID: 8861 RVA: 0x0003E297 File Offset: 0x0003C497
+		// (set) Token: 0x0600229E RID: 8862 RVA: 0x0003E29E File Offset: 0x0003C49E
 		public static GameController.SelectionMode HexSelectionMode { get; set; }
 
 		// Token: 0x170002F2 RID: 754
-		// (get) Token: 0x0600229F RID: 8863 RVA: 0x0003E28F File Offset: 0x0003C48F
-		// (set) Token: 0x060022A0 RID: 8864 RVA: 0x0003E297 File Offset: 0x0003C497
+		// (get) Token: 0x0600229F RID: 8863 RVA: 0x0003E2A6 File Offset: 0x0003C4A6
+		// (set) Token: 0x060022A0 RID: 8864 RVA: 0x0003E2AE File Offset: 0x0003C4AE
 		public bool AdjustingPresenters { get; private set; }
 
 		// Token: 0x140000E2 RID: 226
-		// (add) Token: 0x060022A1 RID: 8865 RVA: 0x000CD8A4 File Offset: 0x000CBAA4
-		// (remove) Token: 0x060022A2 RID: 8866 RVA: 0x000CD8D8 File Offset: 0x000CBAD8
+		// (add) Token: 0x060022A1 RID: 8865 RVA: 0x000CD994 File Offset: 0x000CBB94
+		// (remove) Token: 0x060022A2 RID: 8866 RVA: 0x000CD9C8 File Offset: 0x000CBBC8
 		public static event GameController.HexFocused HexGetFocused;
 
 		// Token: 0x140000E3 RID: 227
-		// (add) Token: 0x060022A3 RID: 8867 RVA: 0x000CD90C File Offset: 0x000CBB0C
-		// (remove) Token: 0x060022A4 RID: 8868 RVA: 0x000CD940 File Offset: 0x000CBB40
+		// (add) Token: 0x060022A3 RID: 8867 RVA: 0x000CD9FC File Offset: 0x000CBBFC
+		// (remove) Token: 0x060022A4 RID: 8868 RVA: 0x000CDA30 File Offset: 0x000CBC30
 		public static event GameController.UnitFocused UnitGetFocused;
 
 		// Token: 0x140000E4 RID: 228
-		// (add) Token: 0x060022A5 RID: 8869 RVA: 0x000CD974 File Offset: 0x000CBB74
-		// (remove) Token: 0x060022A6 RID: 8870 RVA: 0x000CD9A8 File Offset: 0x000CBBA8
+		// (add) Token: 0x060022A5 RID: 8869 RVA: 0x000CDA64 File Offset: 0x000CBC64
+		// (remove) Token: 0x060022A6 RID: 8870 RVA: 0x000CDA98 File Offset: 0x000CBC98
 		public static event GameController.OnEndTurn OnEndTurnClick;
 
 		// Token: 0x140000E5 RID: 229
-		// (add) Token: 0x060022A7 RID: 8871 RVA: 0x000CD9DC File Offset: 0x000CBBDC
-		// (remove) Token: 0x060022A8 RID: 8872 RVA: 0x000CDA10 File Offset: 0x000CBC10
+		// (add) Token: 0x060022A7 RID: 8871 RVA: 0x000CDACC File Offset: 0x000CBCCC
+		// (remove) Token: 0x060022A8 RID: 8872 RVA: 0x000CDB00 File Offset: 0x000CBD00
 		public static event GameController.OnEndTurn AfterEndTurnAIAndPlayer;
 
 		// Token: 0x140000E6 RID: 230
-		// (add) Token: 0x060022A9 RID: 8873 RVA: 0x000CDA44 File Offset: 0x000CBC44
-		// (remove) Token: 0x060022AA RID: 8874 RVA: 0x000CDA78 File Offset: 0x000CBC78
+		// (add) Token: 0x060022A9 RID: 8873 RVA: 0x000CDB34 File Offset: 0x000CBD34
+		// (remove) Token: 0x060022AA RID: 8874 RVA: 0x000CDB68 File Offset: 0x000CBD68
 		public static event GameController.OnObjectiveComplete OnObjectiveCompleted;
 
 		// Token: 0x140000E7 RID: 231
-		// (add) Token: 0x060022AB RID: 8875 RVA: 0x000CDAAC File Offset: 0x000CBCAC
-		// (remove) Token: 0x060022AC RID: 8876 RVA: 0x000CDAE0 File Offset: 0x000CBCE0
+		// (add) Token: 0x060022AB RID: 8875 RVA: 0x000CDB9C File Offset: 0x000CBD9C
+		// (remove) Token: 0x060022AC RID: 8876 RVA: 0x000CDBD0 File Offset: 0x000CBDD0
 		public static event GameController.OnTopTabClick OnTopTabClicked;
 
 		// Token: 0x140000E8 RID: 232
-		// (add) Token: 0x060022AD RID: 8877 RVA: 0x000CDB14 File Offset: 0x000CBD14
-		// (remove) Token: 0x060022AE RID: 8878 RVA: 0x000CDB48 File Offset: 0x000CBD48
+		// (add) Token: 0x060022AD RID: 8877 RVA: 0x000CDC04 File Offset: 0x000CBE04
+		// (remove) Token: 0x060022AE RID: 8878 RVA: 0x000CDC38 File Offset: 0x000CBE38
 		public static event GameController.OnGameLoad OnGameLoaded;
 
 		// Token: 0x170002F3 RID: 755
-		// (get) Token: 0x060022AF RID: 8879 RVA: 0x0003E2A0 File Offset: 0x0003C4A0
-		// (set) Token: 0x060022B0 RID: 8880 RVA: 0x0003E2A7 File Offset: 0x0003C4A7
+		// (get) Token: 0x060022AF RID: 8879 RVA: 0x0003E2B7 File Offset: 0x0003C4B7
+		// (set) Token: 0x060022B0 RID: 8880 RVA: 0x0003E2BE File Offset: 0x0003C4BE
 		public static Dictionary<Faction, GameController.FactionInfo> factionInfo { get; private set; }
 
 		// Token: 0x170002F4 RID: 756
-		// (get) Token: 0x060022B1 RID: 8881 RVA: 0x0003E2AF File Offset: 0x0003C4AF
-		// (set) Token: 0x060022B2 RID: 8882 RVA: 0x0003E2B6 File Offset: 0x0003C4B6
+		// (get) Token: 0x060022B1 RID: 8881 RVA: 0x0003E2C6 File Offset: 0x0003C4C6
+		// (set) Token: 0x060022B2 RID: 8882 RVA: 0x0003E2CD File Offset: 0x0003C4CD
 		public static Dictionary<Faction, PlayerUnits> factionUnits { get; private set; }
 
 		// Token: 0x170002F5 RID: 757
-		// (get) Token: 0x060022B3 RID: 8883 RVA: 0x0003E2BE File Offset: 0x0003C4BE
+		// (get) Token: 0x060022B3 RID: 8883 RVA: 0x0003E2D5 File Offset: 0x0003C4D5
 		public static Scythe.GameLogic.Game Game
 		{
 			get
@@ -100,7 +100,7 @@ namespace Scythe.UI
 		}
 
 		// Token: 0x170002F6 RID: 758
-		// (get) Token: 0x060022B4 RID: 8884 RVA: 0x0003E2D9 File Offset: 0x0003C4D9
+		// (get) Token: 0x060022B4 RID: 8884 RVA: 0x0003E2F0 File Offset: 0x0003C4F0
 		public static GameManager GameManager
 		{
 			get
@@ -114,8 +114,8 @@ namespace Scythe.UI
 		}
 
 		// Token: 0x170002F7 RID: 759
-		// (get) Token: 0x060022B5 RID: 8885 RVA: 0x0003E2F4 File Offset: 0x0003C4F4
-		// (set) Token: 0x060022B6 RID: 8886 RVA: 0x0003E2FC File Offset: 0x0003C4FC
+		// (get) Token: 0x060022B5 RID: 8885 RVA: 0x0003E30B File Offset: 0x0003C50B
+		// (set) Token: 0x060022B6 RID: 8886 RVA: 0x0003E313 File Offset: 0x0003C513
 		public bool GameFinishedTimeOut
 		{
 			get
@@ -128,7 +128,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022B7 RID: 8887 RVA: 0x000CDB7C File Offset: 0x000CBD7C
+		// Token: 0x060022B7 RID: 8887 RVA: 0x000CDC6C File Offset: 0x000CBE6C
 		private void Awake()
 		{
 			GameController.Instance = this;
@@ -229,7 +229,7 @@ namespace Scythe.UI
 			this.InitializeFactionProperties();
 		}
 
-		// Token: 0x060022B8 RID: 8888 RVA: 0x000CDF2C File Offset: 0x000CC12C
+		// Token: 0x060022B8 RID: 8888 RVA: 0x000CE01C File Offset: 0x000CC21C
 		private void InitializeFactionProperties()
 		{
 			if (GameController.factionInfo == null)
@@ -249,7 +249,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022B9 RID: 8889 RVA: 0x000CDFCC File Offset: 0x000CC1CC
+		// Token: 0x060022B9 RID: 8889 RVA: 0x000CE0BC File Offset: 0x000CC2BC
 		private void Start()
 		{
 			SceneController.AfterLoadingTheGame();
@@ -287,7 +287,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022BA RID: 8890 RVA: 0x0003E305 File Offset: 0x0003C505
+		// Token: 0x060022BA RID: 8890 RVA: 0x0003E31C File Offset: 0x0003C51C
 		public void CheckDLCSanity()
 		{
 			if (GameController.GameManager.IsMultiplayer)
@@ -301,7 +301,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022BB RID: 8891 RVA: 0x0003E33C File Offset: 0x0003C53C
+		// Token: 0x060022BB RID: 8891 RVA: 0x000CE1BC File Offset: 0x000CC3BC
 		private void OnDestroy()
 		{
 			DOTween.Clear(false);
@@ -310,10 +310,15 @@ namespace Scythe.UI
 			{
 				PlayerPrefs.SetInt(OptionsManager.PREFS_GAME_CLOSED_CORRECT, OptionsManager.BoolToInt(true));
 			}
-			this._gameActionLogger?.Dispose();
+			GameActionLogger gameActionLogger = this._gameActionLogger;
+			if (gameActionLogger == null)
+			{
+				return;
+			}
+			gameActionLogger.Dispose();
 		}
 
-		// Token: 0x060022BC RID: 8892 RVA: 0x000CE0CC File Offset: 0x000CC2CC
+		// Token: 0x060022BC RID: 8892 RVA: 0x000CE218 File Offset: 0x000CC418
 		private void Update()
 		{
 			if (ShowEnemyMoves.Instance != null)
@@ -349,7 +354,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022BD RID: 8893 RVA: 0x000CE1B0 File Offset: 0x000CC3B0
+		// Token: 0x060022BD RID: 8893 RVA: 0x000CE2FC File Offset: 0x000CC4FC
 		private void Init(bool undoLoad = false)
 		{
 			this.isUndoLoad = undoLoad;
@@ -430,13 +435,14 @@ namespace Scythe.UI
 				this.returnToLobby = false;
 			}
 			this.EndTurnButtonReset();
-			if (this.showAILogs)
+			string logFolder = System.IO.Path.Combine(UnityEngine.Application.persistentDataPath, "logs");
+			System.IO.Directory.CreateDirectory(logFolder);
+			string botLogPath = System.IO.Path.Combine(logFolder, "BotLog_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt");
+			AiPlayer.AttachLogDelegate(delegate(string s)
 			{
-				AiPlayer.AttachLogDelegate(delegate(string s)
-				{
-					Debug.Log(s);
-				});
-			}
+				try { System.IO.File.AppendAllText(botLogPath, s + "\n"); } catch {}
+				if (this.showAILogs) { Debug.Log(s); }
+			});
 			this.autoGainPanel.LoadPreferences();
 			if (GameController.GameManager.IsMultiplayer)
 			{
@@ -486,9 +492,12 @@ namespace Scythe.UI
 					{
 						List<Player> players = GameController.GameManager.GetPlayers();
 						Player player = GameController.GameManager.PlayerCurrent;
-						while (!player.IsHuman)
+						if (GameController.GameManager.GetPlayersWithoutAICount() > 0)
 						{
-							player = players[(GameController.GameManager.GetPlayerLocalId(player) + 1) % players.Count];
+							while (!player.IsHuman)
+							{
+								player = players[(GameController.GameManager.GetPlayerLocalId(player) + 1) % players.Count];
+							}
 						}
 						this.matFaction.UpdateMat(player, GameController.factionInfo[player.matFaction.faction], true);
 						this.matPlayer.isPreview = true;
@@ -531,24 +540,23 @@ namespace Scythe.UI
 			this.TurnCounter.text = ScriptLocalization.Get("GameScene/Round") + " " + (GameController.GameManager.TurnCount + 1).ToString();
 			this.gameBoardPresenter.UpdateBoard(true, true);
 			this.gameBoardPresenter.UpdateTokens();
-
-			// Dispose any existing logger (handles undo-load re-initialisation) then
-			// construct a fresh one. GameController.Game.GetGameId() is the same GUID
-			// used by PlayerPrefs on line 286, so resumed saves append to the same file.
-			this._gameActionLogger?.Dispose();
-			this._gameActionLogger = new Scythe.GameLogic.GameActionLogger(
-				GameController.GameManager,
-				GameController.Game?.GetGameId()
-			);
+			GameActionLogger gameActionLogger = this._gameActionLogger;
+			if (gameActionLogger != null)
+			{
+				gameActionLogger.Dispose();
+			}
+			GameManager gameManager = GameController.GameManager;
+			Scythe.GameLogic.Game game = GameController.Game;
+			this._gameActionLogger = new GameActionLogger(gameManager, (game != null) ? game.GetGameId() : null);
 		}
 
-		// Token: 0x060022BE RID: 8894 RVA: 0x000CEB4C File Offset: 0x000CCD4C
+		// Token: 0x060022BE RID: 8894 RVA: 0x000CED08 File Offset: 0x000CCF08
 		private void UpdateTurnCounterText()
 		{
 			this.TurnCounter.text = ScriptLocalization.Get("GameScene/Round") + " " + (GameController.GameManager.TurnCount + 1).ToString();
 		}
 
-		// Token: 0x060022BF RID: 8895 RVA: 0x000CEB8C File Offset: 0x000CCD8C
+		// Token: 0x060022BF RID: 8895 RVA: 0x000CED48 File Offset: 0x000CCF48
 		private void AttachTopLeftTogglesHoover()
 		{
 			foreach (Toggle2 toggle in this.tabToggles)
@@ -557,13 +565,13 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022C0 RID: 8896 RVA: 0x0003C419 File Offset: 0x0003A619
+		// Token: 0x060022C0 RID: 8896 RVA: 0x0003C430 File Offset: 0x0003A630
 		private void TopLeftToggleSFX()
 		{
 			WorldSFXManager.PlaySound(SoundEnum.PlayersBoardShowEnemysboardRelease, AudioSourceType.Buttons);
 		}
 
-		// Token: 0x060022C1 RID: 8897 RVA: 0x000CEBF4 File Offset: 0x000CCDF4
+		// Token: 0x060022C1 RID: 8897 RVA: 0x000CEDB0 File Offset: 0x000CCFB0
 		private void EndTurnButtonReset()
 		{
 			this.endTurnButton.interactable = false;
@@ -573,7 +581,7 @@ namespace Scythe.UI
 			this.endTurnHintButton.SetActive(true);
 		}
 
-		// Token: 0x060022C2 RID: 8898 RVA: 0x000CEC60 File Offset: 0x000CCE60
+		// Token: 0x060022C2 RID: 8898 RVA: 0x000CEE1C File Offset: 0x000CD01C
 		public void EndTurnButtonEnable()
 		{
 			this.endTurnButton.interactable = true;
@@ -584,7 +592,7 @@ namespace Scythe.UI
 			this.endTurnShade.enabled = false;
 		}
 
-		// Token: 0x060022C3 RID: 8899 RVA: 0x0003E379 File Offset: 0x0003C579
+		// Token: 0x060022C3 RID: 8899 RVA: 0x0003E353 File Offset: 0x0003C553
 		public void EndTurnButtonDisable()
 		{
 			this.endTurnButton.interactable = false;
@@ -593,7 +601,7 @@ namespace Scythe.UI
 			this.endTurnShade.enabled = false;
 		}
 
-		// Token: 0x060022C4 RID: 8900 RVA: 0x000CECC8 File Offset: 0x000CCEC8
+		// Token: 0x060022C4 RID: 8900 RVA: 0x000CEE84 File Offset: 0x000CD084
 		public void EndTurnHint()
 		{
 			if ((!GameController.GameManager.IsMultiplayer || GameController.GameManager.PlayerOwner == GameController.GameManager.PlayerCurrent) && GameController.GameManager.PlayerCurrent.IsHuman)
@@ -621,13 +629,13 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022C5 RID: 8901 RVA: 0x0003E3AB File Offset: 0x0003C5AB
+		// Token: 0x060022C5 RID: 8901 RVA: 0x0003E385 File Offset: 0x0003C585
 		public void OnLoadingScreenStartButtonClicked(bool loadingSave)
 		{
 			base.StartCoroutine(GameController.Instance.AfterMapLoad(loadingSave, false));
 		}
 
-		// Token: 0x060022C6 RID: 8902 RVA: 0x0003E3C0 File Offset: 0x0003C5C0
+		// Token: 0x060022C6 RID: 8902 RVA: 0x0003E39A File Offset: 0x0003C59A
 		public IEnumerator AfterMapLoad(bool saveFileLoaded = false, bool undo = false)
 		{
 			DOTween.KillAll(true);
@@ -741,7 +749,7 @@ namespace Scythe.UI
 			yield break;
 		}
 
-		// Token: 0x060022C7 RID: 8903 RVA: 0x000CEDE8 File Offset: 0x000CCFE8
+		// Token: 0x060022C7 RID: 8903 RVA: 0x000CEFA4 File Offset: 0x000CD1A4
 		public void ActionsAfterCameraPresentation()
 		{
 			base.StartCoroutine(this.AITurn());
@@ -770,7 +778,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022C8 RID: 8904 RVA: 0x0003E3DD File Offset: 0x0003C5DD
+		// Token: 0x060022C8 RID: 8904 RVA: 0x0003E3B7 File Offset: 0x0003C5B7
 		private void AdjustPresentersAfterLoad()
 		{
 			if (!GameController.GameManager.IsMultiplayer || GameController.GameManager.SpectatorMode)
@@ -785,7 +793,7 @@ namespace Scythe.UI
 			this.AdjustOwnerPresenters();
 		}
 
-		// Token: 0x060022C9 RID: 8905 RVA: 0x000CEE60 File Offset: 0x000CD060
+		// Token: 0x060022C9 RID: 8905 RVA: 0x000CF01C File Offset: 0x000CD21C
 		private void AdjustCurrentPlayerPresenters()
 		{
 			if (GameController.GameManager.PlayerOwner.currentMatSection == -1)
@@ -869,7 +877,7 @@ namespace Scythe.UI
 			this.AdjustingPresenters = false;
 		}
 
-		// Token: 0x060022CA RID: 8906 RVA: 0x000CF14C File Offset: 0x000CD34C
+		// Token: 0x060022CA RID: 8906 RVA: 0x000CF308 File Offset: 0x000CD508
 		private void AdjustOwnerPresenters()
 		{
 			if (GameController.GameManager.combatManager.GetBattlefields().Count > 0)
@@ -905,7 +913,7 @@ namespace Scythe.UI
 			this.matPlayer.AfterLoadUpdate();
 		}
 
-		// Token: 0x060022CB RID: 8907 RVA: 0x000CF284 File Offset: 0x000CD484
+		// Token: 0x060022CB RID: 8907 RVA: 0x000CF440 File Offset: 0x000CD640
 		private void AdjustActionManager()
 		{
 			ActionManager actionManager = GameController.GameManager.actionManager;
@@ -920,7 +928,7 @@ namespace Scythe.UI
 			actionManager.PreparePreviousAction();
 		}
 
-		// Token: 0x060022CC RID: 8908 RVA: 0x000CF2C8 File Offset: 0x000CD4C8
+		// Token: 0x060022CC RID: 8908 RVA: 0x000CF484 File Offset: 0x000CD684
 		private void AdjustActionPresenters()
 		{
 			ActionManager actionManager = GameController.GameManager.actionManager;
@@ -953,7 +961,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022CD RID: 8909 RVA: 0x000CF3B8 File Offset: 0x000CD5B8
+		// Token: 0x060022CD RID: 8909 RVA: 0x000CF574 File Offset: 0x000CD774
 		private void AdjustAttackerCombatPresenters()
 		{
 			switch (GameController.GameManager.combatManager.GetActualStage())
@@ -970,16 +978,16 @@ namespace Scythe.UI
 				return;
 			case CombatStage.DeterminatingTheWinner:
 			case CombatStage.CombatResovled:
-				break;
+				return;
 			case CombatStage.EndingTheBattle:
 				GameController.GameManager.combatManager.SwitchToNextStage();
-				break;
+				return;
 			default:
 				return;
 			}
 		}
 
-		// Token: 0x060022CE RID: 8910 RVA: 0x000CF43C File Offset: 0x000CD63C
+		// Token: 0x060022CE RID: 8910 RVA: 0x000CF5F8 File Offset: 0x000CD7F8
 		private void AdjustDefenderCombatPresenters()
 		{
 			switch (GameController.GameManager.combatManager.GetActualStage())
@@ -987,7 +995,7 @@ namespace Scythe.UI
 			case CombatStage.SelectingBattlefield:
 			case CombatStage.DeterminatingTheWinner:
 			case CombatStage.CombatResovled:
-				break;
+				return;
 			case CombatStage.Diversion:
 				GameController.GameManager.combatManager.ReshowDiversionPanelIfAble();
 				return;
@@ -996,13 +1004,13 @@ namespace Scythe.UI
 				return;
 			case CombatStage.EndingTheBattle:
 				GameController.GameManager.combatManager.ReshowDefenderEndingPanel();
-				break;
+				return;
 			default:
 				return;
 			}
 		}
 
-		// Token: 0x060022CF RID: 8911 RVA: 0x000CF4A8 File Offset: 0x000CD6A8
+		// Token: 0x060022CF RID: 8911 RVA: 0x000CF664 File Offset: 0x000CD864
 		public void LoadGame(string filename)
 		{
 			AnalyticsEventLogger.Instance.LogMatchStop(EndReasons.game_load);
@@ -1022,7 +1030,7 @@ namespace Scythe.UI
 			this.menu.GetComponent<GameMenu>().ShowMenu(false);
 		}
 
-		// Token: 0x060022D0 RID: 8912 RVA: 0x0003E41B File Offset: 0x0003C61B
+		// Token: 0x060022D0 RID: 8912 RVA: 0x0003E3F5 File Offset: 0x0003C5F5
 		public void PrepareBeforeUndo()
 		{
 			this.GameIsLoaded = true;
@@ -1031,7 +1039,7 @@ namespace Scythe.UI
 			GameController.GameManager.actionManager.BreakSectionAction(true);
 		}
 
-		// Token: 0x060022D1 RID: 8913 RVA: 0x000CF534 File Offset: 0x000CD734
+		// Token: 0x060022D1 RID: 8913 RVA: 0x000CF6F0 File Offset: 0x000CD8F0
 		public void AfterUndo()
 		{
 			GameController.GameManager.actionLog.ClearAwaitingPayActions();
@@ -1053,7 +1061,7 @@ namespace Scythe.UI
 			base.StartCoroutine(this.AfterMapLoad(true, true));
 		}
 
-		// Token: 0x060022D2 RID: 8914 RVA: 0x000CF620 File Offset: 0x000CD820
+		// Token: 0x060022D2 RID: 8914 RVA: 0x000CF7DC File Offset: 0x000CD9DC
 		private void ClearOnLoad()
 		{
 			DOTween.KillAll(true);
@@ -1102,19 +1110,19 @@ namespace Scythe.UI
 			this.OnDestroy();
 		}
 
-		// Token: 0x060022D3 RID: 8915 RVA: 0x0003E440 File Offset: 0x0003C640
+		// Token: 0x060022D3 RID: 8915 RVA: 0x0003E41A File Offset: 0x0003C61A
 		private void ClearMarkers()
 		{
 			(this.gameBoardPresenter as FlatWorld).ClearMarkers();
 		}
 
-		// Token: 0x060022D4 RID: 8916 RVA: 0x0003E452 File Offset: 0x0003C652
+		// Token: 0x060022D4 RID: 8916 RVA: 0x0003E42C File Offset: 0x0003C62C
 		private void ClearUnits()
 		{
 			(this.gameBoardPresenter as FlatWorld).ClearUnitPresenters();
 		}
 
-		// Token: 0x060022D5 RID: 8917 RVA: 0x000CF778 File Offset: 0x000CD978
+		// Token: 0x060022D5 RID: 8917 RVA: 0x000CF934 File Offset: 0x000CDB34
 		private void CherryPickUpdateAfterLoadGame()
 		{
 			this.AIActionInterrupt = false;
@@ -1133,7 +1141,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022D6 RID: 8918 RVA: 0x000CF7CC File Offset: 0x000CD9CC
+		// Token: 0x060022D6 RID: 8918 RVA: 0x000CF988 File Offset: 0x000CDB88
 		public void AfterGameSynchronize()
 		{
 			if (this.factoryCardPresenter.gameObject.activeInHierarchy)
@@ -1156,7 +1164,7 @@ namespace Scythe.UI
 			this.LoadAutomaticGainPreferences();
 		}
 
-		// Token: 0x060022D7 RID: 8919 RVA: 0x000CF8D0 File Offset: 0x000CDAD0
+		// Token: 0x060022D7 RID: 8919 RVA: 0x000CFA8C File Offset: 0x000CDC8C
 		public void LoadAutomaticGainPreferences()
 		{
 			if (GameController.GameManager.IsMultiplayer)
@@ -1169,7 +1177,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022D8 RID: 8920 RVA: 0x0003E464 File Offset: 0x0003C664
+		// Token: 0x060022D8 RID: 8920 RVA: 0x0003E43E File Offset: 0x0003C63E
 		public void SaveGame()
 		{
 			if (GameController.GameManager.GameFinished)
@@ -1180,7 +1188,7 @@ namespace Scythe.UI
 			this.undoController.OnAutosave();
 		}
 
-		// Token: 0x060022D9 RID: 8921 RVA: 0x000CF95C File Offset: 0x000CDB5C
+		// Token: 0x060022D9 RID: 8921 RVA: 0x000CFB18 File Offset: 0x000CDD18
 		public static void CreateSaveFolderIfNotPresent()
 		{
 			string text = Path.Combine(Application.persistentDataPath, "Saves");
@@ -1190,7 +1198,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022DA RID: 8922 RVA: 0x000CF988 File Offset: 0x000CDB88
+		// Token: 0x060022DA RID: 8922 RVA: 0x000CFB44 File Offset: 0x000CDD44
 		public void MenuOpening()
 		{
 			if (this.cameraMovementEffects.presenationFinished)
@@ -1214,7 +1222,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022DB RID: 8923 RVA: 0x0003E49C File Offset: 0x0003C69C
+		// Token: 0x060022DB RID: 8923 RVA: 0x0003E476 File Offset: 0x0003C676
 		private IEnumerator PopupWindowsBeforeNextTurnDelayed()
 		{
 			yield return new WaitForEndOfFrame();
@@ -1222,7 +1230,7 @@ namespace Scythe.UI
 			yield break;
 		}
 
-		// Token: 0x060022DC RID: 8924 RVA: 0x000CFA44 File Offset: 0x000CDC44
+		// Token: 0x060022DC RID: 8924 RVA: 0x000CFC00 File Offset: 0x000CDE00
 		public void PopupWindowsBeforeNextTurn()
 		{
 			if (GameController.GameManager.PlayerCurrent.currentMatSection == -1)
@@ -1294,7 +1302,7 @@ namespace Scythe.UI
 			WorldSFXManager.PlaySound(SoundEnum.EndOfTurnButtonClick, AudioSourceType.Buttons);
 		}
 
-		// Token: 0x060022DD RID: 8925 RVA: 0x000CFD24 File Offset: 0x000CDF24
+		// Token: 0x060022DD RID: 8925 RVA: 0x000CFEE0 File Offset: 0x000CE0E0
 		public void NextTurn()
 		{
 			if (PlatformManager.IsMobile)
@@ -1318,7 +1326,7 @@ namespace Scythe.UI
 			base.StartCoroutine(this.NextTurnCoroutine());
 		}
 
-		// Token: 0x060022DE RID: 8926 RVA: 0x0003E4AB File Offset: 0x0003C6AB
+		// Token: 0x060022DE RID: 8926 RVA: 0x0003E485 File Offset: 0x0003C685
 		public void HideHumanPlayerInfo()
 		{
 			this.matFaction.combatCardsPresenter.HideCombatCards();
@@ -1332,7 +1340,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022DF RID: 8927 RVA: 0x000CFDB0 File Offset: 0x000CDFB0
+		// Token: 0x060022DF RID: 8927 RVA: 0x000CFF6C File Offset: 0x000CE16C
 		private void DisableSecretInfoInSpectatorMode()
 		{
 			if (PlatformManager.IsStandalone)
@@ -1348,32 +1356,32 @@ namespace Scythe.UI
 			this.EndTurnButtonDisable();
 		}
 
-		// Token: 0x060022E0 RID: 8928 RVA: 0x0003E4E8 File Offset: 0x0003C6E8
+		// Token: 0x060022E0 RID: 8928 RVA: 0x0003E4C2 File Offset: 0x0003C6C2
 		public void ShowHumanPlayerInfo()
 		{
 			this.matFaction.combatCardsPresenter.ShowCombatCards();
 			this.panelInfo.ShowObjectiveCardPreviewTitles();
 		}
 
-		// Token: 0x060022E1 RID: 8929 RVA: 0x0003E505 File Offset: 0x0003C705
+		// Token: 0x060022E1 RID: 8929 RVA: 0x0003E4DF File Offset: 0x0003C6DF
 		public void ShowCombatCards()
 		{
 			this.matFaction.combatCardsPresenter.ShowCombatCards();
 		}
 
-		// Token: 0x060022E2 RID: 8930 RVA: 0x0003E517 File Offset: 0x0003C717
+		// Token: 0x060022E2 RID: 8930 RVA: 0x0003E4F1 File Offset: 0x0003C6F1
 		public void HideCombatCards()
 		{
 			this.matFaction.combatCardsPresenter.HideCombatCards();
 		}
 
-		// Token: 0x060022E3 RID: 8931 RVA: 0x0003E529 File Offset: 0x0003C729
+		// Token: 0x060022E3 RID: 8931 RVA: 0x0003E503 File Offset: 0x0003C703
 		public bool AmmoCardsInvisible()
 		{
 			return this.matFaction.combatCardsPresenter.AmmoCardsInvisible();
 		}
 
-		// Token: 0x060022E4 RID: 8932 RVA: 0x000CFE08 File Offset: 0x000CE008
+		// Token: 0x060022E4 RID: 8932 RVA: 0x000CFFC4 File Offset: 0x000CE1C4
 		public void NextTurnMulti()
 		{
 			if ((GameController.GameManager.IsMyTurn() || !GameController.GameManager.IsMultiplayer) && (this.encounterCardPresenter.gameObject.activeInHierarchy || (this.encounterCardPresenter.encounterCardSmall != null && this.encounterCardPresenter.encounterCardSmall.gameObject.activeInHierarchy)))
@@ -1434,7 +1442,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022E5 RID: 8933 RVA: 0x0003E53B File Offset: 0x0003C73B
+		// Token: 0x060022E5 RID: 8933 RVA: 0x0003E515 File Offset: 0x0003C715
 		private IEnumerator NextTurnCoroutine()
 		{
 			this.playersFactions.UpdateStatus();
@@ -1479,13 +1487,13 @@ namespace Scythe.UI
 				}
 				if (!GameController.GameManager.PlayerCurrent.IsHuman)
 				{
-					goto IL_0389;
+					goto IL_038A;
 				}
-				using (List<MatPlayerSectionPresenter>.Enumerator enumerator = this.matPlayer.matSection.GetEnumerator())
+				using (List<MatPlayerSectionPresenter>.Enumerator enumerator3 = this.matPlayer.matSection.GetEnumerator())
 				{
-					while (enumerator.MoveNext())
+					while (enumerator3.MoveNext())
 					{
-						MatPlayerSectionPresenter matPlayerSectionPresenter2 = enumerator.Current;
+						MatPlayerSectionPresenter matPlayerSectionPresenter2 = enumerator3.Current;
 						matPlayerSectionPresenter2.DisableActionsAndSection(GameController.GameManager.PlayerCurrent.matFaction.DidPlayerUsedMatLastTurn(GameController.GameManager.PlayerCurrent.currentMatSection, matPlayerSectionPresenter2.sectionID) ? (-1) : 0, true);
 						matPlayerSectionPresenter2.SetSectionCooldown(false, false);
 						if (GameController.GameManager.PlayerCurrent.matFaction.DidPlayerUsedMatLastTurn(GameController.GameManager.PlayerCurrent.currentMatSection, matPlayerSectionPresenter2.sectionID))
@@ -1493,7 +1501,7 @@ namespace Scythe.UI
 							matPlayerSectionPresenter2.SetSectionCooldown(true, false);
 						}
 					}
-					goto IL_0389;
+					goto IL_038A;
 				}
 			}
 			if (this.factoryCardPresenter.gameObject.activeInHierarchy)
@@ -1508,7 +1516,7 @@ namespace Scythe.UI
 			{
 				ShowEnemyMoves.Instance.ResumeAnimationsSpeed();
 			}
-			IL_0389:
+			IL_038A:
 			if (this.encounterCardPresenter.encounterCardSmall != null)
 			{
 				this.encounterCardPresenter.encounterCardSmall.transform.parent.gameObject.SetActive(false);
@@ -1571,7 +1579,7 @@ namespace Scythe.UI
 			yield break;
 		}
 
-		// Token: 0x060022E6 RID: 8934 RVA: 0x0003E54A File Offset: 0x0003C74A
+		// Token: 0x060022E6 RID: 8934 RVA: 0x0003E524 File Offset: 0x0003C724
 		private void FinishCurrentAction()
 		{
 			if (HumanInputHandler.Instance.GetSelectedPresenter() != null)
@@ -1580,7 +1588,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022E7 RID: 8935 RVA: 0x000D0134 File Offset: 0x000CE334
+		// Token: 0x060022E7 RID: 8935 RVA: 0x000D02F0 File Offset: 0x000CE4F0
 		private void PlayNewTurnSound()
 		{
 			if (!GameController.GameManager.IsMultiplayer && GameController.GameManager.PlayerCurrent.IsHuman)
@@ -1593,7 +1601,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022E8 RID: 8936 RVA: 0x000D0190 File Offset: 0x000CE390
+		// Token: 0x060022E8 RID: 8936 RVA: 0x000D034C File Offset: 0x000CE54C
 		private void HandleCapitalIcon()
 		{
 			if (GameController.GameManager.IsCampaign)
@@ -1639,7 +1647,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022E9 RID: 8937 RVA: 0x0003E56D File Offset: 0x0003C76D
+		// Token: 0x060022E9 RID: 8937 RVA: 0x0003E547 File Offset: 0x0003C747
 		public IEnumerator AITurn()
 		{
 			if (!GameController.GameManager.PlayerCurrent.IsHuman)
@@ -1675,20 +1683,20 @@ namespace Scythe.UI
 			yield break;
 		}
 
-		// Token: 0x060022EA RID: 8938 RVA: 0x0003E57C File Offset: 0x0003C77C
+		// Token: 0x060022EA RID: 8938 RVA: 0x0003E556 File Offset: 0x0003C756
 		public void TurnOffGameEndedListerner()
 		{
 			GameController.GameManager.GameHasEnded -= this.OnGameEnded;
 		}
 
-		// Token: 0x060022EB RID: 8939 RVA: 0x0003E594 File Offset: 0x0003C794
+		// Token: 0x060022EB RID: 8939 RVA: 0x0003E56E File Offset: 0x0003C76E
 		public void AddGameEndedListerner()
 		{
 			this.TurnOffGameEndedListerner();
 			GameController.GameManager.GameHasEnded += this.OnGameEnded;
 		}
 
-		// Token: 0x060022EC RID: 8940 RVA: 0x0003E5B2 File Offset: 0x0003C7B2
+		// Token: 0x060022EC RID: 8940 RVA: 0x0003E58C File Offset: 0x0003C78C
 		private void ContinueBotAction()
 		{
 			if (this.AIActionInterrupt && !ShowEnemyMoves.Instance.MoreAnimations())
@@ -1699,7 +1707,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022ED RID: 8941 RVA: 0x000D0344 File Offset: 0x000CE544
+		// Token: 0x060022ED RID: 8941 RVA: 0x000D0500 File Offset: 0x000CE700
 		public void UpdateTurnInfo(Player player)
 		{
 			if (this.cameraMovementEffects.presenationFinished && !GameController.GameManager.IsCampaign)
@@ -1772,7 +1780,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022EE RID: 8942 RVA: 0x000D0678 File Offset: 0x000CE878
+		// Token: 0x060022EE RID: 8942 RVA: 0x000D0834 File Offset: 0x000CEA34
 		public void OnLeftTabToggleClicked(int id)
 		{
 			WorldSFXManager.PlaySound(SoundEnum.GuiUpperBeltClick, AudioSourceType.Buttons);
@@ -1793,7 +1801,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022EF RID: 8943 RVA: 0x0003E5E0 File Offset: 0x0003C7E0
+		// Token: 0x060022EF RID: 8943 RVA: 0x0003E5BA File Offset: 0x0003C7BA
 		public void OnLeftTabClosed(int id)
 		{
 			WorldSFXManager.PlaySound(SoundEnum.GuiUpperBeltClick, AudioSourceType.Buttons);
@@ -1801,7 +1809,7 @@ namespace Scythe.UI
 			AnalyticsEventLogger.Instance.LogScreenDisplay(Screens.in_game, Screens.tab_enlist + id, Contexts.ingame);
 		}
 
-		// Token: 0x060022F0 RID: 8944 RVA: 0x000D0714 File Offset: 0x000CE914
+		// Token: 0x060022F0 RID: 8944 RVA: 0x000D08D0 File Offset: 0x000CEAD0
 		private static FactionBasicInfo GetFactionBasicInfo(Faction faction)
 		{
 			return new FactionBasicInfo
@@ -1827,13 +1835,13 @@ namespace Scythe.UI
 			};
 		}
 
-		// Token: 0x060022F1 RID: 8945 RVA: 0x0003E601 File Offset: 0x0003C801
+		// Token: 0x060022F1 RID: 8945 RVA: 0x0003E5DB File Offset: 0x0003C7DB
 		private void UpdateFactionInfo()
 		{
 			GameController.GameManager.factionBasicInfo = GameController.CreateArrayOfInfo();
 		}
 
-		// Token: 0x060022F2 RID: 8946 RVA: 0x000D08A8 File Offset: 0x000CEAA8
+		// Token: 0x060022F2 RID: 8946 RVA: 0x000D0A64 File Offset: 0x000CEC64
 		public static Dictionary<Faction, FactionBasicInfo> CreateArrayOfInfo()
 		{
 			return new Dictionary<Faction, FactionBasicInfo>
@@ -1869,7 +1877,7 @@ namespace Scythe.UI
 			};
 		}
 
-		// Token: 0x060022F3 RID: 8947 RVA: 0x000D0918 File Offset: 0x000CEB18
+		// Token: 0x060022F3 RID: 8947 RVA: 0x000D0AD4 File Offset: 0x000CECD4
 		private void ResetButtonsAndContextAtLoad()
 		{
 			this.matPlayer.ShowSectionMatActionReloading(false);
@@ -1885,7 +1893,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022F4 RID: 8948 RVA: 0x0003E612 File Offset: 0x0003C812
+		// Token: 0x060022F4 RID: 8948 RVA: 0x0003E5EC File Offset: 0x0003C7EC
 		public void SetDragAndDrop(bool enabled)
 		{
 			if (this.DragAndDrop != enabled)
@@ -1897,7 +1905,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022F5 RID: 8949 RVA: 0x000D09A4 File Offset: 0x000CEBA4
+		// Token: 0x060022F5 RID: 8949 RVA: 0x000D0B60 File Offset: 0x000CED60
 		public void UpdateStats(Player player, bool refreshMatSections = false, bool updateStaticObjects = true)
 		{
 			this.gameBoardPresenter.UpdateBoard(false, updateStaticObjects);
@@ -1944,7 +1952,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022F6 RID: 8950 RVA: 0x000D0C18 File Offset: 0x000CEE18
+		// Token: 0x060022F6 RID: 8950 RVA: 0x000D0DD4 File Offset: 0x000CEFD4
 		public void UpdateStats(bool refreshMatSections = false, bool updateStaticObjects = true)
 		{
 			if (GameController.GameManager.IsMultiplayer)
@@ -1963,7 +1971,7 @@ namespace Scythe.UI
 			this.playerStats.UpdateAllStats(previousHumanPlayer, factionInfo.logo);
 		}
 
-		// Token: 0x060022F7 RID: 8951 RVA: 0x000D0CA8 File Offset: 0x000CEEA8
+		// Token: 0x060022F7 RID: 8951 RVA: 0x000D0E64 File Offset: 0x000CF064
 		public void UpdateStatsPresenter()
 		{
 			if (GameController.GameManager.IsMultiplayer)
@@ -1981,24 +1989,20 @@ namespace Scythe.UI
 			this.playerStats.UpdateAllStats(previousHumanPlayer, factionInfo.logo);
 		}
 
-		// Token: 0x060022F8 RID: 8952 RVA: 0x0003E651 File Offset: 0x0003C851
+		// Token: 0x060022F8 RID: 8952 RVA: 0x0003E62B File Offset: 0x0003C82B
 		public void ShowTurnInfo()
 		{
 			this.turnInfoPanel.ActivateTurnInfoPanel();
 		}
 
-		// Token: 0x060022F9 RID: 8953 RVA: 0x0003E65E File Offset: 0x0003C85E
+		// Token: 0x060022F9 RID: 8953 RVA: 0x0003E638 File Offset: 0x0003C838
 		public void ShowTurnInfoNoInput()
 		{
-			if (GameController.GameManager.IsMultiplayer)
-			{
-				this.turnInfoPanel.ActivateTurnInfoPanelNoInput();
-				return;
-			}
+			bool isMultiplayer = GameController.GameManager.IsMultiplayer;
 			this.turnInfoPanel.ActivateTurnInfoPanelNoInput();
 		}
 
-		// Token: 0x060022FA RID: 8954 RVA: 0x0003E683 File Offset: 0x0003C883
+		// Token: 0x060022FA RID: 8954 RVA: 0x0003E650 File Offset: 0x0003C850
 		public void ShowTurnInfoNoInput(Player player)
 		{
 			if (GameController.GameManager.IsMultiplayer)
@@ -2009,7 +2013,7 @@ namespace Scythe.UI
 			this.turnInfoPanel.ActivateTurnInfoPanelNoInput(player);
 		}
 
-		// Token: 0x060022FB RID: 8955 RVA: 0x000D0D78 File Offset: 0x000CEF78
+		// Token: 0x060022FB RID: 8955 RVA: 0x000D0F34 File Offset: 0x000CF134
 		public void OnUpdatePlayerStats()
 		{
 			if (GameController.GameManager.PlayerCurrent.IsHuman)
@@ -2018,13 +2022,13 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x060022FC RID: 8956 RVA: 0x0003E6A9 File Offset: 0x0003C8A9
+		// Token: 0x060022FC RID: 8956 RVA: 0x0003E676 File Offset: 0x0003C876
 		public void AddMessageToExecute(IExecutableMessage message)
 		{
 			this.multiplayerActions.Enqueue(message);
 		}
 
-		// Token: 0x060022FD RID: 8957 RVA: 0x000D0DD0 File Offset: 0x000CEFD0
+		// Token: 0x060022FD RID: 8957 RVA: 0x000D0F8C File Offset: 0x000CF18C
 		public void OnActionFinished()
 		{
 			this.gameBoardPresenter.UpdateBoard(false, false);
@@ -2051,13 +2055,13 @@ namespace Scythe.UI
 			SingletonMono<TopMenuPanelsManager>.Instance.UpdatePlayerInfo(factionInfo, GameController.GameManager.factionBasicInfo[playerOwner.matFaction.faction], playerOwner.objectiveCards, playerOwner.combatCards, false);
 		}
 
-		// Token: 0x060022FE RID: 8958 RVA: 0x0003E6B7 File Offset: 0x0003C8B7
+		// Token: 0x060022FE RID: 8958 RVA: 0x0003E684 File Offset: 0x0003C884
 		public void OnTurnEnded()
 		{
 			this.NextTurnMulti();
 		}
 
-		// Token: 0x060022FF RID: 8959 RVA: 0x000D0F14 File Offset: 0x000CF114
+		// Token: 0x060022FF RID: 8959 RVA: 0x000D10C0 File Offset: 0x000CF2C0
 		public void OnInputEnabled(bool enabled)
 		{
 			if (GameController.GameManager.SpectatorMode)
@@ -2102,7 +2106,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002300 RID: 8960 RVA: 0x000D0FFC File Offset: 0x000CF1FC
+		// Token: 0x06002300 RID: 8960 RVA: 0x000D11A8 File Offset: 0x000CF3A8
 		public void OnShowFactoryCards()
 		{
 			if (GameController.GameManager.TestingMode && GameController.GameManager.IsMyTurn())
@@ -2115,7 +2119,7 @@ namespace Scythe.UI
 			this.factoryCardPresenter.SetCards();
 		}
 
-		// Token: 0x06002301 RID: 8961 RVA: 0x000D1068 File Offset: 0x000CF268
+		// Token: 0x06002301 RID: 8961 RVA: 0x000D1214 File Offset: 0x000CF414
 		public void OnShowEmptyCards(int amount)
 		{
 			if (GameController.GameManager.TestingMode && GameController.GameManager.IsMyTurn())
@@ -2128,7 +2132,7 @@ namespace Scythe.UI
 			this.factoryCardPresenter.ShowEmptyCards(amount);
 		}
 
-		// Token: 0x06002302 RID: 8962 RVA: 0x0003E6BF File Offset: 0x0003C8BF
+		// Token: 0x06002302 RID: 8962 RVA: 0x0003E68C File Offset: 0x0003C88C
 		public void AfterCardAdded()
 		{
 			if (GameController.GameManager.IsMyTurn())
@@ -2138,13 +2142,13 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002303 RID: 8963 RVA: 0x0003E6DE File Offset: 0x0003C8DE
+		// Token: 0x06002303 RID: 8963 RVA: 0x0003E6AB File Offset: 0x0003C8AB
 		public void OnShowChoosenFactory(int cardIndex, int positionIndex)
 		{
 			this.factoryCardPresenter.ShowCard(cardIndex, positionIndex);
 		}
 
-		// Token: 0x06002304 RID: 8964 RVA: 0x000D10D4 File Offset: 0x000CF2D4
+		// Token: 0x06002304 RID: 8964 RVA: 0x000D1280 File Offset: 0x000CF480
 		public void ShowEncounter()
 		{
 			if (GameController.GameManager.TestingMode && GameController.GameManager.IsMyTurn())
@@ -2156,13 +2160,13 @@ namespace Scythe.UI
 			this.encounterCardPresenter.SetOptions(GameController.GameManager.LastEncounterCard);
 		}
 
-		// Token: 0x06002305 RID: 8965 RVA: 0x0003E6ED File Offset: 0x0003C8ED
+		// Token: 0x06002305 RID: 8965 RVA: 0x0003E6BA File Offset: 0x0003C8BA
 		public void ChooseOption(int index)
 		{
 			this.encounterCardPresenter.GrayOutOption(index);
 		}
 
-		// Token: 0x06002306 RID: 8966 RVA: 0x000D1138 File Offset: 0x000CF338
+		// Token: 0x06002306 RID: 8966 RVA: 0x000D12E4 File Offset: 0x000CF4E4
 		public void EndEncounter(int x, int y)
 		{
 			this.gameBoardPresenter.GetGameHexPresenter(x, y).ActivateEncounterEndAnimation();
@@ -2173,7 +2177,7 @@ namespace Scythe.UI
 			AnalyticsEventLogger.Instance.LogScreenDisplay(Screens.in_game, Contexts.ingame);
 		}
 
-		// Token: 0x06002307 RID: 8967 RVA: 0x0003E6FB File Offset: 0x0003C8FB
+		// Token: 0x06002307 RID: 8967 RVA: 0x0003E6C8 File Offset: 0x0003C8C8
 		public void ShowObjectiveCard(ObjectiveCard objectiveCard, Player player)
 		{
 			if (GameController.GameManager.TestingMode)
@@ -2184,14 +2188,14 @@ namespace Scythe.UI
 			this.objectiveCardPresenter.SetCard(objectiveCard, GameController.factionInfo[player.matFaction.faction].logo);
 		}
 
-		// Token: 0x06002308 RID: 8968 RVA: 0x0003E738 File Offset: 0x0003C938
+		// Token: 0x06002308 RID: 8968 RVA: 0x0003E705 File Offset: 0x0003C905
 		public void CombatAbilityUsed(AbilityPerk ability)
 		{
 			this.combatPresenter.SetLastUsedAbility(ability);
 			this.combatPresenter.ShowInfoAboutUsedCombatAbility();
 		}
 
-		// Token: 0x06002309 RID: 8969 RVA: 0x000D11B0 File Offset: 0x000CF3B0
+		// Token: 0x06002309 RID: 8969 RVA: 0x000D135C File Offset: 0x000CF55C
 		public void OnEnemyUnitMove(Unit unit, Dictionary<GameHex, GameHex> possibleMoves)
 		{
 			UnitPresenter unitPresenter = GameController.GetUnitPresenter(unit);
@@ -2202,7 +2206,7 @@ namespace Scythe.UI
 			this.gameBoardPresenter.UpdateStaticObjects();
 		}
 
-		// Token: 0x0600230A RID: 8970 RVA: 0x0003E751 File Offset: 0x0003C951
+		// Token: 0x0600230A RID: 8970 RVA: 0x0003E71E File Offset: 0x0003C91E
 		public void GameEnded()
 		{
 			if (GameController.GameManager.IsMultiplayer)
@@ -2212,7 +2216,7 @@ namespace Scythe.UI
 			base.StartCoroutine(this.WaitWithEndGamePresentationUntilAnimationsAreFinished());
 		}
 
-		// Token: 0x0600230B RID: 8971 RVA: 0x000D11E4 File Offset: 0x000CF3E4
+		// Token: 0x0600230B RID: 8971 RVA: 0x000D1390 File Offset: 0x000CF590
 		public void RunOutOfTime()
 		{
 			if (GameController.GameManager.GetPlayersWithoutAICount() == 1 && GameController.GameManager.IsMultiplayer && MultiplayerController.Instance.RunOutOfTime)
@@ -2230,7 +2234,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x0600230C RID: 8972 RVA: 0x0003E76D File Offset: 0x0003C96D
+		// Token: 0x0600230C RID: 8972 RVA: 0x0003E73A File Offset: 0x0003C93A
 		public IEnumerator WaitWithEndGamePresentationUntilAnimationsAreFinished()
 		{
 			yield return new WaitForEndOfFrame();
@@ -2242,20 +2246,20 @@ namespace Scythe.UI
 			yield break;
 		}
 
-		// Token: 0x0600230D RID: 8973 RVA: 0x0003E77C File Offset: 0x0003C97C
+		// Token: 0x0600230D RID: 8973 RVA: 0x0003E749 File Offset: 0x0003C949
 		public void SynchronizeGame()
 		{
 			this.AfterGameSynchronize();
 		}
 
-		// Token: 0x0600230E RID: 8974 RVA: 0x0003E784 File Offset: 0x0003C984
+		// Token: 0x0600230E RID: 8974 RVA: 0x0003E751 File Offset: 0x0003C951
 		public void GameLoaded()
 		{
 			this.UpdateTurnInfo(GameController.GameManager.PlayerCurrent);
 			this.AdjustPresentersAfterLoad();
 		}
 
-		// Token: 0x0600230F RID: 8975 RVA: 0x000D1284 File Offset: 0x000CF484
+		// Token: 0x0600230F RID: 8975 RVA: 0x000D1430 File Offset: 0x000CF630
 		public void ChooseFirstBattlefield()
 		{
 			if (GameController.GameManager.combatManager.GetBattlefields().Count > 0)
@@ -2266,7 +2270,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002310 RID: 8976 RVA: 0x0003E79C File Offset: 0x0003C99C
+		// Token: 0x06002310 RID: 8976 RVA: 0x0003E769 File Offset: 0x0003C969
 		public void OnShowPoints(List<PlayerEndGameStats> stats)
 		{
 			this.endGameSequencePresenter.EndGameStats = stats;
@@ -2279,7 +2283,7 @@ namespace Scythe.UI
 			this.CheckIfPlayerMasterWonOnline();
 		}
 
-		// Token: 0x06002311 RID: 8977 RVA: 0x0003E7D6 File Offset: 0x0003C9D6
+		// Token: 0x06002311 RID: 8977 RVA: 0x0003E7A3 File Offset: 0x0003C9A3
 		public void OnObjectiveCardHighlight(int index, bool highlight)
 		{
 			if (PlatformManager.IsStandalone)
@@ -2290,25 +2294,25 @@ namespace Scythe.UI
 			SingletonMono<TopMenuPanelsManager>.Instance.GetTopMenuObjectivesPresenter().FocusObjectiveCard(index, highlight);
 		}
 
-		// Token: 0x06002312 RID: 8978 RVA: 0x0003E7FE File Offset: 0x0003C9FE
+		// Token: 0x06002312 RID: 8978 RVA: 0x0003E7CB File Offset: 0x0003C9CB
 		public void OnEncounterEnabled()
 		{
 			this.ShowEncounterCard();
 		}
 
-		// Token: 0x06002313 RID: 8979 RVA: 0x0003E806 File Offset: 0x0003CA06
+		// Token: 0x06002313 RID: 8979 RVA: 0x0003E7D3 File Offset: 0x0003C9D3
 		public static string GetEncounterDescription(int cardId, int option)
 		{
 			return ScriptLocalization.Get(string.Concat(new object[] { "Encounters/EncounterDescription", cardId, "-", option }));
 		}
 
-		// Token: 0x06002314 RID: 8980 RVA: 0x0003E83A File Offset: 0x0003CA3A
+		// Token: 0x06002314 RID: 8980 RVA: 0x0003E807 File Offset: 0x0003CA07
 		public static string GetEncounterActionDescription(int cardId, int option)
 		{
 			return ScriptLocalization.Get(string.Concat(new object[] { "Encounters/EncounterAction", cardId, "-", option }));
 		}
 
-		// Token: 0x06002315 RID: 8981 RVA: 0x0003E86E File Offset: 0x0003CA6E
+		// Token: 0x06002315 RID: 8981 RVA: 0x0003E83B File Offset: 0x0003CA3B
 		public void OnFactoryEnabled()
 		{
 			this.endTurnButton.interactable = false;
@@ -2317,109 +2321,109 @@ namespace Scythe.UI
 			this.ShowFactoryCards();
 		}
 
-		// Token: 0x06002316 RID: 8982 RVA: 0x0003E895 File Offset: 0x0003CA95
+		// Token: 0x06002316 RID: 8982 RVA: 0x0003E862 File Offset: 0x0003CA62
 		private void OnEnemyProduce(ProduceEnemyActionInfo enemyProduceInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyProduceActionAnim(enemyProduceInfo);
 		}
 
-		// Token: 0x06002317 RID: 8983 RVA: 0x0003E8A2 File Offset: 0x0003CAA2
+		// Token: 0x06002317 RID: 8983 RVA: 0x0003E86F File Offset: 0x0003CA6F
 		private void OnEnemyGainWorker(GainWorkerEnemyActionInfo enemyGainWorkerInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyProduceWorkerSave(enemyGainWorkerInfo);
 		}
 
-		// Token: 0x06002318 RID: 8984 RVA: 0x0003E8AF File Offset: 0x0003CAAF
+		// Token: 0x06002318 RID: 8984 RVA: 0x0003E87C File Offset: 0x0003CA7C
 		private void OnEnemyGainWorkerEnds(GainWorkersEndEnemyActionInfo enemyGainWorkersInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyProduceWorkerActionAnim(enemyGainWorkersInfo);
 		}
 
-		// Token: 0x06002319 RID: 8985 RVA: 0x0003E8BC File Offset: 0x0003CABC
+		// Token: 0x06002319 RID: 8985 RVA: 0x0003E889 File Offset: 0x0003CA89
 		private void OnEnemyTrade(TradeEnemyActionInfo enemyTradeInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyTradeActionAnim(enemyTradeInfo);
 		}
 
-		// Token: 0x0600231A RID: 8986 RVA: 0x0003E8C9 File Offset: 0x0003CAC9
+		// Token: 0x0600231A RID: 8986 RVA: 0x0003E896 File Offset: 0x0003CA96
 		private void OnEnemyRecruitBonus(EnlistBonusEnemyActionInfo enlistBonusEnemyInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyGenerateRecruitBonusActionAnim(enlistBonusEnemyInfo);
 		}
 
-		// Token: 0x0600231B RID: 8987 RVA: 0x0003E8D6 File Offset: 0x0003CAD6
+		// Token: 0x0600231B RID: 8987 RVA: 0x0003E8A3 File Offset: 0x0003CAA3
 		private void OnEnemysBonusEnd()
 		{
 			ShowEnemyMoves.Instance.OnEnemysBonusesEnd();
 		}
 
-		// Token: 0x0600231C RID: 8988 RVA: 0x0003E8E2 File Offset: 0x0003CAE2
+		// Token: 0x0600231C RID: 8988 RVA: 0x0003E8AF File Offset: 0x0003CAAF
 		private void OnEnemyRecruit(EnlistEnemyActionInfo enlistEnemyInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyRecruitActionAnim(enlistEnemyInfo);
 		}
 
-		// Token: 0x0600231D RID: 8989 RVA: 0x0003E8EF File Offset: 0x0003CAEF
+		// Token: 0x0600231D RID: 8989 RVA: 0x0003E8BC File Offset: 0x0003CABC
 		private void OnEnemyUpgrade(UpgradeEnemyActionInfo upgradeEnemyInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyUpgradeActionAnim(upgradeEnemyInfo);
 		}
 
-		// Token: 0x0600231E RID: 8990 RVA: 0x0003E8FC File Offset: 0x0003CAFC
+		// Token: 0x0600231E RID: 8990 RVA: 0x0003E8C9 File Offset: 0x0003CAC9
 		private void OnEnemyDeploy(DeployEnemyActionInfo deployEnemyInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyDeployActionAnim(deployEnemyInfo);
 		}
 
-		// Token: 0x0600231F RID: 8991 RVA: 0x0003E909 File Offset: 0x0003CB09
+		// Token: 0x0600231F RID: 8991 RVA: 0x0003E8D6 File Offset: 0x0003CAD6
 		private void OnEnemyBuild(BuildEnemyActionInfo buildEnemyInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyBuildActionAnim(buildEnemyInfo);
 		}
 
-		// Token: 0x06002320 RID: 8992 RVA: 0x0003E916 File Offset: 0x0003CB16
+		// Token: 0x06002320 RID: 8992 RVA: 0x0003E8E3 File Offset: 0x0003CAE3
 		private void OnEnemyPayResource(EnemyPayResourceFromHexInfo payResourcesInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyPayResourcesFromHex(payResourcesInfo);
 		}
 
-		// Token: 0x06002321 RID: 8993 RVA: 0x0003E923 File Offset: 0x0003CB23
+		// Token: 0x06002321 RID: 8993 RVA: 0x0003E8F0 File Offset: 0x0003CAF0
 		private void OnEnemyMove(MoveEnemyActionInfo enemyActionInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyUnitMoveAnim(enemyActionInfo);
 		}
 
-		// Token: 0x06002322 RID: 8994 RVA: 0x0003E930 File Offset: 0x0003CB30
+		// Token: 0x06002322 RID: 8994 RVA: 0x0003E8FD File Offset: 0x0003CAFD
 		private void OnEnemyLoadResources(LoadResourcesEnemyActionInfo enemyActionInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyLoadResourcesAnim(enemyActionInfo);
 		}
 
-		// Token: 0x06002323 RID: 8995 RVA: 0x0003E93D File Offset: 0x0003CB3D
+		// Token: 0x06002323 RID: 8995 RVA: 0x0003E90A File Offset: 0x0003CB0A
 		private void OnEnemyLoadWorker(LoadWorkerActionInfo enemyActionInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyLoadWorkerAnim(enemyActionInfo);
 		}
 
-		// Token: 0x06002324 RID: 8996 RVA: 0x0003E94A File Offset: 0x0003CB4A
+		// Token: 0x06002324 RID: 8996 RVA: 0x0003E917 File Offset: 0x0003CB17
 		private void OnEnemyUnloadWorker(UnloadWorkerActionInfo enemyActionInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyUnloadWorkerAnim(enemyActionInfo);
 		}
 
-		// Token: 0x06002325 RID: 8997 RVA: 0x0003E957 File Offset: 0x0003CB57
+		// Token: 0x06002325 RID: 8997 RVA: 0x0003E924 File Offset: 0x0003CB24
 		private void OnEnemyRetreatMove(MoveRetreatEnemyActionInfo enemyActionInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyRetreatUnitsMoveAnim(enemyActionInfo);
 		}
 
-		// Token: 0x06002326 RID: 8998 RVA: 0x0003E964 File Offset: 0x0003CB64
+		// Token: 0x06002326 RID: 8998 RVA: 0x0003E931 File Offset: 0x0003CB31
 		private void OnEnemyGainTopStats(GainTopStatsEnemyActionInfo enemyActionInfo)
 		{
 			ShowEnemyMoves.Instance.OnEnemyGainTopStatsAnim(enemyActionInfo);
 		}
 
-		// Token: 0x06002327 RID: 8999 RVA: 0x000D1300 File Offset: 0x000CF500
+		// Token: 0x06002327 RID: 8999 RVA: 0x000D14AC File Offset: 0x000CF6AC
 		public void OnGameEnded()
 		{
 			this.SetControlsAtGameEnd();
@@ -2457,7 +2461,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002328 RID: 9000 RVA: 0x0003E971 File Offset: 0x0003CB71
+		// Token: 0x06002328 RID: 9000 RVA: 0x0003E93E File Offset: 0x0003CB3E
 		private void CheckIfPlayerMasterWonOffline()
 		{
 			if (this.endGameSequencePresenter.EndGameStats[0].player.IsHuman)
@@ -2466,7 +2470,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002329 RID: 9001 RVA: 0x0003E996 File Offset: 0x0003CB96
+		// Token: 0x06002329 RID: 9001 RVA: 0x0003E963 File Offset: 0x0003CB63
 		private void CheckIfPlayerMasterWonOnline()
 		{
 			if (this.endGameSequencePresenter.EndGameStats[0].faction == PlayerInfo.me.Faction)
@@ -2475,7 +2479,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x0600232A RID: 9002 RVA: 0x0003E9C0 File Offset: 0x0003CBC0
+		// Token: 0x0600232A RID: 9002 RVA: 0x0003E98D File Offset: 0x0003CB8D
 		public void OnMultiplayerGameEnded()
 		{
 			this.SetControlsAtGameEnd();
@@ -2484,7 +2488,7 @@ namespace Scythe.UI
 			MusicManager.Instance.PrepareWinnerMusic();
 		}
 
-		// Token: 0x0600232B RID: 9003 RVA: 0x000D1438 File Offset: 0x000CF638
+		// Token: 0x0600232B RID: 9003 RVA: 0x000D15E4 File Offset: 0x000CF7E4
 		public void SetControlsAtGameEnd()
 		{
 			this.gameBoardPresenter.UpdateStaticObjects();
@@ -2517,7 +2521,7 @@ namespace Scythe.UI
 			this.darkenUI.gameObject.SetActive(false);
 		}
 
-		// Token: 0x0600232C RID: 9004 RVA: 0x000D1570 File Offset: 0x000CF770
+		// Token: 0x0600232C RID: 9004 RVA: 0x000D171C File Offset: 0x000CF91C
 		public void AddFactoryCard()
 		{
 			this.matPlayer.matSection.Add(this.factoryCardPresenter.GenerateSectionPresenter(this.matPlayer.factoryCardSlot, GameController.GameManager.PlayerCurrent.matPlayer.GetPlayerMatSection(4) as FactoryCard));
@@ -2533,7 +2537,7 @@ namespace Scythe.UI
 			this.matPlayer.matSection[GameController.GameManager.PlayerCurrent.currentMatSection].CheckDownAction();
 		}
 
-		// Token: 0x0600232D RID: 9005 RVA: 0x000D16B0 File Offset: 0x000CF8B0
+		// Token: 0x0600232D RID: 9005 RVA: 0x000D185C File Offset: 0x000CFA5C
 		public void ShowEncounterCard()
 		{
 			int currentMatSection = GameController.GameManager.PlayerCurrent.currentMatSection;
@@ -2558,7 +2562,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x0600232E RID: 9006 RVA: 0x000D1764 File Offset: 0x000CF964
+		// Token: 0x0600232E RID: 9006 RVA: 0x000D1910 File Offset: 0x000CFB10
 		public void ShowFactoryCards()
 		{
 			AchievementManager.UpdateAchievementFirstInFactory();
@@ -2581,13 +2585,13 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x0600232F RID: 9007 RVA: 0x0003E9E7 File Offset: 0x0003CBE7
+		// Token: 0x0600232F RID: 9007 RVA: 0x0003E9B4 File Offset: 0x0003CBB4
 		public bool IsAmmoPoolEmpty()
 		{
 			return this.AmmoPoolEmpty;
 		}
 
-		// Token: 0x06002330 RID: 9008 RVA: 0x0003E9EF File Offset: 0x0003CBEF
+		// Token: 0x06002330 RID: 9008 RVA: 0x0003E9BC File Offset: 0x0003CBBC
 		public void OnNoMoreCombatCards(int cards)
 		{
 			if (cards == 0 && !this.AmmoPoolEmpty)
@@ -2602,7 +2606,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002331 RID: 9009 RVA: 0x000D1810 File Offset: 0x000CFA10
+		// Token: 0x06002331 RID: 9009 RVA: 0x000D19BC File Offset: 0x000CFBBC
 		public void ShowObjectiveCurrentPlayer(int index)
 		{
 			Player player;
@@ -2621,19 +2625,19 @@ namespace Scythe.UI
 			this.objectiveCardPresenter.SetCard(player.objectiveCards[index], GameController.factionInfo[player.matFaction.faction].logo);
 		}
 
-		// Token: 0x06002332 RID: 9010 RVA: 0x0003EA1A File Offset: 0x0003CC1A
+		// Token: 0x06002332 RID: 9010 RVA: 0x0003E9E7 File Offset: 0x0003CBE7
 		public static string GetObjectiveTitle(int objectiveId)
 		{
 			return ScriptLocalization.Get(string.Format("Objectives/ObjectiveTitle{0}", objectiveId));
 		}
 
-		// Token: 0x06002333 RID: 9011 RVA: 0x0003EA31 File Offset: 0x0003CC31
+		// Token: 0x06002333 RID: 9011 RVA: 0x0003E9FE File Offset: 0x0003CBFE
 		public static string GetObjectiveDescription(int objectiveId)
 		{
 			return ScriptLocalization.Get(string.Format("Objectives/ObjectiveDescription{0}", objectiveId));
 		}
 
-		// Token: 0x06002334 RID: 9012 RVA: 0x000D1890 File Offset: 0x000CFA90
+		// Token: 0x06002334 RID: 9012 RVA: 0x000D1A3C File Offset: 0x000CFC3C
 		public void CompleteObjectiveWithWarning(int index)
 		{
 			if (OptionsManager.IsWarningsActive() && !GameController.GameManager.CanPlayerDoActionAfterObjective(index) && GameController.GameManager.PlayerCurrent.matPlayer.GetPlayerMatSection(GameController.GameManager.PlayerCurrent.currentMatSection).ActionDown.CanPlayerGainFromActions() && GameController.GameManager.PlayerCurrent.matPlayer.GetPlayerMatSection(GameController.GameManager.PlayerCurrent.currentMatSection).ActionDown.CanPlayerPayActions())
@@ -2644,7 +2648,7 @@ namespace Scythe.UI
 			this.CompleteObjective(index);
 		}
 
-		// Token: 0x06002335 RID: 9013 RVA: 0x000D1920 File Offset: 0x000CFB20
+		// Token: 0x06002335 RID: 9013 RVA: 0x000D1ACC File Offset: 0x000CFCCC
 		private void ShowObjectivEndTurnWarning(int index)
 		{
 			if (this.endTurnMessage != null)
@@ -2661,7 +2665,7 @@ namespace Scythe.UI
 			}, null);
 		}
 
-		// Token: 0x06002336 RID: 9014 RVA: 0x000D19BC File Offset: 0x000CFBBC
+		// Token: 0x06002336 RID: 9014 RVA: 0x000D1B68 File Offset: 0x000CFD68
 		public void CompleteObjective(int index)
 		{
 			WorldSFXManager.PlaySound(SoundEnum.GuiOjectivesComplitedClick, AudioSourceType.Buttons);
@@ -2698,19 +2702,19 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002337 RID: 9015 RVA: 0x0003EA48 File Offset: 0x0003CC48
+		// Token: 0x06002337 RID: 9015 RVA: 0x0003EA15 File Offset: 0x0003CC15
 		public static string GetStructureBonusName(int bonusId)
 		{
 			return ScriptLocalization.Get("StructureBonus/BonusName" + bonusId.ToString());
 		}
 
-		// Token: 0x06002338 RID: 9016 RVA: 0x0003EA60 File Offset: 0x0003CC60
+		// Token: 0x06002338 RID: 9016 RVA: 0x0003EA2D File Offset: 0x0003CC2D
 		public static string GetStructureBonusDescription(int bonusId)
 		{
 			return ScriptLocalization.Get("StructureBonus/BonusDescription" + bonusId.ToString());
 		}
 
-		// Token: 0x06002339 RID: 9017 RVA: 0x000D1B58 File Offset: 0x000CFD58
+		// Token: 0x06002339 RID: 9017 RVA: 0x000D1D04 File Offset: 0x000CFF04
 		public void ForfeitGame()
 		{
 			if (!GameController.GameManager.GameFinished)
@@ -2730,7 +2734,7 @@ namespace Scythe.UI
 			SceneController.Instance.LoadGame(SceneController.SCENE_MENU_NAME);
 		}
 
-		// Token: 0x0600233A RID: 9018 RVA: 0x000D1BF8 File Offset: 0x000CFDF8
+		// Token: 0x0600233A RID: 9018 RVA: 0x000D1DA4 File Offset: 0x000CFFA4
 		public void ShowScorePreview()
 		{
 			this.endGamePreviewStats.gameObject.SetActive(true);
@@ -2738,7 +2742,7 @@ namespace Scythe.UI
 			this.endGamePreviewStats.ShowPreviewStats(list);
 		}
 
-		// Token: 0x0600233B RID: 9019 RVA: 0x000D1C30 File Offset: 0x000CFE30
+		// Token: 0x0600233B RID: 9019 RVA: 0x000D1DDC File Offset: 0x000CFFDC
 		public void ShowRiverwalkPreview()
 		{
 			this.riverwalkPreview.SetActive(!this.riverwalkPreview.activeSelf);
@@ -2748,7 +2752,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x0600233C RID: 9020 RVA: 0x000D1C9C File Offset: 0x000CFE9C
+		// Token: 0x0600233C RID: 9020 RVA: 0x000D1E48 File Offset: 0x000D0048
 		public void ExitGame()
 		{
 			if (this.GameIsLoaded)
@@ -2811,7 +2815,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x0600233D RID: 9021 RVA: 0x000D1E50 File Offset: 0x000D0050
+		// Token: 0x0600233D RID: 9021 RVA: 0x000D1FFC File Offset: 0x000D01FC
 		public static void SetFocusHex(Scythe.BoardPresenter.GameHexPresenter hex)
 		{
 			GameHex gameHexLogic = hex.GetGameHexLogic();
@@ -2819,14 +2823,13 @@ namespace Scythe.UI
 			{
 				return;
 			}
-			GameController.SelectionMode hexSelectionMode = GameController.HexSelectionMode;
-			if (hexSelectionMode - GameController.SelectionMode.MoveAction <= 7 && GameController.HexGetFocused != null)
+			if (GameController.HexSelectionMode - GameController.SelectionMode.MoveAction <= 7 && GameController.HexGetFocused != null)
 			{
 				GameController.HexGetFocused(hex);
 			}
 		}
 
-		// Token: 0x0600233E RID: 9022 RVA: 0x000D1E90 File Offset: 0x000D0090
+		// Token: 0x0600233E RID: 9022 RVA: 0x000D203C File Offset: 0x000D023C
 		public static void SetFocusUnit(UnitPresenter unit)
 		{
 			GameController.SelectionMode hexSelectionMode = GameController.HexSelectionMode;
@@ -2840,7 +2843,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x0600233F RID: 9023 RVA: 0x000D1ECC File Offset: 0x000D00CC
+		// Token: 0x0600233F RID: 9023 RVA: 0x000D2078 File Offset: 0x000D0278
 		public static void ClearFocus()
 		{
 			foreach (UnitPresenter unitPresenter in GameController.FocusUnit)
@@ -2850,31 +2853,31 @@ namespace Scythe.UI
 			GameController.FocusUnit.Clear();
 		}
 
-		// Token: 0x06002340 RID: 9024 RVA: 0x0003EA78 File Offset: 0x0003CC78
+		// Token: 0x06002340 RID: 9024 RVA: 0x0003EA45 File Offset: 0x0003CC45
 		public Scythe.BoardPresenter.GameHexPresenter GetGameHexPresenter(GameHex position)
 		{
 			return this.gameBoardPresenter.GetGameHexPresenter(position);
 		}
 
-		// Token: 0x06002341 RID: 9025 RVA: 0x0003EA86 File Offset: 0x0003CC86
+		// Token: 0x06002341 RID: 9025 RVA: 0x0003EA53 File Offset: 0x0003CC53
 		public Scythe.BoardPresenter.GameHexPresenter GetGameHexPresenter(int x, int y)
 		{
 			return this.gameBoardPresenter.GetGameHexPresenter(x, y);
 		}
 
-		// Token: 0x06002342 RID: 9026 RVA: 0x0003EA95 File Offset: 0x0003CC95
+		// Token: 0x06002342 RID: 9026 RVA: 0x0003EA62 File Offset: 0x0003CC62
 		public Vector3 GetGameBoardPosition()
 		{
 			return this.gameBoardPresenter.transform.position;
 		}
 
-		// Token: 0x06002343 RID: 9027 RVA: 0x0003EAA7 File Offset: 0x0003CCA7
+		// Token: 0x06002343 RID: 9027 RVA: 0x0003EA74 File Offset: 0x0003CC74
 		public void GetNextPlayerAfterEnemyAnimation()
 		{
 			base.StartCoroutine(this.NextTurnCoroutine());
 		}
 
-		// Token: 0x06002344 RID: 9028 RVA: 0x0003EAB6 File Offset: 0x0003CCB6
+		// Token: 0x06002344 RID: 9028 RVA: 0x0003EA83 File Offset: 0x0003CC83
 		public void MinimizePlayerMat()
 		{
 			if (PlatformManager.IsStandalone)
@@ -2884,7 +2887,7 @@ namespace Scythe.UI
 			this.matPlayer.ShowActionLabels(false);
 		}
 
-		// Token: 0x06002345 RID: 9029 RVA: 0x0003EADB File Offset: 0x0003CCDB
+		// Token: 0x06002345 RID: 9029 RVA: 0x0003EAA8 File Offset: 0x0003CCA8
 		public void MaximizePlayerMat()
 		{
 			if (PlatformManager.IsStandalone)
@@ -2894,13 +2897,13 @@ namespace Scythe.UI
 			this.matPlayer.ShowActionLabels(true);
 		}
 
-		// Token: 0x06002346 RID: 9030 RVA: 0x0003EB00 File Offset: 0x0003CD00
+		// Token: 0x06002346 RID: 9030 RVA: 0x0003EACD File Offset: 0x0003CCCD
 		public static UnitPresenter GetUnitPresenter(Unit unit)
 		{
 			return GameController.factionUnits[unit.Owner.matFaction.faction].GetUnitPresenter(unit);
 		}
 
-		// Token: 0x06002347 RID: 9031 RVA: 0x000D1F28 File Offset: 0x000D0128
+		// Token: 0x06002347 RID: 9031 RVA: 0x000D20D4 File Offset: 0x000D02D4
 		private void ClearDelegates()
 		{
 			GameController.AfterEndTurnAIAndPlayer = null;
@@ -2959,7 +2962,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002348 RID: 9032 RVA: 0x0003EB22 File Offset: 0x0003CD22
+		// Token: 0x06002348 RID: 9032 RVA: 0x0003EAEF File Offset: 0x0003CCEF
 		private void OnApplicationQuit()
 		{
 			if (GameController.GameManager.IsMultiplayer && !this.returnToLobby)
@@ -2968,7 +2971,7 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x06002349 RID: 9033 RVA: 0x0003EB42 File Offset: 0x0003CD42
+		// Token: 0x06002349 RID: 9033 RVA: 0x0003EB0F File Offset: 0x0003CD0F
 		private void OnApplicationPause(bool pauseStatus)
 		{
 			if (GameController.GameManager.IsMultiplayer)
@@ -2977,377 +2980,377 @@ namespace Scythe.UI
 			}
 		}
 
-		// Token: 0x04001812 RID: 6162
+		// Token: 0x0400180F RID: 6159
 		public static GameController Instance;
 
-		// Token: 0x04001816 RID: 6166
+		// Token: 0x04001813 RID: 6163
 		public static int focusHexMax = int.MaxValue;
 
-		// Token: 0x04001817 RID: 6167
+		// Token: 0x04001814 RID: 6164
 		public static int resourcePayed = int.MaxValue;
 
-		// Token: 0x04001818 RID: 6168
+		// Token: 0x04001815 RID: 6165
 		public GameController.QuickstartMode quickstartMode;
 
-		// Token: 0x04001819 RID: 6169
+		// Token: 0x04001816 RID: 6166
 		public bool showAILogs;
 
-		// Token: 0x0400181A RID: 6170
+		// Token: 0x04001817 RID: 6167
 		public Camera uiCamera;
 
-		// Token: 0x0400181B RID: 6171
+		// Token: 0x04001818 RID: 6168
 		public Canvas ui;
 
-		// Token: 0x0400181C RID: 6172
+		// Token: 0x04001819 RID: 6169
 		public GameObject NoMoreBattleAmmoInfo;
 
-		// Token: 0x0400181D RID: 6173
+		// Token: 0x0400181A RID: 6170
 		public TurnInfoPanel turnInfoPanel;
 
-		// Token: 0x0400181E RID: 6174
+		// Token: 0x0400181B RID: 6171
 		public Text endTurnHint;
 
-		// Token: 0x0400181F RID: 6175
+		// Token: 0x0400181C RID: 6172
 		public Image endTurnShade;
 
-		// Token: 0x04001820 RID: 6176
+		// Token: 0x0400181D RID: 6173
 		public GameObject endTurnHintButton;
 
-		// Token: 0x04001821 RID: 6177
+		// Token: 0x0400181E RID: 6174
 		public GameController.EndTurnHintType endTurnHintType;
 
-		// Token: 0x04001822 RID: 6178
+		// Token: 0x0400181F RID: 6175
 		public Button endTurnButton;
 
-		// Token: 0x04001823 RID: 6179
+		// Token: 0x04001820 RID: 6176
 		public Button forfeitButton;
 
-		// Token: 0x04001824 RID: 6180
+		// Token: 0x04001821 RID: 6177
 		public TextMeshProUGUI endTurnButtonText;
 
-		// Token: 0x04001825 RID: 6181
+		// Token: 0x04001822 RID: 6178
 		public Sprite endTurnButtonImageActive;
 
-		// Token: 0x04001826 RID: 6182
+		// Token: 0x04001823 RID: 6179
 		public Sprite endTurnButtonImageActiveGlow;
 
-		// Token: 0x04001827 RID: 6183
+		// Token: 0x04001824 RID: 6180
 		public GameObject gameBoard2d;
 
-		// Token: 0x04001828 RID: 6184
+		// Token: 0x04001825 RID: 6181
 		public GameBoardPresenter gameBoardPresenter;
 
-		// Token: 0x04001829 RID: 6185
+		// Token: 0x04001826 RID: 6182
 		public Animator bottomBar;
 
-		// Token: 0x0400182A RID: 6186
+		// Token: 0x04001827 RID: 6183
 		public MatFactionPresenter matFaction;
 
-		// Token: 0x0400182B RID: 6187
+		// Token: 0x04001828 RID: 6184
 		public MatPlayerPresenter matPlayer;
 
-		// Token: 0x0400182C RID: 6188
+		// Token: 0x04001829 RID: 6185
 		public HexPointerController hexPointerController;
 
-		// Token: 0x0400182D RID: 6189
+		// Token: 0x0400182A RID: 6186
 		public EncounterCardPresenter encounterCardPresenter;
 
-		// Token: 0x0400182E RID: 6190
+		// Token: 0x0400182B RID: 6187
 		public FactoryCardsPresenter factoryCardPresenter;
 
-		// Token: 0x0400182F RID: 6191
+		// Token: 0x0400182C RID: 6188
 		public TabPanelWindow panelInfo;
 
-		// Token: 0x04001830 RID: 6192
+		// Token: 0x0400182D RID: 6189
 		public LastActionInfoPresenter lastActionInfoPresenter;
 
-		// Token: 0x04001831 RID: 6193
+		// Token: 0x0400182E RID: 6190
 		public PlayerStatsPresenter playerStats;
 
-		// Token: 0x04001832 RID: 6194
+		// Token: 0x0400182F RID: 6191
 		public EndGameSequencePresenter endGameSequencePresenter;
 
-		// Token: 0x04001833 RID: 6195
+		// Token: 0x04001830 RID: 6192
 		public EndGameStatsPresenter endGamePreviewStats;
 
-		// Token: 0x04001834 RID: 6196
+		// Token: 0x04001831 RID: 6193
 		public PlayerOrder playersFactions;
 
-		// Token: 0x04001835 RID: 6197
+		// Token: 0x04001832 RID: 6194
 		public ObjectiveCardPresenter objectiveCardPresenter;
 
-		// Token: 0x04001836 RID: 6198
+		// Token: 0x04001833 RID: 6195
 		public GameObject objectiveContextHint;
 
-		// Token: 0x04001837 RID: 6199
+		// Token: 0x04001834 RID: 6196
 		public ResourceTypeLayer ResourceTypeLayer;
 
-		// Token: 0x04001838 RID: 6200
+		// Token: 0x04001835 RID: 6197
 		public CombatPresenter combatPresenter;
 
-		// Token: 0x04001839 RID: 6201
+		// Token: 0x04001836 RID: 6198
 		public CombatPresenterMobile combatPresenterMobile;
 
-		// Token: 0x0400183A RID: 6202
+		// Token: 0x04001837 RID: 6199
 		public GameObject riverwalkPreview;
 
-		// Token: 0x0400183B RID: 6203
+		// Token: 0x04001838 RID: 6200
 		public DragAndDropPanel dragAndDropPanel;
 
-		// Token: 0x0400183C RID: 6204
+		// Token: 0x04001839 RID: 6201
 		public DragAndDropHook hook;
 
-		// Token: 0x0400183D RID: 6205
+		// Token: 0x0400183A RID: 6202
 		public HookController hookController;
 
-		// Token: 0x0400183E RID: 6206
+		// Token: 0x0400183B RID: 6203
 		public TokensController tokensController;
 
-		// Token: 0x0400183F RID: 6207
+		// Token: 0x0400183C RID: 6204
 		public ActionLogInterpreter logInterpreter;
 
-		// Token: 0x04001840 RID: 6208
+		// Token: 0x0400183D RID: 6205
 		public LoadingScreenPresenter loadingScreen;
 
-		// Token: 0x04001841 RID: 6209
+		// Token: 0x0400183E RID: 6206
 		public Image darkenUI;
 
-		// Token: 0x04001842 RID: 6210
+		// Token: 0x0400183F RID: 6207
 		public GameObject menu;
 
-		// Token: 0x04001843 RID: 6211
+		// Token: 0x04001840 RID: 6208
 		public GameObject[] menuHotseatOnly;
 
-		// Token: 0x04001844 RID: 6212
+		// Token: 0x04001841 RID: 6209
 		public Button menuLoadButton;
 
-		// Token: 0x04001845 RID: 6213
+		// Token: 0x04001842 RID: 6210
 		public UndoController undoController;
 
-		// Token: 0x04001846 RID: 6214
+		// Token: 0x04001843 RID: 6211
 		public GameObject exitingScreen;
 
-		// Token: 0x04001847 RID: 6215
+		// Token: 0x04001844 RID: 6212
 		public CameraControler cameraControler;
 
-		// Token: 0x04001848 RID: 6216
+		// Token: 0x04001845 RID: 6213
 		public AutomaticGainPresenter autoGainPanel;
 
-		// Token: 0x04001849 RID: 6217
+		// Token: 0x04001846 RID: 6214
 		public Chat chat;
 
-		// Token: 0x0400184A RID: 6218
+		// Token: 0x04001847 RID: 6215
 		public GameObject chatButton;
 
-		// Token: 0x0400184B RID: 6219
+		// Token: 0x04001848 RID: 6216
 		public GameObject waitInfoEncounter;
 
-		// Token: 0x0400184C RID: 6220
+		// Token: 0x04001849 RID: 6217
 		public GameObject waitInfoFactory;
 
-		// Token: 0x0400184D RID: 6221
+		// Token: 0x0400184A RID: 6218
 		public GameObject waitInfoRecruit;
 
-		// Token: 0x0400184E RID: 6222
+		// Token: 0x0400184B RID: 6219
 		public Dictionary<string, GameObject> capitalsGodrays = new Dictionary<string, GameObject>();
 
-		// Token: 0x0400184F RID: 6223
+		// Token: 0x0400184C RID: 6220
 		public GameObject selectedBattlefieldEffects;
 
-		// Token: 0x04001850 RID: 6224
+		// Token: 0x0400184D RID: 6221
 		public List<Toggle2> tabToggles;
 
-		// Token: 0x04001851 RID: 6225
+		// Token: 0x0400184E RID: 6222
 		public GameController.FactionInfo[] factionLogos;
 
-		// Token: 0x04001852 RID: 6226
+		// Token: 0x0400184F RID: 6223
 		public PlayerUnits[] playerUnits;
 
-		// Token: 0x04001853 RID: 6227
+		// Token: 0x04001850 RID: 6224
 		public YesNoDialog endTurnWarning;
 
-		// Token: 0x04001854 RID: 6228
+		// Token: 0x04001851 RID: 6225
 		public TextMeshProUGUI endTurnMessage;
 
-		// Token: 0x04001855 RID: 6229
+		// Token: 0x04001852 RID: 6226
 		public bool returnToLobby;
 
-		// Token: 0x04001856 RID: 6230
+		// Token: 0x04001853 RID: 6227
 		public bool GameIsLoaded;
 
-		// Token: 0x04001857 RID: 6231
+		// Token: 0x04001854 RID: 6228
 		public bool DragAndDrop = PlatformManager.IsStandalone;
 
-		// Token: 0x04001861 RID: 6241
+		// Token: 0x0400185E RID: 6238
 		public bool endTurnCacheMode;
 
-		// Token: 0x04001862 RID: 6242
+		// Token: 0x0400185F RID: 6239
 		public bool endTurnCached;
 
-		// Token: 0x04001863 RID: 6243
+		// Token: 0x04001860 RID: 6240
 		private bool waitForGameEnd;
 
-		// Token: 0x04001864 RID: 6244
+		// Token: 0x04001861 RID: 6241
 		private Queue<IExecutableMessage> multiplayerActions = new Queue<IExecutableMessage>();
 
-		// Token: 0x04001865 RID: 6245
+		// Token: 0x04001862 RID: 6242
 		public Dictionary<Faction, Vector3> factionCamera = new Dictionary<Faction, Vector3>();
 
-		// Token: 0x04001866 RID: 6246
+		// Token: 0x04001863 RID: 6243
 		private bool AmmoPoolEmpty;
 
-		// Token: 0x04001867 RID: 6247
+		// Token: 0x04001864 RID: 6244
 		private bool AIActionInterrupt;
 
-		// Token: 0x04001868 RID: 6248
+		// Token: 0x04001865 RID: 6245
 		private bool StatsSaved;
 
-		// Token: 0x04001869 RID: 6249
+		// Token: 0x04001866 RID: 6246
 		public bool gameFinishedTimeOut;
 
-		// Token: 0x0400186A RID: 6250
+		// Token: 0x04001867 RID: 6247
 		[Header("Units move animation")]
 		public AnimationCurve unitsHorizontalEase;
 
-		// Token: 0x0400186B RID: 6251
+		// Token: 0x04001868 RID: 6248
 		public AnimationCurve unitsVerticalEase;
 
-		// Token: 0x0400186C RID: 6252
+		// Token: 0x04001869 RID: 6249
 		public AnimationCurve unitsRotationEase;
 
-		// Token: 0x0400186D RID: 6253
+		// Token: 0x0400186A RID: 6250
 		public AnimationCurve unitsSpawn;
 
-		// Token: 0x0400186E RID: 6254
+		// Token: 0x0400186B RID: 6251
 		[Range(0.1f, 10f)]
 		public float unitsMoveSpeed;
 
-		// Token: 0x0400186F RID: 6255
+		// Token: 0x0400186C RID: 6252
 		[Range(0f, 10f)]
 		public float jumpHeight = 2.25f;
 
-		// Token: 0x04001870 RID: 6256
+		// Token: 0x0400186D RID: 6253
 		[Range(0.1f, 10f)]
 		public float resourcesMoveSpeed = 1f;
 
-		// Token: 0x04001871 RID: 6257
+		// Token: 0x0400186E RID: 6254
 		[Range(0f, 10f)]
 		public float resourcesJumpHeight = 1f;
 
-		// Token: 0x04001872 RID: 6258
+		// Token: 0x0400186F RID: 6255
 		[Range(0f, 90f)]
 		[Tooltip("Max rotation which pawn can achieve.\nE.g. for value 20 pawn can make rotation in X-axis and Z-axis from -20 to 20")]
 		public float maxRotation = 20f;
 
-		// Token: 0x04001873 RID: 6259
+		// Token: 0x04001870 RID: 6256
 		public float rangeVisibilityTime = 1f;
 
-		// Token: 0x04001874 RID: 6260
+		// Token: 0x04001871 RID: 6257
 		public GameObject optionsMenu;
 
-		// Token: 0x04001875 RID: 6261
+		// Token: 0x04001872 RID: 6258
 		[HideInInspector]
 		public LogInfo actualLogInfo;
 
-		// Game action logger — constructed in Init(), disposed in OnDestroy().
-		private Scythe.GameLogic.GameActionLogger _gameActionLogger;
-
-		// Token: 0x04001876 RID: 6262
+		// Token: 0x04001873 RID: 6259
 		public static bool gameFromSave = false;
 
-		// Token: 0x04001877 RID: 6263
+		// Token: 0x04001874 RID: 6260
 		public CameraMovementEffects cameraMovementEffects;
 
-		// Token: 0x04001878 RID: 6264
+		// Token: 0x04001875 RID: 6261
 		public bool cameraPresentationEnabled = true;
 
-		// Token: 0x04001879 RID: 6265
+		// Token: 0x04001876 RID: 6262
 		public TextMeshProUGUI TurnCounter;
 
-		// Token: 0x0400187A RID: 6266
+		// Token: 0x04001877 RID: 6263
 		public GameObject reflectionProbes;
 
-		// Token: 0x0400187B RID: 6267
+		// Token: 0x04001878 RID: 6264
 		public ChangeFactionPanel changeFactionPanel;
 
-		// Token: 0x0400187C RID: 6268
+		// Token: 0x04001879 RID: 6265
 		public bool isUndoLoad;
 
-		// Token: 0x0400187D RID: 6269
+		// Token: 0x0400187A RID: 6266
 		public Sprite[] capitalsIcons;
+
+		// Token: 0x0400187B RID: 6267
+		private GameActionLogger _gameActionLogger;
 
 		// Token: 0x02000455 RID: 1109
 		public enum QuickstartMode
 		{
-			// Token: 0x0400187F RID: 6271
+			// Token: 0x0400187D RID: 6269
 			AI = -1,
-			// Token: 0x04001880 RID: 6272
+			// Token: 0x0400187E RID: 6270
 			Tutorial01,
-			// Token: 0x04001881 RID: 6273
+			// Token: 0x0400187F RID: 6271
 			Tutorial02,
-			// Token: 0x04001882 RID: 6274
+			// Token: 0x04001880 RID: 6272
 			Tutorial03,
-			// Token: 0x04001883 RID: 6275
+			// Token: 0x04001881 RID: 6273
 			Tutorial04,
-			// Token: 0x04001884 RID: 6276
+			// Token: 0x04001882 RID: 6274
 			Tutorial05,
-			// Token: 0x04001885 RID: 6277
+			// Token: 0x04001883 RID: 6275
 			Tutorial06,
-			// Token: 0x04001886 RID: 6278
+			// Token: 0x04001884 RID: 6276
 			Tutorial07,
-			// Token: 0x04001887 RID: 6279
+			// Token: 0x04001885 RID: 6277
 			Tutorial08,
-			// Token: 0x04001888 RID: 6280
+			// Token: 0x04001886 RID: 6278
 			Tutorial09,
-			// Token: 0x04001889 RID: 6281
+			// Token: 0x04001887 RID: 6279
 			Tutorial10,
-			// Token: 0x0400188A RID: 6282
+			// Token: 0x04001888 RID: 6280
 			Tutorial11,
-			// Token: 0x0400188B RID: 6283
+			// Token: 0x04001889 RID: 6281
 			Challenge1,
-			// Token: 0x0400188C RID: 6284
+			// Token: 0x0400188A RID: 6282
 			Challenge2,
-			// Token: 0x0400188D RID: 6285
+			// Token: 0x0400188B RID: 6283
 			Challenge3,
-			// Token: 0x0400188E RID: 6286
+			// Token: 0x0400188C RID: 6284
 			Challenge4
 		}
 
 		// Token: 0x02000456 RID: 1110
 		public enum SelectionMode
 		{
-			// Token: 0x04001890 RID: 6288
+			// Token: 0x0400188E RID: 6286
 			Normal,
-			// Token: 0x04001891 RID: 6289
+			// Token: 0x0400188F RID: 6287
 			MoveAction,
-			// Token: 0x04001892 RID: 6290
+			// Token: 0x04001890 RID: 6288
 			DownAction,
-			// Token: 0x04001893 RID: 6291
+			// Token: 0x04001891 RID: 6289
 			TradeAction,
-			// Token: 0x04001894 RID: 6292
+			// Token: 0x04001892 RID: 6290
 			GainWorker,
-			// Token: 0x04001895 RID: 6293
+			// Token: 0x04001893 RID: 6291
 			Combat,
-			// Token: 0x04001896 RID: 6294
+			// Token: 0x04001894 RID: 6292
 			Deploy,
-			// Token: 0x04001897 RID: 6295
+			// Token: 0x04001895 RID: 6293
 			Build,
-			// Token: 0x04001898 RID: 6296
+			// Token: 0x04001896 RID: 6294
 			PayResource
 		}
 
 		// Token: 0x02000457 RID: 1111
 		public enum EndTurnHintType
 		{
-			// Token: 0x0400189A RID: 6298
+			// Token: 0x04001898 RID: 6296
 			ChoseActionFirst,
-			// Token: 0x0400189B RID: 6299
+			// Token: 0x04001899 RID: 6297
 			Combat,
-			// Token: 0x0400189C RID: 6300
+			// Token: 0x0400189A RID: 6298
 			WaitForOpponent,
-			// Token: 0x0400189D RID: 6301
+			// Token: 0x0400189B RID: 6299
 			ChoseFactoryCard,
-			// Token: 0x0400189E RID: 6302
+			// Token: 0x0400189C RID: 6300
 			GameEnded
 		}
 
@@ -3383,22 +3386,22 @@ namespace Scythe.UI
 		[Serializable]
 		public class FactionInfo
 		{
-			// Token: 0x0400189F RID: 6303
+			// Token: 0x0400189D RID: 6301
 			public Faction faction;
 
-			// Token: 0x040018A0 RID: 6304
+			// Token: 0x0400189E RID: 6302
 			public Sprite logo;
 
-			// Token: 0x040018A1 RID: 6305
+			// Token: 0x0400189F RID: 6303
 			public Texture logoTex;
 
-			// Token: 0x040018A2 RID: 6306
+			// Token: 0x040018A0 RID: 6304
 			public Color color;
 
-			// Token: 0x040018A3 RID: 6307
+			// Token: 0x040018A1 RID: 6305
 			public Color colorAccent;
 
-			// Token: 0x040018A4 RID: 6308
+			// Token: 0x040018A2 RID: 6306
 			public Sprite[] mechAbilityIcons;
 		}
 	}

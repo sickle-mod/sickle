@@ -50,6 +50,24 @@ namespace Scythe.GameLogic
 			{
 				this.gottaMoveToBuild = false;
 			}
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
+			{
+				bool hasObj14 = false;
+				foreach (ObjectiveCard card in aiPlayer.player.objectiveCards)
+				{
+					if (card.cardId == 14 && card.status == ObjectiveCard.ObjectiveStatus.Open)
+					{
+						hasObj14 = true;
+						break;
+					}
+				}
+				if (!hasObj14 || aiPlayer.player.matPlayer.buildings.Count >= 1)
+				{
+					this.canBuild = false;
+					this.gottaMoveToBuild = false;
+					this.resourceDemandPriority[ResourceType.wood] = 1;
+				}
+			}
 			this.UpdateObjectiveArea(aiPlayer);
 			this.UpdateWorkerCountTarget(aiPlayer);
 			this.UpdateUselessWorkers4Production(aiPlayer);
@@ -70,6 +88,38 @@ namespace Scythe.GameLogic
 			base.UpdateRecruitOrder(aiPlayer);
 			this.UpdateRecruitOneTimeOrder(aiPlayer);
 			this.ScatterCheck(aiPlayer, 2000);
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
+			{
+				bool hasObj6 = false;
+				foreach (ObjectiveCard card2 in aiPlayer.player.objectiveCards)
+				{
+					if (card2.cardId == 6 && card2.status == ObjectiveCard.ObjectiveStatus.Open)
+					{
+						hasObj6 = true;
+						break;
+					}
+				}
+				if (!hasObj6)
+				{
+					foreach (Unit unit in this.moveTarget.Keys.ToList<Unit>())
+					{
+						for (int i = this.moveTarget[unit].Count - 1; i >= 0; i--)
+						{
+							GameHex hex = this.moveTarget[unit][i];
+							if (hex.Owner != null && hex.Owner != aiPlayer.player && !hex.HasOwnerCharacter() && hex.GetOwnerMechs().Count == 0 && hex.GetOwnerWorkers().Count > 0)
+							{
+								this.moveTarget[unit].RemoveAt(i);
+							}
+						}
+						if (this.moveTarget[unit].Count == 0)
+						{
+							this.moveTarget.Remove(unit);
+							this.movePriority.Remove(unit);
+							this.moveDistance.Remove(unit);
+						}
+					}
+				}
+			}
 			foreach (KeyValuePair<Unit, int> keyValuePair in this.movePriority)
 			{
 				this.movePrioritySorted.Add(keyValuePair.Value, keyValuePair.Key);

@@ -6,10 +6,10 @@ using Scythe.GameLogic.Actions;
 
 namespace Scythe.GameLogic
 {
-	// Token: 0x020009ED RID: 2541
+	// Token: 0x020009F6 RID: 2550
 	public class GameActionLogger : IDisposable
 	{
-		// Token: 0x06004275 RID: 17013 RVA: 0x00168A68 File Offset: 0x00166C68
+		// Token: 0x060042AE RID: 17070 RVA: 0x0016B15C File Offset: 0x0016935C
 		public GameActionLogger(GameManager gameManager, string gameId = null)
 		{
 			if (gameManager == null)
@@ -32,7 +32,7 @@ namespace Scythe.GameLogic
 			this.Subscribe();
 		}
 
-		// Token: 0x06004276 RID: 17014 RVA: 0x000527B2 File Offset: 0x000509B2
+		// Token: 0x060042AF RID: 17071 RVA: 0x000527E9 File Offset: 0x000509E9
 		public void Dispose()
 		{
 			if (this._disposed)
@@ -44,7 +44,7 @@ namespace Scythe.GameLogic
 			this.FlushToDisk();
 		}
 
-		// Token: 0x06004277 RID: 17015 RVA: 0x00168B2C File Offset: 0x00166D2C
+		// Token: 0x060042B0 RID: 17072 RVA: 0x0016B220 File Offset: 0x00169420
 		private void Subscribe()
 		{
 			ActionLog.LogInfoCreated += this.OnLogInfoCreated;
@@ -54,7 +54,7 @@ namespace Scythe.GameLogic
 			this._gm.MultiplayerGameEnded += this.OnGameEnded;
 		}
 
-		// Token: 0x06004278 RID: 17016 RVA: 0x00168BA8 File Offset: 0x00166DA8
+		// Token: 0x060042B1 RID: 17073 RVA: 0x0016B29C File Offset: 0x0016949C
 		private void Unsubscribe()
 		{
 			ActionLog.LogInfoCreated -= this.OnLogInfoCreated;
@@ -64,7 +64,7 @@ namespace Scythe.GameLogic
 			this._gm.MultiplayerGameEnded -= this.OnGameEnded;
 		}
 
-		// Token: 0x06004279 RID: 17017 RVA: 0x00168C24 File Offset: 0x00166E24
+		// Token: 0x060042B2 RID: 17074 RVA: 0x0016B318 File Offset: 0x00169518
 		private void OnLogInfoCreated(LogInfo logInfo, int index)
 		{
 			if (this._disposed || logInfo == null)
@@ -79,22 +79,45 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x0600427A RID: 17018 RVA: 0x00168C78 File Offset: 0x00166E78
+		// Token: 0x060042B3 RID: 17075 RVA: 0x0016B36C File Offset: 0x0016956C
 		private void OnObtainActionInfo(string actionInfo)
 		{
 			if (this._disposed || string.IsNullOrEmpty(actionInfo))
 			{
 				return;
 			}
-			string text = ((actionInfo.Length >= 2 && actionInfo[0] == '^') ? actionInfo.Substring(2) : actionInfo);
-			this._pending.Add("           >> \"" + text.Trim() + "\"");
+			string playerName = "";
+			string text = actionInfo;
+			if (actionInfo.Length >= 2 && actionInfo[0] == '^')
+			{
+				char c = actionInfo[1];
+				switch (c)
+				{
+				case 'A': playerName = "Albion"; break;
+				case 'C': playerName = "Crimea"; break;
+				case 'N': playerName = "Nordic"; break;
+				case 'P': playerName = "Polania"; break;
+				case 'R': playerName = "Rusviet"; break;
+				case 'S': playerName = "Saxony"; break;
+				case 'T': playerName = "Togawa"; break;
+				}
+				text = actionInfo.Substring(2);
+			}
+			if (string.IsNullOrEmpty(playerName))
+			{
+				this._pending.Add("           >> \"" + text.Trim() + "\"");
+			}
+			else
+			{
+				this._pending.Add(string.Format("[{0,4}]  {1,-14} >> \"{2}\"", this._gm.TurnCount, playerName, text.Trim()));
+			}
 			if (this._pending.Count >= 20)
 			{
 				this.FlushToDisk();
 			}
 		}
 
-		// Token: 0x0600427B RID: 17019 RVA: 0x000527D0 File Offset: 0x000509D0
+		// Token: 0x060042B4 RID: 17076 RVA: 0x00052807 File Offset: 0x00050A07
 		private void OnChangeTurn()
 		{
 			if (this._disposed)
@@ -105,7 +128,7 @@ namespace Scythe.GameLogic
 			this.FlushToDisk();
 		}
 
-		// Token: 0x0600427C RID: 17020 RVA: 0x00168CEC File Offset: 0x00166EEC
+		// Token: 0x060042B5 RID: 17077 RVA: 0x0016B3E0 File Offset: 0x001695E0
 		private void OnGameEnded()
 		{
 			if (this._disposed)
@@ -124,7 +147,7 @@ namespace Scythe.GameLogic
 			this.Unsubscribe();
 		}
 
-		// Token: 0x0600427D RID: 17021 RVA: 0x00168DA8 File Offset: 0x00166FA8
+		// Token: 0x060042B6 RID: 17078 RVA: 0x0016B49C File Offset: 0x0016969C
 		public void FlushToDisk()
 		{
 			if (this._pending.Count == 0)
@@ -141,7 +164,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x0600427E RID: 17022 RVA: 0x00168DF8 File Offset: 0x00166FF8
+		// Token: 0x060042B7 RID: 17079 RVA: 0x0016B4EC File Offset: 0x001696EC
 		private void WriteHeader()
 		{
 			StringBuilder sb = new StringBuilder();
@@ -170,7 +193,7 @@ namespace Scythe.GameLogic
 			});
 		}
 
-		// Token: 0x0600427F RID: 17023 RVA: 0x00168F8C File Offset: 0x0016718C
+		// Token: 0x060042B8 RID: 17080 RVA: 0x0016B680 File Offset: 0x00169880
 		private void WriteResumeMarker()
 		{
 			string marker = string.Format("\n--- RESUMED {0:yyyy-MM-dd HH:mm:ss} ", DateTime.Now) + string.Format("(turn {0}) ---\n", this._gm.TurnCount);
@@ -180,7 +203,7 @@ namespace Scythe.GameLogic
 			});
 		}
 
-		// Token: 0x06004280 RID: 17024 RVA: 0x00168FF0 File Offset: 0x001671F0
+		// Token: 0x060042B9 RID: 17081 RVA: 0x0016B6E4 File Offset: 0x001698E4
 		private void AppendPlayerRoster(StringBuilder sb)
 		{
 			int num = 1;
@@ -196,7 +219,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004281 RID: 17025 RVA: 0x00169110 File Offset: 0x00167310
+		// Token: 0x060042BA RID: 17082 RVA: 0x0016B804 File Offset: 0x00169A04
 		private void AppendFinalScores(List<PlayerEndGameStats> stats)
 		{
 			if (stats == null || stats.Count == 0)
@@ -237,7 +260,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004282 RID: 17026 RVA: 0x000527F2 File Offset: 0x000509F2
+		// Token: 0x060042BB RID: 17083 RVA: 0x00052829 File Offset: 0x00050A29
 		private void MaybeEmitTurnDivider(int turnNumber)
 		{
 			if (turnNumber == this._lastTurnSeen)
@@ -248,7 +271,7 @@ namespace Scythe.GameLogic
 			this._pending.Add(string.Format("\n--- TURN {0} ---", turnNumber));
 		}
 
-		// Token: 0x06004283 RID: 17027 RVA: 0x001692E8 File Offset: 0x001674E8
+		// Token: 0x060042BC RID: 17084 RVA: 0x0016B9DC File Offset: 0x00169BDC
 		private static void TryWrite(Action write)
 		{
 			try
@@ -260,7 +283,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004284 RID: 17028 RVA: 0x00169310 File Offset: 0x00167510
+		// Token: 0x060042BD RID: 17085 RVA: 0x0016BA04 File Offset: 0x00169C04
 		private string FormatLogEntry(LogInfo logInfo)
 		{
 			string text = logInfo.PlayerAssigned.ToString();
@@ -320,7 +343,7 @@ namespace Scythe.GameLogic
 			return stringBuilder.ToString();
 		}
 
-		// Token: 0x06004285 RID: 17029 RVA: 0x00169558 File Offset: 0x00167758
+		// Token: 0x060042BE RID: 17086 RVA: 0x0016BC4C File Offset: 0x00169E4C
 		private static string PlacementLabel(ActionPositionType p)
 		{
 			if (p == ActionPositionType.Top)
@@ -350,7 +373,7 @@ namespace Scythe.GameLogic
 			return "OTHER";
 		}
 
-		// Token: 0x06004286 RID: 17030 RVA: 0x001695B0 File Offset: 0x001677B0
+		// Token: 0x060042BF RID: 17087 RVA: 0x0016BCA4 File Offset: 0x00169EA4
 		private static string ActionLabel(LogInfo logInfo)
 		{
 			CombatLogInfo combatLogInfo = logInfo as CombatLogInfo;
@@ -385,7 +408,7 @@ namespace Scythe.GameLogic
 			return logInfo.Type.ToString();
 		}
 
-		// Token: 0x06004287 RID: 17031 RVA: 0x00169688 File Offset: 0x00167888
+		// Token: 0x060042C0 RID: 17088 RVA: 0x0016BD7C File Offset: 0x00169F7C
 		private static string DetailString(LogInfo logInfo)
 		{
 			string text11;
@@ -475,7 +498,9 @@ namespace Scythe.GameLogic
 														{
 															Dictionary<ResourceType, int> dictionary3 = dictionary;
 															ResourceType key2 = keyValuePair2.Key;
-															dictionary3[key2] += keyValuePair2.Value;
+															Dictionary<ResourceType, int> dictionary4 = dictionary3;
+															ResourceType resourceType = key2;
+															dictionary4[resourceType] += keyValuePair2.Value;
 														}
 														else
 														{
@@ -573,7 +598,7 @@ namespace Scythe.GameLogic
 			return text11;
 		}
 
-		// Token: 0x06004288 RID: 17032 RVA: 0x0016A040 File Offset: 0x00168240
+		// Token: 0x060042C1 RID: 17089 RVA: 0x0016C738 File Offset: 0x0016A938
 		private static string FriendlyMatName(PlayerMatType mat)
 		{
 			switch (mat)
@@ -597,7 +622,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06004289 RID: 17033 RVA: 0x0016A0A8 File Offset: 0x001682A8
+		// Token: 0x060042C2 RID: 17090 RVA: 0x0016C7A0 File Offset: 0x0016A9A0
 		private static string HexLabel(GameHex hex)
 		{
 			if (hex == null)
@@ -646,7 +671,7 @@ namespace Scythe.GameLogic
 			return stringBuilder.ToString();
 		}
 
-		// Token: 0x0600428A RID: 17034 RVA: 0x0016A21C File Offset: 0x0016841C
+		// Token: 0x060042C3 RID: 17091 RVA: 0x0016C914 File Offset: 0x0016AB14
 		private static string OtherActionDescription(LogInfo logInfo)
 		{
 			if (logInfo.IsEncounter)
@@ -670,90 +695,92 @@ namespace Scythe.GameLogic
 				string text = ((list.Count > 0) ? string.Join(", ", list) : "free");
 				string text2 = ((list2.Count > 0) ? string.Join(", ", list2) : "");
 				string text3 = ((text2.Length > 0) ? " → " : "");
-				
 				if (logInfo.EncounterCardId > 0)
 				{
-					return string.Format("Encounter [Card #{0}]: {1}{2}{3}", logInfo.EncounterCardId, text, text3, text2);
+					return string.Format("Encounter [Card #{0}]: {1}{2}{3}", new object[] { logInfo.EncounterCardId, text, text3, text2 });
 				}
 				return string.Format("Encounter: {0}{1}{2}", text, text3, text2);
 			}
-			StarLogInfo starLogInfo = logInfo as StarLogInfo;
-			if (starLogInfo != null)
+			else
 			{
-				return string.Format("★ Star: {0} ({1}/6)", starLogInfo.GainedStar, starLogInfo.starsUnlocked);
-			}
-			FactoryLogInfo factoryLogInfo = logInfo as FactoryLogInfo;
-			if (factoryLogInfo != null && logInfo.Type == LogInfoType.FactoryCardGain)
-			{
-				return string.Format("Factory Card #{0}", factoryLogInfo.GainedFactoryCard.CardId);
-			}
-			if (logInfo.Type == LogInfoType.FactoryTopAction)
-			{
-				List<string> list3 = new List<string>();
-				List<string> list4 = new List<string>();
-				if (logInfo.PayLogInfos != null)
+				StarLogInfo starLogInfo = logInfo as StarLogInfo;
+				if (starLogInfo != null)
 				{
-					foreach (LogInfo logInfo4 in logInfo.PayLogInfos)
-					{
-						list3.Add(GameActionLogger.DetailString(logInfo4));
-					}
+					return string.Format("★ Star: {0} ({1}/6)", starLogInfo.GainedStar, starLogInfo.starsUnlocked);
 				}
-				if (logInfo.AdditionalGain != null)
+				FactoryLogInfo factoryLogInfo = logInfo as FactoryLogInfo;
+				if (factoryLogInfo != null && logInfo.Type == LogInfoType.FactoryCardGain)
 				{
-					foreach (LogInfo logInfo5 in logInfo.AdditionalGain)
-					{
-						list4.Add(GameActionLogger.GainSummary(logInfo5));
-					}
+					return string.Format("Factory Card #{0}", factoryLogInfo.GainedFactoryCard.CardId);
 				}
-				string text4 = ((list3.Count > 0) ? string.Join(", ", list3) : "");
-				string text5 = ((list4.Count > 0) ? string.Join(", ", list4) : "");
-				string text6 = ((text4.Length > 0 && text5.Length > 0) ? " → " : "");
-				return string.Format("Factory: {0}{1}{2}", text4, text6, text5);
-			}
-			DeployLogInfo deployLogInfo = logInfo as DeployLogInfo;
-			if (deployLogInfo != null)
-			{
-				string text7 = ((deployLogInfo.DeployedMech != null) ? GameActionLogger.MechName(deployLogInfo.DeployedMech) : "?");
-				string text8 = ((deployLogInfo.Position != null) ? string.Format(" at ({0},{1})", deployLogInfo.Position.posX, deployLogInfo.Position.posY) : "");
-				string text9 = ((deployLogInfo.MechBonus != 0) ? string.Format(" +{0}bonus", deployLogInfo.MechBonus) : "");
-				return string.Format("Deploy {0}{1}{2}", text7, text8, text9);
-			}
-			if (logInfo.Type == LogInfoType.TradeResources)
-			{
-				List<string> list5 = new List<string>();
-				List<string> list6 = new List<string>();
-				if (logInfo.PayLogInfos != null)
+				if (logInfo.Type == LogInfoType.FactoryTopAction)
 				{
-					foreach (LogInfo logInfo6 in logInfo.PayLogInfos)
+					List<string> list3 = new List<string>();
+					List<string> list4 = new List<string>();
+					if (logInfo.PayLogInfos != null)
 					{
-						list5.Add(GameActionLogger.DetailString(logInfo6));
-					}
-				}
-				if (logInfo.AdditionalGain != null)
-				{
-					foreach (LogInfo logInfo7 in logInfo.AdditionalGain)
-					{
-						GainNonboardResourceLogInfo gainNonboardResourceLogInfo = logInfo7 as GainNonboardResourceLogInfo;
-						if (gainNonboardResourceLogInfo != null && gainNonboardResourceLogInfo.Amount > 0)
+						foreach (LogInfo logInfo4 in logInfo.PayLogInfos)
 						{
-							list6.Add(string.Format("+{0} {1}", gainNonboardResourceLogInfo.Amount, gainNonboardResourceLogInfo.Gained));
+							list3.Add(GameActionLogger.DetailString(logInfo4));
 						}
 					}
+					if (logInfo.AdditionalGain != null)
+					{
+						foreach (LogInfo logInfo5 in logInfo.AdditionalGain)
+						{
+							list4.Add(GameActionLogger.GainSummary(logInfo5));
+						}
+					}
+					string text4 = ((list3.Count > 0) ? string.Join(", ", list3) : "");
+					string text5 = ((list4.Count > 0) ? string.Join(", ", list4) : "");
+					string text6 = ((text4.Length > 0 && text5.Length > 0) ? " → " : "");
+					return string.Format("Factory: {0}{1}{2}", text4, text6, text5);
 				}
-				string text10 = ((list5.Count > 0) ? string.Join(", ", list5) : "");
-				string text11 = ((list6.Count > 0) ? string.Join(", ", list6) : "");
-				string text12 = ((text10.Length > 0 && text11.Length > 0) ? " → " : "");
-				return string.Format("Trade: {0}{1}{2}", text10, text12, text11);
+				DeployLogInfo deployLogInfo = logInfo as DeployLogInfo;
+				if (deployLogInfo != null)
+				{
+					string text7 = ((deployLogInfo.DeployedMech != null) ? GameActionLogger.MechName(deployLogInfo.DeployedMech) : "?");
+					string text8 = ((deployLogInfo.Position != null) ? string.Format(" at ({0},{1})", deployLogInfo.Position.posX, deployLogInfo.Position.posY) : "");
+					string text9 = ((deployLogInfo.MechBonus != 0) ? string.Format(" +{0}bonus", deployLogInfo.MechBonus) : "");
+					return string.Format("Deploy {0}{1}{2}", text7, text8, text9);
+				}
+				if (logInfo.Type == LogInfoType.TradeResources)
+				{
+					List<string> list5 = new List<string>();
+					List<string> list6 = new List<string>();
+					if (logInfo.PayLogInfos != null)
+					{
+						foreach (LogInfo logInfo6 in logInfo.PayLogInfos)
+						{
+							list5.Add(GameActionLogger.DetailString(logInfo6));
+						}
+					}
+					if (logInfo.AdditionalGain != null)
+					{
+						foreach (LogInfo logInfo7 in logInfo.AdditionalGain)
+						{
+							GainNonboardResourceLogInfo gainNonboardResourceLogInfo = logInfo7 as GainNonboardResourceLogInfo;
+							if (gainNonboardResourceLogInfo != null && gainNonboardResourceLogInfo.Amount > 0)
+							{
+								list6.Add(string.Format("+{0} {1}", gainNonboardResourceLogInfo.Amount, gainNonboardResourceLogInfo.Gained));
+							}
+						}
+					}
+					string text10 = ((list5.Count > 0) ? string.Join(", ", list5) : "");
+					string text11 = ((list6.Count > 0) ? string.Join(", ", list6) : "");
+					string text12 = ((text10.Length > 0 && text11.Length > 0) ? " → " : "");
+					return string.Format("Trade: {0}{1}{2}", text10, text12, text11);
+				}
+				GainNonboardResourceLogInfo gainNonboardResourceLogInfo2 = logInfo as GainNonboardResourceLogInfo;
+				if (gainNonboardResourceLogInfo2 != null)
+				{
+					return string.Format("+{0} {1}", gainNonboardResourceLogInfo2.Amount, gainNonboardResourceLogInfo2.Gained);
+				}
+				return GameActionLogger.ActionLabel(logInfo) + " " + GameActionLogger.DetailString(logInfo);
 			}
-			GainNonboardResourceLogInfo gainNonboardResourceLogInfo2 = logInfo as GainNonboardResourceLogInfo;
-			if (gainNonboardResourceLogInfo2 != null)
-			{
-				return string.Format("+{0} {1}", gainNonboardResourceLogInfo2.Amount, gainNonboardResourceLogInfo2.Gained);
-			}
-			return GameActionLogger.ActionLabel(logInfo) + " " + GameActionLogger.DetailString(logInfo);
 		}
 
-		// Token: 0x0600428B RID: 17035 RVA: 0x0016A71C File Offset: 0x0016891C
+		// Token: 0x060042C4 RID: 17092 RVA: 0x0016CE4C File Offset: 0x0016B04C
 		private static string GainSummary(LogInfo g)
 		{
 			GainNonboardResourceLogInfo gainNonboardResourceLogInfo = g as GainNonboardResourceLogInfo;
@@ -802,26 +829,31 @@ namespace Scythe.GameLogic
 						EnlistLogInfo enlistLogInfo = g as EnlistLogInfo;
 						if (enlistLogInfo == null)
 						{
-							string detail = GameActionLogger.DetailString(g).Trim();
-							if (!string.IsNullOrEmpty(detail))
+							string text = GameActionLogger.DetailString(g).Trim();
+							if (string.IsNullOrEmpty(text))
 							{
-								if (g.Type == LogInfoType.TradeResources || g.Type == LogInfoType.Produce)
-									return detail;
-								return GameActionLogger.ActionLabel(g) + " " + detail;
+								return GameActionLogger.ActionLabel(g);
 							}
-							return GameActionLogger.ActionLabel(g);
+							if (g.Type == LogInfoType.TradeResources || g.Type == LogInfoType.Produce)
+							{
+								return text;
+							}
+							return GameActionLogger.ActionLabel(g) + " " + text;
 						}
-						if (enlistLogInfo.TypeOfDownAction == DownActionType.Factory)
+						else
 						{
-							return "Enlist";
+							if (enlistLogInfo.TypeOfDownAction == DownActionType.Factory)
+							{
+								return "Enlist";
+							}
+							return string.Format("Enlist {0}→+{1}", enlistLogInfo.TypeOfDownAction, enlistLogInfo.OneTimeBonus);
 						}
-						return string.Format("Enlist {0}→+{1}", enlistLogInfo.TypeOfDownAction, enlistLogInfo.OneTimeBonus);
 					}
 				}
 			}
 		}
 
-		// Token: 0x0600428C RID: 17036 RVA: 0x00052820 File Offset: 0x00050A20
+		// Token: 0x060042C5 RID: 17093 RVA: 0x00052857 File Offset: 0x00050A57
 		private static string UpgradeBottomName(ResourceType resource)
 		{
 			switch (resource)
@@ -839,7 +871,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x0600428D RID: 17037 RVA: 0x0016A8A0 File Offset: 0x00168AA0
+		// Token: 0x060042C6 RID: 17094 RVA: 0x0016D00C File Offset: 0x0016B20C
 		private static string HexTypeResource(HexType hexType)
 		{
 			switch (hexType)
@@ -866,7 +898,7 @@ namespace Scythe.GameLogic
 			return hexType.ToString();
 		}
 
-		// Token: 0x0600428E RID: 17038 RVA: 0x0016A8FC File Offset: 0x00168AFC
+		// Token: 0x060042C7 RID: 17095 RVA: 0x0016D068 File Offset: 0x0016B268
 		private static string MechName(Mech mech)
 		{
 			try
@@ -882,19 +914,19 @@ namespace Scythe.GameLogic
 			return string.Format("Mech#{0}", (mech != null) ? mech.Id.ToString() : "?");
 		}
 
-		// Token: 0x0400334D RID: 13133
+		// Token: 0x04003367 RID: 13159
 		private readonly GameManager _gm;
 
-		// Token: 0x0400334E RID: 13134
+		// Token: 0x04003368 RID: 13160
 		private readonly string _filePath;
 
-		// Token: 0x0400334F RID: 13135
+		// Token: 0x04003369 RID: 13161
 		private readonly List<string> _pending = new List<string>();
 
-		// Token: 0x04003350 RID: 13136
+		// Token: 0x0400336A RID: 13162
 		private bool _disposed;
 
-		// Token: 0x04003351 RID: 13137
+		// Token: 0x0400336B RID: 13163
 		private int _lastTurnSeen = -1;
 	}
 }

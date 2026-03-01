@@ -5,20 +5,20 @@ using Scythe.Multiplayer.Messages;
 
 namespace Scythe.GameLogic
 {
-	// Token: 0x0200059F RID: 1439
+	// Token: 0x020005A8 RID: 1448
 	public class AiPlayer
 	{
 		// Token: 0x14000135 RID: 309
-		// (add) Token: 0x06002D69 RID: 11625
-		// (remove) Token: 0x06002D6A RID: 11626
+		// (add) Token: 0x06002D9C RID: 11676 RVA: 0x0010CA54 File Offset: 0x0010AC54
+		// (remove) Token: 0x06002D9D RID: 11677 RVA: 0x0010CA88 File Offset: 0x0010AC88
 		public static event AiPlayer.LogDelegate LogMessage;
 
 		// Token: 0x14000136 RID: 310
-		// (add) Token: 0x06002D6B RID: 11627
-		// (remove) Token: 0x06002D6C RID: 11628
+		// (add) Token: 0x06002D9E RID: 11678 RVA: 0x0010CABC File Offset: 0x0010ACBC
+		// (remove) Token: 0x06002D9F RID: 11679 RVA: 0x0010CAF0 File Offset: 0x0010ACF0
 		public static event AiPlayer.CombatAbilityUsedDelegate CombatAbilityUsed;
 
-		// Token: 0x06002D6D RID: 11629
+		// Token: 0x06002DA0 RID: 11680 RVA: 0x0010CB24 File Offset: 0x0010AD24
 		public AiPlayer(Player player, GameManager gameManager)
 		{
 			this.player = player;
@@ -29,7 +29,7 @@ namespace Scythe.GameLogic
 			this.Init();
 		}
 
-		// Token: 0x06002D6E RID: 11630
+		// Token: 0x06002DA1 RID: 11681 RVA: 0x0010CBBC File Offset: 0x0010ADBC
 		public void Init()
 		{
 			if (this.player.aiDifficulty == AIDifficulty.Hard)
@@ -89,7 +89,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D6F RID: 11631
+		// Token: 0x06002DA2 RID: 11682 RVA: 0x0010CD68 File Offset: 0x0010AF68
 		public void MoveWorkerToBuild(GainMove gainMove, Worker w)
 		{
 			GameHex gameHex = null;
@@ -126,7 +126,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D70 RID: 11632
+		// Token: 0x06002DA3 RID: 11683 RVA: 0x000445FC File Offset: 0x000427FC
 		public List<ResourceBundle> FindResources(ResourceType resType, int resAmount, out bool fulfilled)
 		{
 			if (this.player.aiDifficulty == AIDifficulty.Hard)
@@ -136,7 +136,7 @@ namespace Scythe.GameLogic
 			return this.FindResourcesBasic(resType, resAmount, out fulfilled);
 		}
 
-		// Token: 0x06002D71 RID: 11633
+		// Token: 0x06002DA4 RID: 11684 RVA: 0x0010CE98 File Offset: 0x0010B098
 		public List<ResourceBundle> FindResourcesBasic(ResourceType resType, int resAmount, out bool fulfilled)
 		{
 			List<ResourceBundle> list = new List<ResourceBundle>();
@@ -179,7 +179,7 @@ namespace Scythe.GameLogic
 			return list;
 		}
 
-		// Token: 0x06002D72 RID: 11634
+		// Token: 0x06002DA5 RID: 11685 RVA: 0x0004461F File Offset: 0x0004281F
 		public bool Pay4Action(PayResource payResource)
 		{
 			if (this.player.aiDifficulty == AIDifficulty.Hard)
@@ -189,7 +189,7 @@ namespace Scythe.GameLogic
 			return this.Pay4ActionBasic(payResource);
 		}
 
-		// Token: 0x06002D73 RID: 11635
+		// Token: 0x06002DA6 RID: 11686 RVA: 0x0010CFEC File Offset: 0x0010B1EC
 		public bool Pay4ActionBasic(PayResource payResource)
 		{
 			bool flag = false;
@@ -240,13 +240,13 @@ namespace Scythe.GameLogic
 			return flag3;
 		}
 
-		// Token: 0x06002D74 RID: 11636
+		// Token: 0x06002DA7 RID: 11687 RVA: 0x0004463E File Offset: 0x0004283E
 		public void PlayTurn()
 		{
 			this.PlayAction(this.Bot());
 		}
 
-		// Token: 0x06002D75 RID: 11637
+		// Token: 0x06002DA8 RID: 11688 RVA: 0x0010D224 File Offset: 0x0010B424
 		public void ContinueLeaverAction()
 		{
 			if (this.player.currentMatSection == -1)
@@ -310,7 +310,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D76 RID: 11638
+		// Token: 0x06002DA9 RID: 11689 RVA: 0x0010D36C File Offset: 0x0010B56C
 		private AiAction CreateCurrentAction()
 		{
 			int currentMatSection = this.player.currentMatSection;
@@ -319,7 +319,7 @@ namespace Scythe.GameLogic
 			return new AiAction(currentMatSection, playerMatSection.ActionTop, gainActionId, playerMatSection.ActionDown, this.gameManager);
 		}
 
-		// Token: 0x06002D77 RID: 11639
+		// Token: 0x06002DAA RID: 11690 RVA: 0x0004464C File Offset: 0x0004284C
 		private void ContinueCombat()
 		{
 			if (this.gameManager.combatManager.CanPerformStep(this.player))
@@ -328,13 +328,13 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D78 RID: 11640
+		// Token: 0x06002DAB RID: 11691 RVA: 0x0004467C File Offset: 0x0004287C
 		private void ContinueTopAction(AiAction aiAction)
 		{
 			this.gameManager.actionManager.PrepareNextAction();
 		}
 
-		// Token: 0x06002D79 RID: 11641
+		// Token: 0x06002DAC RID: 11692 RVA: 0x0004468E File Offset: 0x0004288E
 		private void ContinueDownAction(AiAction aiAction)
 		{
 			this.gameManager.actionManager.PrepareNextAction();
@@ -342,7 +342,7 @@ namespace Scythe.GameLogic
 			this.InformAboutEndedTurn();
 		}
 
-		// Token: 0x06002D7A RID: 11642
+		// Token: 0x06002DAD RID: 11693 RVA: 0x0010D3C4 File Offset: 0x0010B5C4
 		private void PlayAction(AiRecipe recipe)
 		{
 			AiAction action = recipe.action;
@@ -355,7 +355,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D7B RID: 11643
+		// Token: 0x06002DAE RID: 11694 RVA: 0x0010D414 File Offset: 0x0010B614
 		private void PlayTopAction(AiRecipe recipe, AiAction action)
 		{
 			if (!this.forbiddenActions.Contains(action.topAction.GetGainAction(action.gainActionId).GetGainType()))
@@ -365,7 +365,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D7C RID: 11644
+		// Token: 0x06002DAF RID: 11695 RVA: 0x0010D46C File Offset: 0x0010B66C
 		private void PlayBottomAction(AiAction action)
 		{
 			if (this.player.currentMatSection == -1 || this.gameManager.actionManager.GetLastBonusAction() != null || this.WaitingForCard || this.bottomActionExecuted)
@@ -386,7 +386,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D7D RID: 11645
+		// Token: 0x06002DB0 RID: 11696 RVA: 0x0010D520 File Offset: 0x0010B720
 		private void TryToCompleteObjective()
 		{
 			if (this.gameManager.PlayerCurrent.objectiveCards != null)
@@ -403,7 +403,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D7E RID: 11646
+		// Token: 0x06002DB1 RID: 11697 RVA: 0x0010D600 File Offset: 0x0010B800
 		private void InformAboutEndedTurn()
 		{
 			if (this.gameManager.PlayerCurrent == this.player && this.gameManager.actionManager.GetLastBonusAction() == null && !this.gameManager.GameFinished)
@@ -416,19 +416,19 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D7F RID: 11647
+		// Token: 0x06002DB2 RID: 11698 RVA: 0x0010D678 File Offset: 0x0010B878
 		public bool CanPlayTopAction(GainType gain)
 		{
 			return !this.forbiddenActions.Contains(gain) && !this.player.matFaction.DidPlayerUsedMatLastTurn(this.AiTopActions[gain].matSectionId, this.player.lastMatSection);
 		}
 
-		// Token: 0x06002D80 RID: 11648
+		// Token: 0x06002DB3 RID: 11699 RVA: 0x0010D6C4 File Offset: 0x0010B8C4
 		private bool CanPlayDownAction(AiAction action)
 		{
 			return !this.forbiddenActions.Contains(action.downAction.GetGainAction(0).GetGainType()) && !this.player.matFaction.DidPlayerUsedMatLastTurn(action.matSectionId, this.player.lastMatSection);
 		}
 
-		// Token: 0x06002D81 RID: 11649
+		// Token: 0x06002DB4 RID: 11700 RVA: 0x0010D718 File Offset: 0x0010B918
 		public void PerformCombatStage(CombatStage stage)
 		{
 			switch (stage)
@@ -523,7 +523,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D82 RID: 11650
+		// Token: 0x06002DB5 RID: 11701 RVA: 0x0010D9E4 File Offset: 0x0010BBE4
 		public void UseAbility()
 		{
 			if (this.player.matFaction.faction == Faction.Albion && this.player.matFaction.SkillUnlocked[1] && this.player == this.gameManager.combatManager.GetAttacker())
@@ -633,7 +633,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D83 RID: 11651
+		// Token: 0x06002DB6 RID: 11702 RVA: 0x0010DD28 File Offset: 0x0010BF28
 		public bool CombatPreparation(bool simulate = false, GameHex battlefield = null, Player opponent = null)
 		{
 			if (this.player.matFaction.faction == Faction.Saxony || this.player.matFaction.faction == Faction.Polania || this.player.matFaction.faction == Faction.Nordic || this.player.matFaction.faction == Faction.Rusviet || this.player.matFaction.faction == Faction.Albion || this.player.matFaction.faction == Faction.Togawa)
@@ -797,7 +797,7 @@ namespace Scythe.GameLogic
 			return true;
 		}
 
-		// Token: 0x06002D84 RID: 11652
+		// Token: 0x06002DB7 RID: 11703 RVA: 0x0010E35C File Offset: 0x0010C55C
 		public void WithdrawUnits()
 		{
 			GameHex gameHex = this.gameManager.combatManager.GetWithdrawPositions()[0];
@@ -857,7 +857,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D85 RID: 11653
+		// Token: 0x06002DB8 RID: 11704 RVA: 0x0010E558 File Offset: 0x0010C758
 		public void UseTogawaAbility()
 		{
 			if (this.player.matFaction.abilities.Contains(AbilityPerk.Shinobi) && this.player.matFaction.SkillUnlocked[3] && this.gameManager.tokenManager.CanRearmTrap(this.gameManager.combatManager.GetSelectedBattlefield(), this.player.matFaction.faction))
@@ -866,7 +866,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D86 RID: 11654
+		// Token: 0x06002DB9 RID: 11705 RVA: 0x000446AC File Offset: 0x000428AC
 		public void UsePolaniaAbility()
 		{
 			if (this.player.matFaction.abilities.Contains(AbilityPerk.Camaraderie) && this.player.matFaction.SkillUnlocked[2])
@@ -875,7 +875,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D87 RID: 11655
+		// Token: 0x06002DBA RID: 11706 RVA: 0x0010E5E8 File Offset: 0x0010C7E8
 		public void HandleEncounterAndFactory()
 		{
 			if (this.player.aiDifficulty == AIDifficulty.Hard)
@@ -907,7 +907,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D88 RID: 11656
+		// Token: 0x06002DBB RID: 11707 RVA: 0x0010E754 File Offset: 0x0010C954
 		private void HandleEncounterAndFactoryBasic()
 		{
 			if (this.gameManager.CheckEncounter(false) || this.gameManager.LastEncounterCard != null)
@@ -1005,28 +1005,32 @@ namespace Scythe.GameLogic
 				if (this.gameManager.IsMultiplayer)
 				{
 					List<FactoryCard> factoryCards = this.gameManager.GetFactoryCards();
-					int bestCardIndex = this.SelectBestFactoryCard(factoryCards);
+					int num2 = this.SelectBestFactoryCard(factoryCards);
 					if (this.gameManager.PlayerOwner == null)
 					{
 						this.gameManager.OnActionSent(new EmptyCardsMessage(factoryCards.Count));
-						this.gameManager.OnActionSent(new FactoryMessage(factoryCards[bestCardIndex].CardId.ToString(), (int)this.player.matFaction.faction, bestCardIndex));
+						this.gameManager.OnActionSent(new FactoryMessage(factoryCards[num2].CardId.ToString(), (int)this.player.matFaction.faction, num2));
 					}
 					else
 					{
-						this.gameManager.OnActionSent(new GetFactoryMessage(bestCardIndex));
+						this.gameManager.OnActionSent(new GetFactoryMessage(num2));
 					}
-					this.gameManager.AddFactoryCard(bestCardIndex);
+					this.gameManager.AddFactoryCard(num2);
 					return;
 				}
 				List<FactoryCard> factoryCards2 = this.gameManager.GetFactoryCards();
-				int bestCardIndex2 = this.SelectBestFactoryCard(factoryCards2);
-				this.gameManager.AddFactoryCard(bestCardIndex2);
+				int num3 = this.SelectBestFactoryCard(factoryCards2);
+				this.gameManager.AddFactoryCard(num3);
 			}
 		}
 
-		// Token: 0x06002D89 RID: 11657
+		// Token: 0x06002DBC RID: 11708 RVA: 0x0010EB74 File Offset: 0x0010CD74
 		private bool CanGetResourcesFromEncounter(SectionAction section, int gainId)
 		{
+			if (gainId < 0 || gainId >= section.gainActionsCount)
+			{
+				return false;
+			}
 			GainAction gainAction = section.GetGainAction(gainId);
 			if (gainAction is GainResource)
 			{
@@ -1035,7 +1039,7 @@ namespace Scythe.GameLogic
 			return gainAction is GainAnyResource && this.strategicAnalysis.resourceHighestPriority != ResourceType.combatCard && section.CanPlayerPayActions();
 		}
 
-		// Token: 0x06002D8A RID: 11658
+		// Token: 0x06002DBD RID: 11709 RVA: 0x0010EBD8 File Offset: 0x0010CDD8
 		private void PrepareEncounterAction(GainAction action)
 		{
 			GainType gainType = action.GetGainType();
@@ -1066,7 +1070,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D8B RID: 11659
+		// Token: 0x06002DBE RID: 11710 RVA: 0x0010ECAC File Offset: 0x0010CEAC
 		private void HandleEncounterAndFactoryAdvanced()
 		{
 			if (this.gameManager.CheckEncounter(false) || this.gameManager.LastEncounterCard != null)
@@ -1088,112 +1092,131 @@ namespace Scythe.GameLogic
 					encounterCard = this.gameManager.GetEncounterCard();
 				}
 				this.gameManager.OnActionSent(new EncounterCardMessage(encounterCard.CardId.ToString(), (int)this.player.matFaction.faction));
-				bool option1Acceptable = this.IsEncounterOptionAcceptable(encounterCard, 1);
-				bool option2Acceptable = this.IsEncounterOptionAcceptable(encounterCard, 2);
-				bool is4Oil = false;
-				for (int k = 0; k < encounterCard.GetAction(2).gainActionsCount; k++)
+				bool flag = this.IsEncounterOptionAcceptable(encounterCard, 1);
+				bool flag2 = this.IsEncounterOptionAcceptable(encounterCard, 2);
+				bool flag3 = false;
+				for (int i = 0; i < encounterCard.GetAction(2).gainActionsCount; i++)
 				{
-					GainAction gainAction = encounterCard.GetAction(2).GetGainAction(k);
+					GainAction gainAction = encounterCard.GetAction(2).GetGainAction(i);
 					if (gainAction is GainResource)
 					{
-						GainResource gainObj = (GainResource)gainAction;
-						if (gainObj.ResourceToGain == ResourceType.oil && gainObj.Amount == 4) is4Oil = true;
+						GainResource gainResource = (GainResource)gainAction;
+						if (gainResource.ResourceToGain == ResourceType.oil && gainResource.Amount == 4)
+						{
+							flag3 = true;
+						}
 					}
 				}
-
-				int chosenOption = 0;
-				if (this.player.matFaction.factionPerk != AbilityPerk.Meander && option2Acceptable && this.player.Popularity >= 3 && this.player.Popularity <= 5)
+				int num = 0;
+				if (this.player.matFaction.factionPerk != AbilityPerk.Meander && flag2 && this.player.Popularity >= 3 && this.player.Popularity <= 5)
 				{
 					if (encounterCard.CardId == 14 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Mechs) == 0)
 					{
-						chosenOption = 2;
+						num = 2;
 					}
 					else if (encounterCard.CardId == 23 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0)
 					{
-						chosenOption = 2;
+						num = 2;
 					}
 					else if ((encounterCard.CardId == 6 || encounterCard.CardId == 8 || encounterCard.CardId == 16) && this.player.GetNumberOfStars(StarType.Recruits) == 0)
 					{
-						chosenOption = 2;
+						num = 2;
 					}
 					else if ((encounterCard.CardId == 4 || encounterCard.CardId == 3 || encounterCard.CardId == 27) && this.player.GetNumberOfStars(StarType.Mechs) == 0)
 					{
-						chosenOption = 2;
+						num = 2;
 					}
-					else if (is4Oil && this.player.GetNumberOfStars(StarType.Upgrades) == 0 && (this.player.matPlayer.matType == PlayerMatType.Industrial || this.player.matPlayer.matType == PlayerMatType.Patriotic || this.player.matPlayer.matType == PlayerMatType.Agricultural || this.player.matPlayer.matType == PlayerMatType.Engineering))
+					else if (flag3 && this.player.GetNumberOfStars(StarType.Upgrades) == 0 && (this.player.matPlayer.matType == PlayerMatType.Industrial || this.player.matPlayer.matType == PlayerMatType.Patriotic || this.player.matPlayer.matType == PlayerMatType.Agricultural || this.player.matPlayer.matType == PlayerMatType.Engineering))
 					{
-						chosenOption = 2;
+						num = 2;
 					}
 					else if ((encounterCard.CardId == 19 || encounterCard.CardId == 21) && this.player.stars[StarType.Combat] < 2)
 					{
-						chosenOption = 2;
+						num = 2;
 					}
 					else if (encounterCard.CardId == 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0 && this.player.GetNumberOfStars(StarType.Mechs) == 0)
 					{
-						chosenOption = 2;
+						num = 2;
 					}
 					else if (encounterCard.CardId == 15 && (this.player.GetNumberOfStars(StarType.Recruits) == 0 || this.player.GetNumberOfStars(StarType.Mechs) == 0))
 					{
-						chosenOption = 2;
+						num = 2;
 					}
 				}
-				
-				if (chosenOption == 0 && this.player.matFaction.faction == Faction.Saxony)
+				if (num == 0 && this.player.matFaction.faction == Faction.Saxony)
 				{
-					bool flag = false;
-					if (option1Acceptable)
+					bool flag4 = false;
+					if (flag)
 					{
-						for (int k = 0; k < encounterCard.GetAction(1).gainActionsCount; k++)
+						for (int j = 0; j < encounterCard.GetAction(1).gainActionsCount; j++)
 						{
-							GainType gainType = encounterCard.GetAction(1).GetGainAction(k).GetGainType();
-							if (gainType == GainType.Power || gainType == GainType.CombatCard) flag = true;
+							GainType gainType = encounterCard.GetAction(1).GetGainAction(j).GetGainType();
+							if (gainType == GainType.Power || gainType == GainType.CombatCard)
+							{
+								flag4 = true;
+							}
 						}
-						if (flag) chosenOption = 1;
+						if (flag4)
+						{
+							num = 1;
+						}
 					}
-					if (!flag && option2Acceptable)
+					if (!flag4 && flag2)
 					{
 						for (int k = 0; k < encounterCard.GetAction(2).gainActionsCount; k++)
 						{
-							GainType gainType = encounterCard.GetAction(2).GetGainAction(k).GetGainType();
-							if (gainType == GainType.Power || gainType == GainType.CombatCard) flag = true;
+							GainType gainType2 = encounterCard.GetAction(2).GetGainAction(k).GetGainType();
+							if (gainType2 == GainType.Power || gainType2 == GainType.CombatCard)
+							{
+								flag4 = true;
+							}
 						}
-						if (flag) chosenOption = 2;
+						if (flag4)
+						{
+							num = 2;
+						}
 					}
-					if (!flag && option1Acceptable) chosenOption = 1;
-					else if (!flag && option2Acceptable) chosenOption = 2;
+					if (!flag4 && flag)
+					{
+						num = 1;
+					}
+					else if (!flag4 && flag2)
+					{
+						num = 2;
+					}
 				}
-				else if (this.player.matFaction.factionPerk != AbilityPerk.Meander && option1Acceptable)
+				else if (this.player.matFaction.factionPerk != AbilityPerk.Meander && flag)
 				{
-					chosenOption = 1;
+					num = 1;
 				}
-				SectionAction sectionAction = encounterCard.GetAction(chosenOption);
-				if (chosenOption > 0)
+				SectionAction sectionAction = encounterCard.GetAction(num);
+				if (num > 0)
 				{
 					int[] array = new int[]
 					{
 						AiAction.FindResourceGain(encounterCard.GetAction(1)),
 						AiAction.FindResourceGain(encounterCard.GetAction(2))
 					};
-					this.gameManager.ChooseEncounterOption(chosenOption);
-					this.gameManager.actionManager.SetSectionAction(encounterCard.GetAction(chosenOption), null, array[chosenOption - 1]);
-					for (int i = 0; i < sectionAction.gainActionsCount; i++)
+					this.gameManager.ChooseEncounterOption(num);
+					this.gameManager.actionManager.SetSectionAction(encounterCard.GetAction(num), null, array[num - 1]);
+					for (int l = 0; l < sectionAction.gainActionsCount; l++)
 					{
-						GainAction gainAction = sectionAction.GetGainAction(i);
-						if (gainAction.GainAvaliable() && !this.player.automaticGain.ContainsKey(gainAction.GetGainType()))
+						GainAction gainAction2 = sectionAction.GetGainAction(l);
+						if (gainAction2.GainAvaliable() && !this.player.automaticGain.ContainsKey(gainAction2.GetGainType()))
 						{
-							this.PrepareEncounterAction(gainAction);
+							this.PrepareEncounterAction(gainAction2);
 							this.gameManager.actionManager.PrepareNextAction();
 						}
 					}
 				}
 				else
 				{
-					for (int j = 0; j < sectionAction.gainActionsCount; j++)
+					for (int m = 0; m < sectionAction.gainActionsCount; m++)
 					{
-						GainAction gainAction2 = sectionAction.GetGainAction(j);
-						if (gainAction2 is GainResource)
+						GainAction gainAction3 = sectionAction.GetGainAction(m);
+						if (gainAction3 is GainResource)
 						{
-							((GainResource)gainAction2).SetDestinationAmount(this.player.character.position, gainAction2.Amount);
+							((GainResource)gainAction3).SetDestinationAmount(this.player.character.position, gainAction3.Amount);
 						}
 					}
 					this.gameManager.ChooseEncounterOption(0);
@@ -1201,74 +1224,130 @@ namespace Scythe.GameLogic
 				}
 				if (this.player.matFaction.factionPerk == AbilityPerk.Meander && (!this.gameManager.IsMultiplayer || this.gameManager.PlayerOwner == null))
 				{
-					int secondOption = -1;
-					if (option1Acceptable && option2Acceptable)
+					int num2 = -1;
+					if (flag && flag2)
 					{
-						bool option2Special = false;
+						bool flag5 = false;
 						if (this.player.Popularity >= 3 && this.player.Popularity <= 5)
 						{
-							if (encounterCard.CardId == 14 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Mechs) == 0) option2Special = true;
-							else if (encounterCard.CardId == 23 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0) option2Special = true;
-							else if ((encounterCard.CardId == 6 || encounterCard.CardId == 8 || encounterCard.CardId == 16) && this.player.GetNumberOfStars(StarType.Recruits) == 0) option2Special = true;
-							else if ((encounterCard.CardId == 4 || encounterCard.CardId == 3 || encounterCard.CardId == 27) && this.player.GetNumberOfStars(StarType.Mechs) == 0) option2Special = true;
-							else if (is4Oil && this.player.GetNumberOfStars(StarType.Upgrades) == 0) option2Special = true;
-							else if ((encounterCard.CardId == 19 || encounterCard.CardId == 21) && this.player.stars[StarType.Combat] < 2) option2Special = true;
-							else if (encounterCard.CardId == 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0 && this.player.GetNumberOfStars(StarType.Mechs) == 0) option2Special = true;
-							else if (encounterCard.CardId == 15 && (this.player.GetNumberOfStars(StarType.Recruits) == 0 || this.player.GetNumberOfStars(StarType.Mechs) == 0)) option2Special = true;
+							if (encounterCard.CardId == 14 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Mechs) == 0)
+							{
+								flag5 = true;
+							}
+							else if (encounterCard.CardId == 23 && this.player.matPlayer.workers.Count < 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0)
+							{
+								flag5 = true;
+							}
+							else if ((encounterCard.CardId == 6 || encounterCard.CardId == 8 || encounterCard.CardId == 16) && this.player.GetNumberOfStars(StarType.Recruits) == 0)
+							{
+								flag5 = true;
+							}
+							else if ((encounterCard.CardId == 4 || encounterCard.CardId == 3 || encounterCard.CardId == 27) && this.player.GetNumberOfStars(StarType.Mechs) == 0)
+							{
+								flag5 = true;
+							}
+							else if (flag3 && this.player.GetNumberOfStars(StarType.Upgrades) == 0)
+							{
+								flag5 = true;
+							}
+							else if ((encounterCard.CardId == 19 || encounterCard.CardId == 21) && this.player.stars[StarType.Combat] < 2)
+							{
+								flag5 = true;
+							}
+							else if (encounterCard.CardId == 5 && this.player.GetNumberOfStars(StarType.Recruits) == 0 && this.player.GetNumberOfStars(StarType.Mechs) == 0)
+							{
+								flag5 = true;
+							}
+							else if (encounterCard.CardId == 15 && (this.player.GetNumberOfStars(StarType.Recruits) == 0 || this.player.GetNumberOfStars(StarType.Mechs) == 0))
+							{
+								flag5 = true;
+							}
 						}
-						
-						if (option2Special) secondOption = 2;
+						if (flag5)
+						{
+							num2 = 2;
+						}
 						else
 						{
-							int score1 = 0;
-							int score2 = 0;
-							for (int k = 0; k < encounterCard.GetAction(1).gainActionsCount; k++)
+							int num3 = 0;
+							int num4 = 0;
+							for (int n = 0; n < encounterCard.GetAction(1).gainActionsCount; n++)
 							{
-								GainType gainType = encounterCard.GetAction(1).GetGainAction(k).GetGainType();
-								if (gainType == GainType.Mech) score1 += 150;
-								else if (gainType == GainType.Power) score1 += 120;
-								else if (gainType == GainType.CombatCard) score1 += 100;
-								else if (gainType == GainType.Produce) score1 += 100;
-								else score1 += 50;
+								GainType gainType3 = encounterCard.GetAction(1).GetGainAction(n).GetGainType();
+								if (gainType3 == GainType.Mech)
+								{
+									num3 += 150;
+								}
+								else if (gainType3 == GainType.Power)
+								{
+									num3 += 120;
+								}
+								else if (gainType3 == GainType.CombatCard)
+								{
+									num3 += 100;
+								}
+								else if (gainType3 == GainType.Produce)
+								{
+									num3 += 100;
+								}
+								else
+								{
+									num3 += 50;
+								}
 							}
-							for (int k = 0; k < encounterCard.GetAction(2).gainActionsCount; k++)
+							for (int num5 = 0; num5 < encounterCard.GetAction(2).gainActionsCount; num5++)
 							{
-								GainType gainType = encounterCard.GetAction(2).GetGainAction(k).GetGainType();
-								if (gainType == GainType.Mech) score2 += 150;
-								else if (gainType == GainType.Power) score2 += 120;
-								else if (gainType == GainType.CombatCard) score2 += 100;
-								else if (gainType == GainType.Produce) score2 += 100;
-								else score2 += 50;
+								GainType gainType4 = encounterCard.GetAction(2).GetGainAction(num5).GetGainType();
+								if (gainType4 == GainType.Mech)
+								{
+									num4 += 150;
+								}
+								else if (gainType4 == GainType.Power)
+								{
+									num4 += 120;
+								}
+								else if (gainType4 == GainType.CombatCard)
+								{
+									num4 += 100;
+								}
+								else if (gainType4 == GainType.Produce)
+								{
+									num4 += 100;
+								}
+								else
+								{
+									num4 += 50;
+								}
 							}
-							secondOption = (score2 > score1) ? 2 : 1;
+							num2 = ((num4 > num3) ? 2 : 1);
 						}
 					}
-					else if (option1Acceptable)
+					else if (flag)
 					{
-						secondOption = 1;
+						num2 = 1;
 					}
-					else if (option2Acceptable)
+					else if (flag2)
 					{
-						secondOption = 2;
+						num2 = 2;
 					}
-					if (secondOption >= 0)
+					if (num2 >= 0)
 					{
 						int[] array2 = new int[]
 						{
 							AiAction.FindResourceGain(encounterCard.GetAction(1)),
 							AiAction.FindResourceGain(encounterCard.GetAction(2))
 						};
-						sectionAction = encounterCard.GetAction(secondOption);
-						if (this.CanGetResourcesFromEncounter(sectionAction, array2[secondOption - 1]))
+						sectionAction = encounterCard.GetAction(num2);
+						if (this.CanGetResourcesFromEncounter(sectionAction, array2[num2 - 1]))
 						{
-							this.gameManager.ChooseEncounterOption(secondOption);
-							this.gameManager.actionManager.SetSectionAction(encounterCard.GetAction(secondOption), null, 0);
-							for (int k = 0; k < sectionAction.gainActionsCount; k++)
+							this.gameManager.ChooseEncounterOption(num2);
+							this.gameManager.actionManager.SetSectionAction(encounterCard.GetAction(num2), null, 0);
+							for (int num6 = 0; num6 < sectionAction.gainActionsCount; num6++)
 							{
-								GainAction gainAction3 = sectionAction.GetGainAction(k);
-								if (gainAction3.GainAvaliable() && !this.player.automaticGain.ContainsKey(gainAction3.GetGainType()))
+								GainAction gainAction4 = sectionAction.GetGainAction(num6);
+								if (gainAction4.GainAvaliable() && !this.player.automaticGain.ContainsKey(gainAction4.GetGainType()))
 								{
-									this.PrepareEncounterAction(gainAction3);
+									this.PrepareEncounterAction(gainAction4);
 									this.gameManager.actionManager.PrepareNextAction();
 								}
 							}
@@ -1294,26 +1373,26 @@ namespace Scythe.GameLogic
 				if (this.gameManager.IsMultiplayer)
 				{
 					List<FactoryCard> factoryCards = this.gameManager.GetFactoryCards();
-					int bestCardIndex = this.SelectBestFactoryCard(factoryCards);
+					int num7 = this.SelectBestFactoryCard(factoryCards);
 					if (this.gameManager.PlayerOwner == null)
 					{
 						this.gameManager.OnActionSent(new EmptyCardsMessage(factoryCards.Count));
-						this.gameManager.OnActionSent(new FactoryMessage(factoryCards[bestCardIndex].CardId.ToString(), (int)this.player.matFaction.faction, bestCardIndex));
+						this.gameManager.OnActionSent(new FactoryMessage(factoryCards[num7].CardId.ToString(), (int)this.player.matFaction.faction, num7));
 					}
 					else
 					{
-						this.gameManager.OnActionSent(new GetFactoryMessage(bestCardIndex));
+						this.gameManager.OnActionSent(new GetFactoryMessage(num7));
 					}
-					this.gameManager.AddFactoryCard(bestCardIndex);
+					this.gameManager.AddFactoryCard(num7);
 					return;
 				}
 				List<FactoryCard> factoryCards2 = this.gameManager.GetFactoryCards();
-				int bestCardIndex2 = this.SelectBestFactoryCard(factoryCards2);
-				this.gameManager.AddFactoryCard(bestCardIndex2);
+				int num8 = this.SelectBestFactoryCard(factoryCards2);
+				this.gameManager.AddFactoryCard(num8);
 			}
 		}
 
-		// Token: 0x06002D8C RID: 11660
+		// Token: 0x06002DBF RID: 11711 RVA: 0x000446EC File Offset: 0x000428EC
 		private void StarPopularity(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.player.GetNumberOfStars(StarType.Popularity) == 0 && this.CanPlayTopAction(GainType.Popularity))
@@ -1322,20 +1401,25 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D8D RID: 11661
+		// Token: 0x06002DC0 RID: 11712 RVA: 0x0010F714 File Offset: 0x0010D914
 		private void StarPower(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			bool shouldKeepGainingPower = false;
-			if (this.player.GetNumberOfStars(StarType.Combat) < 2) shouldKeepGainingPower = true;
-			if (this.player.matFaction.faction == Faction.Saxony) shouldKeepGainingPower = true;
-
-			if ((this.player.GetNumberOfStars(StarType.Power) == 0 || shouldKeepGainingPower) && this.CanPlayTopAction(GainType.Power))
+			bool flag = false;
+			if (this.player.GetNumberOfStars(StarType.Combat) < 2)
+			{
+				flag = true;
+			}
+			if (this.player.matFaction.faction == Faction.Saxony)
+			{
+				flag = true;
+			}
+			if ((this.player.GetNumberOfStars(StarType.Power) == 0 || flag) && this.CanPlayTopAction(GainType.Power))
 			{
 				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Power], "Star Power"));
 			}
 		}
 
-		// Token: 0x06002D8E RID: 11662
+		// Token: 0x06002DC1 RID: 11713 RVA: 0x00044722 File Offset: 0x00042922
 		private void PowerIfWeak(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.player.Power == 0 && this.CanPlayTopAction(GainType.Power))
@@ -1344,7 +1428,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D8F RID: 11663
+		// Token: 0x06002DC2 RID: 11714 RVA: 0x0010F784 File Offset: 0x0010D984
 		private void TradeForResource(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.CanPlayTopAction(GainType.AnyResource) && this.strategicAnalysis.resourceHighestPriority != ResourceType.combatCard && this.strategicAnalysis.workersOutOfBase > 0)
@@ -1353,7 +1437,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D90 RID: 11664
+		// Token: 0x06002DC3 RID: 11715 RVA: 0x0010F7D4 File Offset: 0x0010D9D4
 		private void TradeForBottomAction(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.CanPlayTopAction(GainType.AnyResource) && this.strategicAnalysis.resourceHighestPriority != ResourceType.combatCard && this.player.Coins > 0 && ((this.strategicAnalysis.resourceHighestPriority == ResourceType.food && this.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0) is GainRecruit && this.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable() && (int)this.AiTopActions[GainType.AnyResource].downAction.GetPayAction(0).Amount - this.player.Resources(false)[ResourceType.food] <= 2) || (this.strategicAnalysis.resourceHighestPriority == ResourceType.metal && this.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0) is GainMech && this.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable() && (int)this.AiTopActions[GainType.AnyResource].downAction.GetPayAction(0).Amount - this.player.Resources(false)[ResourceType.metal] <= 2) || (this.strategicAnalysis.resourceHighestPriority == ResourceType.oil && this.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0) is GainUpgrade && this.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable() && (int)this.AiTopActions[GainType.AnyResource].downAction.GetPayAction(0).Amount - this.player.Resources(false)[ResourceType.oil] <= 2) || (this.strategicAnalysis.resourceHighestPriority == ResourceType.wood && this.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0) is GainBuilding && this.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable() && (int)this.AiTopActions[GainType.AnyResource].downAction.GetPayAction(0).Amount - this.player.Resources(false)[ResourceType.wood] <= 2)))
@@ -1362,7 +1446,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D91 RID: 11665
+		// Token: 0x06002DC4 RID: 11716 RVA: 0x00044757 File Offset: 0x00042957
 		private void CoinIfPoor(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.player.Coins == 0 && this.CanPlayTopAction(GainType.Coin))
@@ -1371,7 +1455,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D92 RID: 11666
+		// Token: 0x06002DC5 RID: 11717 RVA: 0x0004478C File Offset: 0x0004298C
 		private void MoveToBuild(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.player.aiDifficulty == AIDifficulty.Hard)
@@ -1382,7 +1466,7 @@ namespace Scythe.GameLogic
 			this.MoveToBuildBasic(actionOptions, priority);
 		}
 
-		// Token: 0x06002D93 RID: 11667
+		// Token: 0x06002DC6 RID: 11718 RVA: 0x0010FA24 File Offset: 0x0010DC24
 		private void MoveToBuildBasic(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (!this.strategicAnalysis.canBuild && this.player.GetNumberOfStars(StarType.Structures) == 0 && this.AiActions[this.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions() && this.CanPlayTopAction(GainType.Move))
@@ -1402,7 +1486,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D94 RID: 11668
+		// Token: 0x06002DC7 RID: 11719 RVA: 0x000447AD File Offset: 0x000429AD
 		private void MoveByAnalysisPriority(SortedList<int, AiRecipe> actionOptions)
 		{
 			if (this.CanPlayTopAction(GainType.Move))
@@ -1411,7 +1495,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D95 RID: 11669
+		// Token: 0x06002DC8 RID: 11720 RVA: 0x0010FAA8 File Offset: 0x0010DCA8
 		public ResourceType TradeResourceType()
 		{
 			ResourceType resourceType = this.strategicAnalysis.resourceHighestPriority;
@@ -1422,7 +1506,7 @@ namespace Scythe.GameLogic
 			return resourceType;
 		}
 
-		// Token: 0x06002D96 RID: 11670
+		// Token: 0x06002DC9 RID: 11721 RVA: 0x0010FADC File Offset: 0x0010DCDC
 		private int SelectTopActionFlavor(List<int> options)
 		{
 			if (options.Count == 1)
@@ -1439,8 +1523,12 @@ namespace Scythe.GameLogic
 				}
 				return num2;
 			}
-			if (this.AiActions[options[0]].topAction.Type == TopActionType.Trade && this.player.matFaction.faction == Faction.Saxony)
+			else
 			{
+				if (this.AiActions[options[0]].topAction.Type != TopActionType.Trade || this.player.matFaction.faction != Faction.Saxony)
+				{
+					return options[0];
+				}
 				int num3 = options[0];
 				int num4 = options[1];
 				if (this.TradeResourceType() == ResourceType.combatCard)
@@ -1449,10 +1537,9 @@ namespace Scythe.GameLogic
 				}
 				return num3;
 			}
-			return options[0];
 		}
 
-		// Token: 0x06002D97 RID: 11671
+		// Token: 0x06002DCA RID: 11722 RVA: 0x0010FBB4 File Offset: 0x0010DDB4
 		private void StarConstructions(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.strategicAnalysis.canBuild && this.CanPlayDownAction(this.AiActions[this.gainBuildingActionPosition[0]]))
@@ -1461,7 +1548,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D98 RID: 11672
+		// Token: 0x06002DCB RID: 11723 RVA: 0x0010FC18 File Offset: 0x0010DE18
 		private void StarMechs(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.strategicAnalysis.canDeploy && this.CanPlayDownAction(this.AiActions[this.gainMechActionPosition[0]]))
@@ -1470,7 +1557,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D99 RID: 11673
+		// Token: 0x06002DCC RID: 11724 RVA: 0x0010FC7C File Offset: 0x0010DE7C
 		private void StarRecruits(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.strategicAnalysis.canEnlist && this.CanPlayDownAction(this.AiActions[this.gainRecruitActionPosition[0]]))
@@ -1479,7 +1566,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D9A RID: 11674
+		// Token: 0x06002DCD RID: 11725 RVA: 0x0010FCE0 File Offset: 0x0010DEE0
 		private void StarUpgrades(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.strategicAnalysis.canUpgrade && this.CanPlayDownAction(this.AiActions[this.gainUpgradeActionPosition[0]]))
@@ -1488,7 +1575,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D9B RID: 11675
+		// Token: 0x06002DCE RID: 11726 RVA: 0x0010FD44 File Offset: 0x0010DF44
 		private void TradeLoop(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.strategicAnalysis.tradeLoopPresent && this.CanPlayTopAction(GainType.AnyResource) && this.AiTopActions[GainType.AnyResource].topAction.CanPlayerPayActions())
@@ -1504,7 +1591,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D9C RID: 11676
+		// Token: 0x06002DCF RID: 11727 RVA: 0x0010FDC8 File Offset: 0x0010DFC8
 		private void ProduceLoop(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.strategicAnalysis.produceLoopPresent && this.CanPlayTopAction(GainType.Produce) && this.AiTopActions[GainType.Produce].topAction.CanPlayerPayActions())
@@ -1513,7 +1600,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D9D RID: 11677
+		// Token: 0x06002DD0 RID: 11728 RVA: 0x0010FE20 File Offset: 0x0010E020
 		private void RandomAllowed(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			int num = this.gameManager.random.Next(0, this.AiActions.Count - 1);
@@ -1524,7 +1611,7 @@ namespace Scythe.GameLogic
 			actionOptions.Add(priority, new AiRecipe(this.AiActions[num], "Random allowed"));
 		}
 
-		// Token: 0x06002D9E RID: 11678
+		// Token: 0x06002DD1 RID: 11729 RVA: 0x0010FEB8 File Offset: 0x0010E0B8
 		private void ProduceForDemand(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.CanPlayTopAction(GainType.Produce))
@@ -1555,7 +1642,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002D9F RID: 11679
+		// Token: 0x06002DD2 RID: 11730 RVA: 0x00110078 File Offset: 0x0010E278
 		private void MovePreparation(SortedList<int, AiRecipe> actionOptions)
 		{
 			AiAction action = actionOptions.Values[0].action;
@@ -1588,7 +1675,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DA0 RID: 11680
+		// Token: 0x06002DD3 RID: 11731 RVA: 0x00110174 File Offset: 0x0010E374
 		private void PurgeActions(SortedList<int, AiRecipe> actionOptions, AiPlayer player)
 		{
 			List<int> list = new List<int>();
@@ -1606,7 +1693,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DA1 RID: 11681
+		// Token: 0x06002DD4 RID: 11732 RVA: 0x001101FC File Offset: 0x0010E3FC
 		protected void StrategicAnalysisRun()
 		{
 			int num = 500;
@@ -1632,7 +1719,7 @@ namespace Scythe.GameLogic
 			switch (this.player.matFaction.faction)
 			{
 			case Faction.Polania:
-				this.strategicAnalysis.Run(this, 130, 134, 180, num, 145);
+				this.strategicAnalysis.Run(this, 130, 134, 130, num, 145);
 				return;
 			case Faction.Nordic:
 				this.strategicAnalysis.Run(this, 102, 134, 125, num, 145);
@@ -1650,7 +1737,7 @@ namespace Scythe.GameLogic
 			this.strategicAnalysis.Run(this, 130, 130, 125, num, 145);
 		}
 
-		// Token: 0x06002DA2 RID: 11682
+		// Token: 0x06002DD5 RID: 11733 RVA: 0x0011037C File Offset: 0x0010E57C
 		public virtual AiRecipe Bot()
 		{
 			SortedList<int, AiRecipe> sortedList = new SortedList<int, AiRecipe>(new InvertedComparer());
@@ -1673,7 +1760,7 @@ namespace Scythe.GameLogic
 				}
 				if (this.player.stars[StarType.Combat] == 0)
 				{
-					int count6 = this.strategicAnalysis.movePriority.Count;
+					int count = this.strategicAnalysis.movePriority.Count;
 				}
 				int num2 = this.player.stars[StarType.Objective];
 				if (this.player.stars[StarType.Upgrades] == 0 && this.player.GetNumberOfStars(StarType.Upgrades) == 0 && this.AiActions[this.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions())
@@ -1700,54 +1787,64 @@ namespace Scythe.GameLogic
 			sortedList.Clear();
 			Dictionary<DownActionType, int> dictionary = new Dictionary<DownActionType, int>
 			{
-				{ DownActionType.Upgrade, 206 },
-				{ DownActionType.Deploy, 202 },
-				{ DownActionType.Build, 200 },
-				{ DownActionType.Enlist, 204 }
+				{
+					DownActionType.Upgrade,
+					206
+				},
+				{
+					DownActionType.Deploy,
+					202
+				},
+				{
+					DownActionType.Build,
+					200
+				},
+				{
+					DownActionType.Enlist,
+					204
+				}
 			};
-			int starPowerPriority = 112; // Base power priority
-			
+			int num3 = 112;
 			switch (this.player.matPlayer.matType)
 			{
-				case PlayerMatType.Industrial:
-					dictionary[DownActionType.Deploy] = 210;
-					starPowerPriority = 208;
-					dictionary[DownActionType.Upgrade] = 206;
-					dictionary[DownActionType.Enlist] = 200;
-					break;
-				case PlayerMatType.Patriotic:
-				case PlayerMatType.Mechanical:
-					starPowerPriority = 210;
-					dictionary[DownActionType.Deploy] = 208;
-					dictionary[DownActionType.Enlist] = 206;
-					dictionary[DownActionType.Upgrade] = 200;
-					break;
-				case PlayerMatType.Engineering:
-					dictionary[DownActionType.Upgrade] = 210;
-					dictionary[DownActionType.Deploy] = 208;
-					dictionary[DownActionType.Enlist] = 206;
-					starPowerPriority = 200;
-					break;
-				case PlayerMatType.Agricultural:
-					starPowerPriority = 210;
-					dictionary[DownActionType.Enlist] = 208;
-					dictionary[DownActionType.Deploy] = 206;
-					dictionary[DownActionType.Upgrade] = 200;
-					break;
-				case PlayerMatType.Innovative:
-					dictionary[DownActionType.Upgrade] = 210;
-					dictionary[DownActionType.Enlist] = 208;
-					dictionary[DownActionType.Deploy] = 206;
-					starPowerPriority = 200;
-					break;
-				case PlayerMatType.Militant:
-					dictionary[DownActionType.Deploy] = 210;
-					dictionary[DownActionType.Enlist] = 208;
-					dictionary[DownActionType.Upgrade] = 206;
-					starPowerPriority = 200;
-					break;
+			case PlayerMatType.Industrial:
+				dictionary[DownActionType.Deploy] = 210;
+				num3 = 208;
+				dictionary[DownActionType.Upgrade] = 206;
+				dictionary[DownActionType.Enlist] = 200;
+				break;
+			case PlayerMatType.Engineering:
+				dictionary[DownActionType.Upgrade] = 210;
+				dictionary[DownActionType.Deploy] = 208;
+				dictionary[DownActionType.Enlist] = 206;
+				num3 = 200;
+				break;
+			case PlayerMatType.Patriotic:
+			case PlayerMatType.Mechanical:
+				num3 = 210;
+				dictionary[DownActionType.Deploy] = 208;
+				dictionary[DownActionType.Enlist] = 206;
+				dictionary[DownActionType.Upgrade] = 200;
+				break;
+			case PlayerMatType.Agricultural:
+				num3 = 210;
+				dictionary[DownActionType.Enlist] = 208;
+				dictionary[DownActionType.Deploy] = 206;
+				dictionary[DownActionType.Upgrade] = 200;
+				break;
+			case PlayerMatType.Militant:
+				dictionary[DownActionType.Deploy] = 210;
+				dictionary[DownActionType.Enlist] = 208;
+				dictionary[DownActionType.Upgrade] = 206;
+				num3 = 200;
+				break;
+			case PlayerMatType.Innovative:
+				dictionary[DownActionType.Upgrade] = 210;
+				dictionary[DownActionType.Enlist] = 208;
+				dictionary[DownActionType.Deploy] = 206;
+				num3 = 200;
+				break;
 			}
-
 			if (this.player.matPlayer.UpgradesDone >= 3)
 			{
 				if (this.player.matPlayer.matType == PlayerMatType.Industrial)
@@ -1917,7 +2014,7 @@ namespace Scythe.GameLogic
 				this.ProduceForDemand(sortedList, 132);
 				this.MoveByAnalysisPriority(sortedList);
 				this.TradeForResource(sortedList, 120);
-				this.StarPower(sortedList, starPowerPriority);
+				this.StarPower(sortedList, num3);
 				this.StarPopularity(sortedList, 110);
 				this.RandomAllowed(sortedList, 100);
 				if ((this.player.matFaction.faction == Faction.Nordic && this.player.matPlayer.matType == PlayerMatType.Industrial) || (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Patriotic) || (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Agricultural))
@@ -1934,41 +2031,47 @@ namespace Scythe.GameLogic
 				this.MovePreparation(sortedList);
 				this.ProducePreparation(sortedList);
 			}
-			SortedList<int, AiRecipe> filteredList = new SortedList<int, AiRecipe>(new InvertedComparer());
-			foreach (KeyValuePair<int, AiRecipe> kvp in sortedList)
+			SortedList<int, AiRecipe> sortedList2 = new SortedList<int, AiRecipe>(new InvertedComparer());
+			foreach (KeyValuePair<int, AiRecipe> keyValuePair2 in sortedList)
 			{
-				int priority = kvp.Key;
-				AiAction action = kvp.Value.action;
-				
+				int num4 = keyValuePair2.Key;
+				AiAction action = keyValuePair2.Value.action;
 				if (action.matSectionId == 4 && this.player.Power >= 1 && this.player.Popularity >= 1 && this.player.Coins >= 1)
 				{
-					priority += 200;
+					num4 += 200;
 				}
-				
 				if (action.topAction != null)
 				{
-					for (int pIndex = 0; pIndex < action.topAction.GetNumberOfPayActions(); pIndex++)
+					for (int i = 0; i < action.topAction.GetNumberOfPayActions(); i++)
 					{
-						PayType payType = action.topAction.GetPayAction(pIndex).GetPayType();
-						int amount = (int)action.topAction.GetPayAction(pIndex).GetAmount();
-						if (payType == PayType.Power && this.player.Power - amount < 1) priority -= 1000;
-						if (payType == PayType.Popularity && this.player.Popularity - amount < 1) priority -= 1000;
-						if (payType == PayType.Coin && this.player.Coins - amount < 1) priority -= 1000;
+						PayType payType = action.topAction.GetPayAction(i).GetPayType();
+						int amount = (int)action.topAction.GetPayAction(i).GetAmount();
+						if (payType == PayType.Power && this.player.Power - amount < 1)
+						{
+							num4 -= 1000;
+						}
+						if (payType == PayType.Popularity && this.player.Popularity - amount < 1)
+						{
+							num4 -= 1000;
+						}
+						if (payType == PayType.Coin && this.player.Coins - amount < 1)
+						{
+							num4 -= 1000;
+						}
 					}
 				}
-				
-				while (filteredList.ContainsKey(priority))
+				while (sortedList2.ContainsKey(num4))
 				{
-					priority--;
+					num4--;
 				}
-				filteredList.Add(priority, kvp.Value);
+				sortedList2.Add(num4, keyValuePair2.Value);
 			}
-			sortedList = filteredList;
+			sortedList = sortedList2;
 			this.Log(sortedList);
 			return sortedList.Values[0];
 		}
 
-		// Token: 0x06002DA3 RID: 11683
+		// Token: 0x06002DD6 RID: 11734 RVA: 0x00111484 File Offset: 0x0010F684
 		public void Log(SortedList<int, AiRecipe> actionOptions)
 		{
 			string text = "---" + this.player.matFaction.faction.ToString() + "---" + Environment.NewLine;
@@ -2002,7 +2105,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DA4 RID: 11684
+		// Token: 0x06002DD7 RID: 11735 RVA: 0x000447DF File Offset: 0x000429DF
 		public void Log(string msg)
 		{
 			if (AiPlayer.LogMessage != null)
@@ -2011,7 +2114,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DA5 RID: 11685
+		// Token: 0x06002DD8 RID: 11736 RVA: 0x00111634 File Offset: 0x0010F834
 		public void LogAiPlayerStatus()
 		{
 			this.Log(this.ToString());
@@ -2033,14 +2136,14 @@ namespace Scythe.GameLogic
 			this.Log(text + Environment.NewLine);
 		}
 
-		// Token: 0x06002DA6 RID: 11686
+		// Token: 0x06002DD9 RID: 11737 RVA: 0x000447F3 File Offset: 0x000429F3
 		public static void AttachLogDelegate(AiPlayer.LogDelegate func)
 		{
 			AiPlayer.LogMessage = null;
 			AiPlayer.LogMessage += func;
 		}
 
-		// Token: 0x06002DA7 RID: 11687
+		// Token: 0x06002DDA RID: 11738 RVA: 0x00111710 File Offset: 0x0010F910
 		private int MovePreparationPriority()
 		{
 			if (this.player.aiDifficulty == AIDifficulty.Hard)
@@ -2061,7 +2164,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DA8 RID: 11688
+		// Token: 0x06002DDB RID: 11739 RVA: 0x00111984 File Offset: 0x0010FB84
 		public List<ResourceBundle> FindResourcesAdvanced(ResourceType resType, int resAmount, out bool fulfilled)
 		{
 			List<ResourceBundle> list = new List<ResourceBundle>();
@@ -2104,7 +2207,7 @@ namespace Scythe.GameLogic
 			return list;
 		}
 
-		// Token: 0x06002DA9 RID: 11689
+		// Token: 0x06002DDC RID: 11740 RVA: 0x00111AD8 File Offset: 0x0010FCD8
 		public bool Pay4ActionAdvanced(PayResource payResource)
 		{
 			bool flag = false;
@@ -2155,7 +2258,7 @@ namespace Scythe.GameLogic
 			return flag3;
 		}
 
-		// Token: 0x06002DAA RID: 11690
+		// Token: 0x06002DDD RID: 11741 RVA: 0x00044801 File Offset: 0x00042A01
 		private int ProducePreparationPriority()
 		{
 			if (this.player.aiDifficulty != AIDifficulty.Hard)
@@ -2169,7 +2272,7 @@ namespace Scythe.GameLogic
 			return 0;
 		}
 
-		// Token: 0x06002DAB RID: 11691
+		// Token: 0x06002DDE RID: 11742 RVA: 0x00111D10 File Offset: 0x0010FF10
 		private void ProducePreparation(SortedList<int, AiRecipe> actionOptions)
 		{
 			AiAction action = actionOptions.Values[0].action;
@@ -2202,7 +2305,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DAC RID: 11692
+		// Token: 0x06002DDF RID: 11743 RVA: 0x00111E0C File Offset: 0x0011000C
 		public void MoveCharacterToEncounter(GainMove gainMove)
 		{
 			GameHex gameHex = null;
@@ -2220,7 +2323,7 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002DAD RID: 11693
+		// Token: 0x06002DE0 RID: 11744 RVA: 0x00111EF0 File Offset: 0x001100F0
 		private void MoveToBuildAdvanced(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (!this.strategicAnalysis.canBuild && this.player.GetNumberOfStars(StarType.Structures) == 0 && this.AiActions[this.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions() && this.CanPlayTopAction(GainType.Move))
@@ -2244,21 +2347,21 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x060042B6 RID: 17078
+		// Token: 0x06002DE1 RID: 11745 RVA: 0x00111F74 File Offset: 0x00110174
 		private bool IsEncounterOptionAcceptable(EncounterCard encounterCard, int optionIndex)
 		{
 			if (this.player.Coins <= 4)
 			{
 				return false;
 			}
-			SectionAction option = encounterCard.GetAction(optionIndex);
-			if (!option.CanPlayerPayActions())
+			SectionAction action = encounterCard.GetAction(optionIndex);
+			if (!action.CanPlayerPayActions())
 			{
 				return false;
 			}
-			for (int i = 0; i < option.gainActionsCount; i++)
+			for (int i = 0; i < action.gainActionsCount; i++)
 			{
-				switch (option.GetGainAction(i).GetGainType())
+				switch (action.GetGainAction(i).GetGainType())
 				{
 				case GainType.Power:
 					if (this.player.Power >= 16)
@@ -2313,86 +2416,86 @@ namespace Scythe.GameLogic
 			return true;
 		}
 
-		// Token: 0x06004311 RID: 17169
+		// Token: 0x06002DE2 RID: 11746 RVA: 0x001120C8 File Offset: 0x001102C8
 		private int SelectBestFactoryCard(List<FactoryCard> factoryCards)
 		{
-			List<int> priorityOrder = new List<int>();
-			int combatStars = this.player.GetNumberOfStars(StarType.Combat);
-			int numberOfStars = this.player.GetNumberOfStars(StarType.Mechs);
-			int recruitStars = this.player.GetNumberOfStars(StarType.Recruits);
-			int mechanicStars = numberOfStars + recruitStars;
+			List<int> list = new List<int>();
+			int numberOfStars = this.player.GetNumberOfStars(StarType.Combat);
+			int numberOfStars2 = this.player.GetNumberOfStars(StarType.Mechs);
+			int numberOfStars3 = this.player.GetNumberOfStars(StarType.Recruits);
+			int num = numberOfStars2 + numberOfStars3;
 			int count = this.player.matFaction.mechs.Count;
-			int buildingCount = this.player.matPlayer.buildings.Count;
-			int upgradeStars = this.player.GetNumberOfStars(StarType.Upgrades);
+			int count2 = this.player.matPlayer.buildings.Count;
+			int numberOfStars4 = this.player.GetNumberOfStars(StarType.Upgrades);
 			int coins = this.player.Coins;
 			int power = this.player.Power;
-			int combatCards = this.player.combatCards.Count;
-			bool isSaxony = this.player.matFaction.faction == Faction.Saxony;
-			bool isPolaniaOrNordic = this.player.matFaction.faction == Faction.Polania || this.player.matFaction.faction == Faction.Nordic;
-			bool isBuildingMat = this.player.matPlayer.matType == PlayerMatType.Agricultural || this.player.matPlayer.matType == PlayerMatType.Engineering || this.player.matPlayer.matType == PlayerMatType.Mechanical;
-			if (isSaxony || combatStars == 0)
+			int count3 = this.player.combatCards.Count;
+			bool flag = this.player.matFaction.faction == Faction.Saxony;
+			bool flag2 = this.player.matFaction.faction == Faction.Polania || this.player.matFaction.faction == Faction.Nordic;
+			bool flag3 = this.player.matPlayer.matType == PlayerMatType.Agricultural || this.player.matPlayer.matType == PlayerMatType.Engineering || this.player.matPlayer.matType == PlayerMatType.Mechanical;
+			if (flag || numberOfStars == 0)
 			{
-				priorityOrder.Add(15);
+				list.Add(15);
 			}
-			if (recruitStars == 0)
+			if (numberOfStars3 == 0)
 			{
-				priorityOrder.Add(18);
+				list.Add(18);
 			}
-			if (recruitStars == 0 && coins >= 4)
+			if (numberOfStars3 == 0 && coins >= 4)
 			{
-				priorityOrder.Add(12);
+				list.Add(12);
 			}
 			if (count < 3 && coins >= 4)
 			{
-				priorityOrder.Add(10);
-				priorityOrder.Add(13);
+				list.Add(10);
+				list.Add(13);
 			}
-			if (buildingCount < 3 && isBuildingMat && isPolaniaOrNordic)
+			if (count2 < 3 && flag3 && flag2)
 			{
-				priorityOrder.Add(11);
-				priorityOrder.Add(13);
+				list.Add(11);
+				list.Add(13);
 			}
-			if (upgradeStars == 0 && coins >= 4)
+			if (numberOfStars4 == 0 && coins >= 4)
 			{
-				priorityOrder.Add(9);
+				list.Add(9);
 			}
-			if (upgradeStars == 0 && combatCards >= 2)
+			if (numberOfStars4 == 0 && count3 >= 2)
 			{
-				priorityOrder.Add(17);
+				list.Add(17);
 			}
-			if (!isSaxony && combatStars == 2 && mechanicStars < 2 && combatCards >= 2 && coins >= 3)
+			if (!flag && numberOfStars == 2 && num < 2 && count3 >= 2 && coins >= 3)
 			{
-				priorityOrder.Add(8);
-				priorityOrder.Add(1);
+				list.Add(8);
+				list.Add(1);
 			}
-			if (!isSaxony && combatStars == 2)
+			if (!flag && numberOfStars == 2)
 			{
 				if (power >= 4)
 				{
-					priorityOrder.Add(5);
+					list.Add(5);
 				}
-				if (combatCards >= 2)
+				if (count3 >= 2)
 				{
-					priorityOrder.Add(3);
+					list.Add(3);
 				}
 				if (power >= 4)
 				{
-					priorityOrder.Add(6);
+					list.Add(6);
 				}
-				if (combatCards >= 2)
+				if (count3 >= 2)
 				{
-					priorityOrder.Add(4);
+					list.Add(4);
 				}
 			}
-			priorityOrder.Add(7);
-			priorityOrder.Add(2);
-			priorityOrder.Add(16);
-			priorityOrder.Add(14);
-			foreach (int cardId in priorityOrder)
+			list.Add(7);
+			list.Add(2);
+			list.Add(16);
+			list.Add(14);
+			foreach (int num2 in list)
 			{
 				for (int i = 0; i < factoryCards.Count; i++)
 				{
-					if (factoryCards[i].CardId == cardId)
+					if (factoryCards[i].CardId == num2)
 					{
 						return i;
 					}
@@ -2401,54 +2504,54 @@ namespace Scythe.GameLogic
 			return 0;
 		}
 
-		// Token: 0x04001EE1 RID: 7905
+		// Token: 0x04001EFA RID: 7930
 		public readonly Player player;
 
-		// Token: 0x04001EE2 RID: 7906
+		// Token: 0x04001EFB RID: 7931
 		public List<AiAction> AiActions = new List<AiAction>();
 
-		// Token: 0x04001EE3 RID: 7907
+		// Token: 0x04001EFC RID: 7932
 		public Dictionary<GainType, AiAction> AiTopActions = new Dictionary<GainType, AiAction>();
 
-		// Token: 0x04001EE4 RID: 7908
+		// Token: 0x04001EFD RID: 7933
 		public AiStrategicAnalysis strategicAnalysis;
 
-		// Token: 0x04001EE5 RID: 7909
+		// Token: 0x04001EFE RID: 7934
 		public AiKickStart kickstarter;
 
-		// Token: 0x04001EE6 RID: 7910
+		// Token: 0x04001EFF RID: 7935
 		public AiKickStartAdv kickstarterAdv;
 
-		// Token: 0x04001EE7 RID: 7911
+		// Token: 0x04001F00 RID: 7936
 		public List<int> gainUpgradeActionPosition = new List<int>();
 
-		// Token: 0x04001EE8 RID: 7912
+		// Token: 0x04001F01 RID: 7937
 		public List<int> gainMechActionPosition = new List<int>();
 
-		// Token: 0x04001EE9 RID: 7913
+		// Token: 0x04001F02 RID: 7938
 		public List<int> gainBuildingActionPosition = new List<int>();
 
-		// Token: 0x04001EEA RID: 7914
+		// Token: 0x04001F03 RID: 7939
 		public List<int> gainRecruitActionPosition = new List<int>();
 
-		// Token: 0x04001EEB RID: 7915
+		// Token: 0x04001F04 RID: 7940
 		public HashSet<GainType> forbiddenActions = new HashSet<GainType>();
 
-		// Token: 0x04001EEC RID: 7916
+		// Token: 0x04001F05 RID: 7941
 		public bool WaitingForCard;
 
-		// Token: 0x04001EED RID: 7917
+		// Token: 0x04001F06 RID: 7942
 		private bool bottomActionExecuted;
 
-		// Token: 0x04001EEE RID: 7918
+		// Token: 0x04001F07 RID: 7943
 		private GameManager gameManager;
 
-		// Token: 0x020005A0 RID: 1440
-		// (Invoke) Token: 0x06002DB1 RID: 11697
+		// Token: 0x020005A9 RID: 1449
+		// (Invoke) Token: 0x06002DE6 RID: 11750
 		public delegate void LogDelegate(string s);
 
-		// Token: 0x020005A1 RID: 1441
-		// (Invoke) Token: 0x06002DB5 RID: 11701
+		// Token: 0x020005AA RID: 1450
+		// (Invoke) Token: 0x06002DEA RID: 11754
 		public delegate void CombatAbilityUsedDelegate(AbilityPerk abilityPerk);
 	}
 }
