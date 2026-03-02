@@ -55,7 +55,7 @@ namespace Scythe.GameLogic
 				bool hasObj14 = false;
 				foreach (ObjectiveCard card in aiPlayer.player.objectiveCards)
 				{
-					if (card.cardId == 14 && card.status == ObjectiveCard.ObjectiveStatus.Open)
+					if (card.CardId == 14 && card.status == ObjectiveCard.ObjectiveStatus.Open)
 					{
 						hasObj14 = true;
 						break;
@@ -93,7 +93,7 @@ namespace Scythe.GameLogic
 				bool hasObj6 = false;
 				foreach (ObjectiveCard card2 in aiPlayer.player.objectiveCards)
 				{
-					if (card2.cardId == 6 && card2.status == ObjectiveCard.ObjectiveStatus.Open)
+					if (card2.CardId == 6 && card2.status == ObjectiveCard.ObjectiveStatus.Open)
 					{
 						hasObj6 = true;
 						break;
@@ -195,6 +195,13 @@ namespace Scythe.GameLogic
 				this.recruitOneTimePriority[GainType.Power] = 20;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
+			{
+				this.recruitOneTimePriority[GainType.Power] = 20;
+				this.recruitOneTimePriority[GainType.CombatCard] = 20;
+				return;
+			}
+			// Industrial + (Polania or Crimea or Albion or Nordic or Rusviet or Togawa) or Engineering + (Crimea or Albion or Rusviet or Togawa) or Innovative + (Polania or Crimea or Albion or Nordic or Rusviet or Togawa) or Patriotic + (Albion or Rusviet or Togawa or Crimea or Nordic or Polania) or Mechanical + (Albion or Rusviet or Togawa or Crimea or Nordic or Polania) or Agricultural + (Albion or Rusviet or Togawa or Crimea) or Militant + (Albion or Rusviet or Togawa or Crimea or Nordic or Polania): boost Power and CombatCard for 2 combat stars
+			if ((aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)))
 			{
 				this.recruitOneTimePriority[GainType.Power] = 20;
 				this.recruitOneTimePriority[GainType.CombatCard] = 20;
@@ -620,30 +627,122 @@ namespace Scythe.GameLogic
 			switch (aiPlayer.player.matFaction.faction)
 			{
 			case Faction.Polania:
-				if (aiPlayer.player.matPlayer.buildings.Count == 0)
+				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 				{
-					this.resourceDemandPriority[ResourceType.wood] = 10;
-				}
-				if (aiPlayer.player.matFaction.mechs.Count == 0)
-				{
+					// Industrial Polania: Workers, Mechs, Recruits, Power, 2 combats, Objective
 					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+					if (aiPlayer.player.matPlayer.GetBuilding(BuildingType.Mill) != null && aiPlayer.player.matPlayer.GetBuilding(BuildingType.Mill).position.Owner == aiPlayer.player && aiPlayer.player.matPlayer.GetBuilding(BuildingType.Mill).position.hexType == HexType.tundra && aiPlayer.player.matPlayer.GetBuilding(BuildingType.Mill).position.GetOwnerWorkers().Count >= 2)
+					{
+						this.resourceDemandPriority[ResourceType.oil] = 1;
+					}
 				}
-				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
 				{
-					this.resourceDemandPriority[ResourceType.oil] = 1;
+					// Innovative Polania: Recruits, Mechs, Workers, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
 				}
-				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && aiPlayer.player.matPlayer.GetBuilding(BuildingType.Mill) != null && aiPlayer.player.matPlayer.GetBuilding(BuildingType.Mill).position.Owner == aiPlayer.player && aiPlayer.player.matPlayer.GetBuilding(BuildingType.Mill).position.hexType == HexType.tundra && aiPlayer.player.matPlayer.GetBuilding(BuildingType.Mill).position.GetOwnerWorkers().Count >= 2)
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
 				{
-					this.resourceDemandPriority[ResourceType.oil] = 1;
+					// Patriotic Polania: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+				{
+					// Mechanical Polania: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else
+				{
+					if (aiPlayer.player.matPlayer.buildings.Count == 0)
+					{
+						this.resourceDemandPriority[ResourceType.wood] = 10;
+					}
+					if (aiPlayer.player.matFaction.mechs.Count == 0)
+					{
+						this.resourceDemandPriority[ResourceType.metal] = 11;
+					}
+					if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+					{
+						this.resourceDemandPriority[ResourceType.oil] = 1;
+					}
+					if (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+					{
+						// Militant Polania: Workers, Mechs, Enlists, 2 combats, Objective
+						this.resourceDemandPriority[ResourceType.metal] = 11;
+						this.resourceDemandPriority[ResourceType.food] = 10;
+						this.resourceDemandPriority[ResourceType.oil] = 3;
+						this.resourceDemandPriority[ResourceType.wood] = 2;
+					}
 				}
 				break;
 			case Faction.Albion:
 				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
 				{
-					this.resourceDemandPriority[ResourceType.food] = 4;
-					this.resourceDemandPriority[ResourceType.metal] = 3;
+					// Mechanical Albion: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
 					this.resourceDemandPriority[ResourceType.wood] = 2;
-					this.resourceDemandPriority[ResourceType.oil] = 1;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+				{
+					// Innovative Albion: 2 Upgrades, Mechs, 4 Upgrades, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.oil] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+				{
+					// Industrial Albion: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+				{
+					// Engineering Albion: Workers, Mechs, Upgrades, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.oil] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+				{
+					// Patriotic Albion: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+				{
+					// Agricultural Albion: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+				{
+					// Militant Albion: Workers, Mechs, Enlists, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
 				}
 				break;
 			case Faction.Nordic:
@@ -670,13 +769,171 @@ namespace Scythe.GameLogic
 						this.resourceDemandPriority[ResourceType.food] = 10;
 					}
 				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+				{
+					// Innovative Nordic: 2 Upgrades, Mechs, 4 Upgrades, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.oil] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+				{
+					// Industrial Nordic: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+				{
+					// Patriotic Nordic: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+				{
+					// Mechanical Nordic: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+				{
+					// Militant Nordic: Workers, Mechs, Enlists, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
 				else if (aiPlayer.player.matFaction.mechs.Count <= 1)
 				{
 					this.resourceDemandPriority[ResourceType.metal] = 8;
 				}
 				break;
+			case Faction.Crimea:
+				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+				{
+					// Industrial Crimea: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+				{
+					// Engineering Crimea: Recruits, Mechs, Workers, Objective, 2 combats
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+				{
+					// Innovative Crimea: Recruits, Mechs, Workers, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+				{
+					// Patriotic Crimea: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+				{
+					// Mechanical Crimea: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+				{
+					// Agricultural Crimea: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+				{
+					// Militant Crimea: Workers, Mechs, Enlists, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				break;
 			case Faction.Togawa:
-				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && this.resourceAccess[ResourceType.metal] >= 2)
+				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+				{
+					// Innovative Togawa: 2 Upgrades, Mechs, 4 Upgrades, Power, 2 combats, Objective
+					if (this.resourceAccess[ResourceType.metal] >= 2)
+					{
+						this.resourceDemandPriority[ResourceType.metal] = 1;
+					}
+					this.resourceDemandPriority[ResourceType.oil] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+				{
+					// Industrial Togawa: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+				{
+					// Engineering Togawa: Workers, Mechs, Upgrades, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.oil] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+				{
+					// Patriotic Togawa: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+				{
+					// Mechanical Togawa: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+				{
+					// Agricultural Togawa: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+				{
+					// Militant Togawa: Workers, Mechs, Enlists, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && this.resourceAccess[ResourceType.metal] >= 2)
 				{
 					this.resourceDemandPriority[ResourceType.metal] = 1;
 				}
@@ -685,24 +942,112 @@ namespace Scythe.GameLogic
 					this.resourceDemandPriority[ResourceType.wood] = 10;
 				}
 				break;
-			case Faction.Saxony:
-				if (aiPlayer.player.matFaction.mechs.Count <= 1)
+			case Faction.Rusviet:
+				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
 				{
+					// Innovative Rusviet: 2 Upgrades, Mechs, 4 Upgrades, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.oil] = 11;
 					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
 				}
-				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 				{
-					this.resourceDemandPriority[ResourceType.food] = 5;
-					this.resourceDemandPriority[ResourceType.metal] = 4;
+					// Industrial Rusviet: Workers, Mechs, Recruits, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
 					this.resourceDemandPriority[ResourceType.oil] = 3;
 					this.resourceDemandPriority[ResourceType.wood] = 2;
 				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+				{
+					// Engineering Rusviet: Workers, Mechs, Upgrades, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.oil] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+				{
+					// Patriotic Rusviet: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+				{
+					// Agricultural Rusviet: Workers, Recruits, Mechs, Power, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.food] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+				{
+					// Militant Rusviet: Workers, Mechs, Enlists, 2 combats, Objective
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.food] = 10;
+					this.resourceDemandPriority[ResourceType.oil] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				break;
+			case Faction.Saxony:
 				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 				{
-					this.resourceDemandPriority[ResourceType.metal] = 5;
-					this.resourceDemandPriority[ResourceType.wood] = 4;
-					this.resourceDemandPriority[ResourceType.oil] = 3;
-					this.resourceDemandPriority[ResourceType.food] = 2;
+					// Industrial Saxony: 6 combat stars, 2 objective stars, workers, 2 upgrades, mechs, power, upgrades
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.oil] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+				{
+					// Engineering Saxony: 6 combat stars, 2 objective stars, workers, 2 upgrades, mechs, upgrades, recruits
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.oil] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+				{
+					// Patriotic Saxony: 6 combat stars, 2 objective stars, workers, 2 upgrades, mechs, recruits, upgrades
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.oil] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
+				{
+					// Mechanical Saxony: 6 combat stars, 2 objective stars, workers, 2 upgrades, mechs, power, recruits
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.oil] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
+				{
+					// Agricultural Saxony: 6 combat stars, 2 objective stars, workers, 2 upgrades, mechs, recruits
+					this.resourceDemandPriority[ResourceType.metal] = 11;
+					this.resourceDemandPriority[ResourceType.oil] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+				{
+					// Militant Saxony: 6 combat stars, 2 objective stars, 2 upgrades, workers, mechs, recruits, upgrades
+					this.resourceDemandPriority[ResourceType.oil] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+				{
+					// Innovative Saxony: 6 combat stars, 2 objective stars, 2 upgrades, workers, mechs, upgrades, recruits
+					this.resourceDemandPriority[ResourceType.oil] = 11;
+					this.resourceDemandPriority[ResourceType.metal] = 10;
+					this.resourceDemandPriority[ResourceType.food] = 3;
+					this.resourceDemandPriority[ResourceType.wood] = 2;
 				}
 				break;
 			}
@@ -1093,7 +1438,7 @@ namespace Scythe.GameLogic
 		// Token: 0x06002E20 RID: 11808
 		protected void UpdateMoveTargetsObjective(AiPlayer aiPlayer, int priProduce1, int priProduce2, int priEncounter, int priFight, int priBuildSpot)
 		{
-			if (this.objectiveArea.Count > 0 && ((aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)))
+			if (this.objectiveArea.Count > 0 && ((aiPlayer.player.matFaction.faction == Faction.Saxony) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)))
 			{
 				int num = 0;
 				Dictionary<Unit, int> dictionary = new Dictionary<Unit, int>();
@@ -1232,7 +1577,7 @@ namespace Scythe.GameLogic
 			{
 				return (float)(2 - hex.GetOwnerWorkers().Count);
 			}
-			if ((aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial) && (aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Mechanical) && (aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Engineering) && (aiPlayer.player.matFaction.faction != Faction.Polania || aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial) && (aiPlayer.player.matFaction.faction != Faction.Albion || aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial))
+			if (aiPlayer.player.matFaction.faction != Faction.Saxony && (aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial) && (aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Mechanical) && (aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Engineering) && (aiPlayer.player.matFaction.faction != Faction.Polania || aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial) && (aiPlayer.player.matFaction.faction != Faction.Polania || aiPlayer.player.matPlayer.matType != PlayerMatType.Innovative) && (aiPlayer.player.matFaction.faction != Faction.Crimea || aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial) && (aiPlayer.player.matFaction.faction != Faction.Crimea || aiPlayer.player.matPlayer.matType != PlayerMatType.Engineering) && (aiPlayer.player.matFaction.faction != Faction.Crimea || aiPlayer.player.matPlayer.matType != PlayerMatType.Innovative) && (aiPlayer.player.matPlayer.matType != PlayerMatType.Innovative || (aiPlayer.player.matFaction.faction != Faction.Albion && aiPlayer.player.matFaction.faction != Faction.Nordic && aiPlayer.player.matFaction.faction != Faction.Rusviet && aiPlayer.player.matFaction.faction != Faction.Togawa)) && (aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial || (aiPlayer.player.matFaction.faction != Faction.Albion && aiPlayer.player.matFaction.faction != Faction.Nordic && aiPlayer.player.matFaction.faction != Faction.Rusviet && aiPlayer.player.matFaction.faction != Faction.Togawa)) && (aiPlayer.player.matPlayer.matType != PlayerMatType.Engineering || (aiPlayer.player.matFaction.faction != Faction.Albion && aiPlayer.player.matFaction.faction != Faction.Rusviet && aiPlayer.player.matFaction.faction != Faction.Togawa)) && (aiPlayer.player.matPlayer.matType != PlayerMatType.Patriotic || (aiPlayer.player.matFaction.faction != Faction.Albion && aiPlayer.player.matFaction.faction != Faction.Rusviet && aiPlayer.player.matFaction.faction != Faction.Togawa && aiPlayer.player.matFaction.faction != Faction.Crimea && aiPlayer.player.matFaction.faction != Faction.Nordic && aiPlayer.player.matFaction.faction != Faction.Polania)) && (aiPlayer.player.matPlayer.matType != PlayerMatType.Mechanical || (aiPlayer.player.matFaction.faction != Faction.Albion && aiPlayer.player.matFaction.faction != Faction.Rusviet && aiPlayer.player.matFaction.faction != Faction.Togawa && aiPlayer.player.matFaction.faction != Faction.Crimea && aiPlayer.player.matFaction.faction != Faction.Nordic && aiPlayer.player.matFaction.faction != Faction.Polania)) && (aiPlayer.player.matPlayer.matType != PlayerMatType.Agricultural || (aiPlayer.player.matFaction.faction != Faction.Albion && aiPlayer.player.matFaction.faction != Faction.Rusviet && aiPlayer.player.matFaction.faction != Faction.Togawa && aiPlayer.player.matFaction.faction != Faction.Crimea)) && (aiPlayer.player.matPlayer.matType != PlayerMatType.Militant || (aiPlayer.player.matFaction.faction != Faction.Albion && aiPlayer.player.matFaction.faction != Faction.Rusviet && aiPlayer.player.matFaction.faction != Faction.Togawa && aiPlayer.player.matFaction.faction != Faction.Crimea && aiPlayer.player.matFaction.faction != Faction.Nordic && aiPlayer.player.matFaction.faction != Faction.Polania)) && (aiPlayer.player.matFaction.faction != Faction.Albion || aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial))
 			{
 				return 1f;
 			}
@@ -1362,7 +1707,7 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
-			if (!this.movePriority.ContainsKey(aiPlayer.player.character) && ((aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)))
+			if (!this.movePriority.ContainsKey(aiPlayer.player.character) && ((aiPlayer.player.matFaction.faction == Faction.Saxony) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)))
 			{
 				this.moveRange.Add(aiPlayer.player.character, this.moveRangeAll[aiPlayer.player.character]);
 				foreach (GameHex gameHex2 in this.moveRange[aiPlayer.player.character].Keys)
@@ -1377,7 +1722,7 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
-			if (priFight > 0 && aiPlayer.strategicAnalysis.enemyCanBeAttackedBy.Count > 0 && (aiPlayer.player.Power >= 7 || (aiPlayer.player.matFaction.faction == Faction.Saxony && (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering))) && (aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2 || aiPlayer.player.matFaction.factionPerk == AbilityPerk.Dominate))
+			if (priFight > 0 && aiPlayer.strategicAnalysis.enemyCanBeAttackedBy.Count > 0 && (aiPlayer.player.Power >= 7 || aiPlayer.player.GetNumberOfStars(StarType.Power) > 0 || (aiPlayer.player.matFaction.faction == Faction.Saxony) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa))) && (aiPlayer.player.GetNumberOfStars(StarType.Combat) < (aiPlayer.player.matFaction.faction == Faction.Saxony ? 6 : 2) || aiPlayer.player.matFaction.factionPerk == AbilityPerk.Dominate))
 			{
 				GameHex gameHex3 = null;
 				float num = 0f;
@@ -1408,7 +1753,7 @@ namespace Scythe.GameLogic
 				if (gameHex3 != null)
 				{
 					Unit unit = null;
-					if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+					if ((aiPlayer.player.matFaction.faction == Faction.Saxony || aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa) && (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering || aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic || aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical || aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural || aiPlayer.player.matPlayer.matType == PlayerMatType.Militant || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa))))
 					{
 						for (int i = 0; i < this.enemyCanBeAttackedBy[gameHex3].Count<Unit>(); i++)
 						{
@@ -1470,7 +1815,7 @@ namespace Scythe.GameLogic
 							}
 						}
 					}
-					if ((aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial))
+					if ((aiPlayer.player.matFaction.faction == Faction.Saxony) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Nordic)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Nordic)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Nordic)) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial))
 					{
 						int num2 = 0;
 						for (int j = 0; j < this.enemyCanBeAttackedBy[gameHex3].Count<Unit>(); j++)
@@ -2033,15 +2378,47 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
+			if (aiPlayer.player.GetNumberOfStars(StarType.Power) > 0 && aiPlayer.player.GetNumberOfStars(StarType.Combat) < (aiPlayer.player.matFaction.faction == Faction.Saxony ? 6 : 2) && this.enemyCanBeAttackedBy.Count == 0 && !aiPlayer.player.matFaction.factionPerk.HasFlag(AbilityPerk.Dominate))
+			{
+				GameHex factory = this.gameManager.gameBoard.factory;
+				if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.characterDistance.ContainsKey(factory))
+				{
+					this.movePriority.Add(aiPlayer.player.character, priFight + 10);
+					this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { factory });
+					this.moveDistance.Add(aiPlayer.player.character, this.characterDistance[factory]);
+				}
+				foreach (Mech mech in aiPlayer.player.matFaction.mechs)
+				{
+					if (!this.movePriority.ContainsKey(mech) && this.moveRange[mech].ContainsKey(factory))
+					{
+						this.movePriority.Add(mech, priFight + 9);
+						this.moveTarget.Add(mech, new List<GameHex> { factory });
+						this.moveDistance.Add(mech, this.moveRange[mech][factory]);
+					}
+				}
+			}
 		}
 
 		// Token: 0x06002E26 RID: 11814
 		public override void UpdateWorkerCountTarget(AiPlayer aiPlayer)
 		{
 			this.workerCountTarget = 5;
+			this.pursuingWorkerStar = false;
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && aiPlayer.TradeResourceType() == ResourceType.combatCard)
 			{
 				this.workerCountTarget = 8;
+			}
+			// Once 2+ of the 4 bottom-row stars (Mechs, Recruits, Structures, Upgrades) are earned,
+			// raise the worker count target to 8 and pursue the Workers star
+			int bottomRowStars = 0;
+			if (aiPlayer.player.GetNumberOfStars(StarType.Mechs) > 0) bottomRowStars++;
+			if (aiPlayer.player.GetNumberOfStars(StarType.Recruits) > 0) bottomRowStars++;
+			if (aiPlayer.player.GetNumberOfStars(StarType.Structures) > 0) bottomRowStars++;
+			if (aiPlayer.player.GetNumberOfStars(StarType.Upgrades) > 0) bottomRowStars++;
+			if (bottomRowStars >= 2 && aiPlayer.player.GetNumberOfStars(StarType.Workers) == 0)
+			{
+				this.workerCountTarget = 8;
+				this.pursuingWorkerStar = true;
 			}
 		}
 
