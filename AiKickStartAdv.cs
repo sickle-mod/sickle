@@ -540,53 +540,65 @@ namespace Scythe.GameLogic
 			switch (this.gameManager.TurnCount)
 			{
 			case 0:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
-				return;
-			case 1:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
 				{
-					tradeResource = new ResourceType[]
-					{
-						ResourceType.metal,
-						ResourceType.metal
-					}
+					tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal }
 				});
 				return;
+			case 1:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				return;
 			case 2:
-				if (this.gameManager.gameBoard.validateOwnership(new List<GameHex>
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
 				{
-					this.gameManager.gameBoard.hexMap[2, 1],
-					this.gameManager.gameBoard.hexMap[3, 1],
-					this.gameManager.gameBoard.hexMap[1, 1]
-				}, player.player))
-				{
-					actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
+					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
 					{
-						moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
+						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
+						this.gameManager.moveManager.SetMoveAction(gainMove);
+						if (this.gameManager.gameBoard.hexMap[2, 1].GetOwnerWorkers().Count > 0)
 						{
-							GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
-							this.gameManager.moveManager.SetMoveAction(gainMove);
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[2, 1].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 1], this.HexResources(this.gameManager.gameBoard.hexMap[2, 1]), null);
+						}
+						if (this.gameManager.gameBoard.hexMap[1, 1].GetOwnerWorkers().Count > 0)
+						{
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[1, 1].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 1], this.HexResources(this.gameManager.gameBoard.hexMap[1, 1]), null);
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
-					});
-				}
+						this.gameManager.moveManager.Clear();
+						this.gameManager.actionManager.PrepareNextAction();
+					}
+				});
 				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[3, 1];
 				return;
 			case 3:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Power], "Kickstart"));
 				return;
 			case 4:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				return;
+			case 5:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Power], "Kickstart"));
+				return;
+			case 6:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				return;
+			case 7:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
 				{
-					tradeResource = new ResourceType[]
+					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
 					{
-						ResourceType.food,
-						ResourceType.food
+						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
+						this.gameManager.moveManager.SetMoveAction(gainMove);
+						var hex = this.gameManager.gameBoard.hexMap[3, 1];
+						if(hex.GetOwnerWorkers().Count > 0) {
+							this.gameManager.moveManager.SelectUnit(hex.GetOwnerWorkers()[0]);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 1], null, null);
+						}
+						this.gameManager.moveManager.SelectUnit(player.player.character);
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 1], null, null);
+						this.gameManager.moveManager.Clear();
+						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1275,13 +1287,13 @@ namespace Scythe.GameLogic
 			switch (this.gameManager.TurnCount)
 			{
 			case 0:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Rusviet Agro Kickstart"));
 				return;
 			case 1:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Rusviet Agro Kickstart"));
 				return;
 			case 2:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Rusviet Agro Kickstart")
 				{
 					tradeResource = new ResourceType[]
 					{
@@ -1289,106 +1301,64 @@ namespace Scythe.GameLogic
 						ResourceType.metal
 					}
 				});
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[6, 3];
 				return;
 			case 3:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Rusviet Agro Kickstart")
 				{
-					tradeResource = new ResourceType[2]
+					tradeResource = new ResourceType[]
+					{
+						ResourceType.oil,
+						ResourceType.oil
+					}
 				});
 				return;
 			case 4:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Rusviet Agro Kickstart")
 				{
 					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
 					{
 						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
 						this.gameManager.moveManager.SetMoveAction(gainMove);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 4], null, null);
-						Mech mech = this.gameManager.gameBoard.hexMap[6, 3].GetOwnerMechs()[0];
-						List<Unit> list = new List<Unit>();
-						foreach (Worker worker in mech.position.GetOwnerWorkers())
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 2], null, null);
+						if (this.gameManager.gameBoard.hexMap[6, 3].GetOwnerMechs().Count > 0)
 						{
-							list.Add(worker);
+							Mech mech = this.gameManager.gameBoard.hexMap[6, 3].GetOwnerMechs()[0];
+							List<Unit> list = new List<Unit>();
+							int wcount = 0;
+							foreach (Worker worker in this.gameManager.gameBoard.hexMap[6, 3].GetOwnerWorkers())
+							{
+								if (wcount < 4) { list.Add(worker); wcount++; }
+							}
+							this.gameManager.moveManager.SelectUnit(mech);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 2], this.HexResources(mech.position), list);
 						}
-						this.gameManager.moveManager.SelectUnit(mech);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 4], this.HexResources(mech.position), list);
-						this.gameManager.moveManager.UnloadAllWorkersFromMech(mech);
-						List<Unit> list2 = new List<Unit>();
-						foreach (Worker worker2 in mech.position.GetOwnerWorkers())
-						{
-							list2.Add(worker2);
-						}
-						list2.RemoveRange(0, 1);
-						this.gameManager.moveManager.SelectUnit(mech);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 4], this.HexResources(mech.position), list2);
-						this.gameManager.moveManager.UnloadAllWorkersFromMech(mech);
 						this.gameManager.moveManager.Clear();
 						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
 			case 5:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Rusviet Agro Kickstart"));
 				return;
 			case 6:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Power], "Rusviet Agro Kickstart"));
+				return;
+			case 7:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Rusviet Agro Kickstart"));
+				return;
+			case 8:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Power], "Rusviet Agro Kickstart"));
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[6, 4];
+				return;
+			case 9:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Rusviet Agro Kickstart")
 				{
 					tradeResource = new ResourceType[]
 					{
 						ResourceType.metal,
 						ResourceType.metal
-					}
-				});
-				return;
-			case 7:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
-				{
-					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
-					{
-						GainMove gainMove2 = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
-						this.gameManager.moveManager.SetMoveAction(gainMove2);
-						Dictionary<GameHex, int> dictionary = new Dictionary<GameHex, int>();
-						player.player.character.position.gameBoard.MoveRange(player.player.character, 2, out dictionary);
-						GameHex gameHex = player.player.character.position;
-						foreach (GameHex gameHex2 in dictionary.Keys)
-						{
-							if (gameHex2.hasEncounter && !gameHex2.encounterUsed)
-							{
-								gameHex = gameHex2;
-							}
-						}
-						this.gameManager.moveManager.SelectUnit(player.player.character);
-						this.gameManager.moveManager.MoveSelectedUnit(gameHex, null, null);
-						Mech mech2 = this.gameManager.gameBoard.hexMap[5, 4].GetOwnerMechs()[0];
-						Dictionary<GameHex, int> dictionary2 = new Dictionary<GameHex, int>();
-						mech2.position.gameBoard.MoveRange(mech2, 2, out dictionary2);
-						GameHex gameHex3 = mech2.position;
-						foreach (GameHex gameHex4 in dictionary2.Keys)
-						{
-							if (gameHex4.hexType == HexType.forest)
-							{
-								if (gameHex3.hexType != HexType.forest)
-								{
-									gameHex3 = gameHex4;
-								}
-								else if (gameHex4.hasTunnel && !gameHex3.hasTunnel)
-								{
-									gameHex3 = gameHex4;
-								}
-							}
-						}
-						List<Unit> list3 = new List<Unit>();
-						foreach (Worker worker3 in mech2.position.GetOwnerWorkers())
-						{
-							list3.Add(worker3);
-						}
-						list3.RemoveRange(0, 1);
-						this.gameManager.moveManager.SelectUnit(mech2);
-						this.gameManager.moveManager.MoveSelectedUnit(gameHex3, null, list3);
-						this.gameManager.moveManager.UnloadAllWorkersFromMech(mech2);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2388,41 +2358,29 @@ namespace Scythe.GameLogic
 			switch (this.gameManager.TurnCount)
 			{
 			case 0:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Nordic Industrial Kickstart")
+				{
+					tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal }
+				});
+				return;
+			case 1:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Nordic Industrial Kickstart"));
+				return;
+			case 2:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Power], "Nordic Industrial Kickstart"));
+				return;
+			case 3:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Nordic Industrial Kickstart"));
+				return;
+			case 4:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Nordic Industrial Kickstart")
 				{
 					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
 					{
 						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
 						this.gameManager.moveManager.SetMoveAction(gainMove);
-						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[4, 1].GetOwnerWorkers()[0]);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 2], this.HexResources(this.gameManager.gameBoard.hexMap[4, 1]), null);
-						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[5, 1].GetOwnerWorkers()[0]);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 1], this.HexResources(this.gameManager.gameBoard.hexMap[5, 1]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
-					}
-				});
-				return;
-			case 1:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Nordic Industrial Kickstart")
-				{
-					tradeResource = new ResourceType[]
-					{
-						ResourceType.metal,
-						ResourceType.metal
-					}
-				});
-				return;
-			case 2:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Nordic Industrial Kickstart"));
-				return;
-			case 3:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Nordic Industrial Kickstart")
-				{
-					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
-					{
-						GainMove gainMove2 = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
-						this.gameManager.moveManager.SetMoveAction(gainMove2);
+						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[6, 1].GetOwnerWorkers()[0]);
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 1], this.HexResources(this.gameManager.gameBoard.hexMap[6, 1]), null);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 2], null, null);
 						this.gameManager.moveManager.Clear();
@@ -2430,26 +2388,13 @@ namespace Scythe.GameLogic
 					}
 				});
 				return;
-			case 4:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Nordic Industrial Kickstart")
-				{
-					tradeResource = new ResourceType[]
-					{
-						ResourceType.metal,
-						ResourceType.metal
-					}
-				});
-				return;
 			case 5:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Nordic Industrial Kickstart"));
-				return;
-			case 6:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Nordic Industrial Kickstart")
 				{
 					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
 					{
-						GainMove gainMove3 = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
-						this.gameManager.moveManager.SetMoveAction(gainMove3);
+						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
+						this.gameManager.moveManager.SetMoveAction(gainMove);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 4], null, null);
 						this.gameManager.moveManager.Clear();
@@ -2790,10 +2735,80 @@ namespace Scythe.GameLogic
 			this.NordIndustrial(actionOptions, player);
 		}
 
-		// Token: 0x06002D33 RID: 11571 RVA: 0x000445B3 File Offset: 0x000427B3
 		private void RusvietEngine(SortedList<int, AiRecipe> actionOptions, AiPlayer player)
 		{
-			this.RusvietAgro(actionOptions, player);
+			switch (this.gameManager.TurnCount)
+			{
+			case 0:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Rusviet Engineering: Produce 1 worker, 1 metal"));
+				return;
+			case 1:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Rusviet Engineering: Produce 2 workers, 1 metal"));
+				return;
+			case 2:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiActions[player.SelectTopActionFlavor(player.gainMechActionPosition)], "Rusviet Engineering: Trade 2 metal, Deploy at 6,3")
+				{
+					tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal }
+				});
+				return;
+			case 3:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Rusviet Engineering: Move Mech (6,3->6,4->5,4), Hero -> Encounter")
+				{
+					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
+					{
+						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
+						this.gameManager.moveManager.SetMoveAction(gainMove);
+						
+						// Hero character to tundra 6,4 encounter (following user text, but hex map 5,4 is the encounter)
+						this.gameManager.moveManager.SelectUnit(player.player.character);
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 4], null, null);
+						
+						// Mech from 6,3 carrying 4 workers to mountain 6,4, leave 1, then continue to 5,4 with 3
+						if (player.player.matFaction.mechs.Count > 0)
+						{
+							Mech mech = player.player.matFaction.mechs[0];
+							List<Unit> workers = new List<Unit>();
+							int wcount = 0;
+							foreach (Worker w in this.gameManager.gameBoard.hexMap[6, 3].GetOwnerWorkers())
+							{
+								if (wcount < 4) { workers.Add(w); wcount++; }
+							}
+							
+							// Move 1: 6,3 -> 6,4
+							this.gameManager.moveManager.SelectUnit(mech);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 4], null, workers);
+							
+							// Drop 1 worker at 6,4
+							if (mech.LoadedWorkers.Count > 0)
+							{
+								this.gameManager.moveManager.UnloadWorkerFromSelectedMech(mech.LoadedWorkers[0]);
+							}
+							
+							// Move 2: 6,4 -> 5,4 (with remaining 3 workers)
+							this.gameManager.moveManager.SelectUnit(mech);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 4], null, new List<Unit>(mech.LoadedWorkers));
+						}
+						
+						this.gameManager.moveManager.Clear();
+						this.gameManager.actionManager.PrepareNextAction();
+					}
+				});
+				return;
+			case 4:
+			case 5:
+			case 6:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiActions[player.SelectTopActionFlavor(player.gainUpgradeActionPosition)], "Rusviet Engineering: Produce -> Upgrade"));
+				return;
+			case 7:
+			case 8:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiActions[player.SelectTopActionFlavor(player.gainMechActionPosition)], "Rusviet Engineering: Trade 2 food, Deploy")
+				{
+					tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food }
+				});
+				return;
+			default:
+				return;
+			}
 		}
 
 		// Token: 0x06002D34 RID: 11572 RVA: 0x000445B3 File Offset: 0x000427B3
@@ -2891,29 +2906,20 @@ namespace Scythe.GameLogic
 			case 0:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
 				{
-					tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food }
+					tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal }
 				});
 				return;
 			case 1:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
 				return;
 			case 2:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
 				{
-					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
-					{
-						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
-						this.gameManager.moveManager.SetMoveAction(gainMove);
-						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[3, 8].GetOwnerWorkers()[0]);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 7], null, null);
-						this.gameManager.moveManager.SelectUnit(player.player.character);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 7], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
-					}
+					tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.food }
 				});
 				return;
 			case 3:
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[3, 8];
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
 				return;
 			case 4:
@@ -2923,43 +2929,45 @@ namespace Scythe.GameLogic
 					{
 						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
 						this.gameManager.moveManager.SetMoveAction(gainMove);
+						// Hero to 4,7
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, null);
-						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[3, 8].GetOwnerWorkers()[0]);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 7], null, null);
+						// Mech + 4 workers from 3,8 to 3,7, drop 2, continue with 2 to 4,7
+						if (this.gameManager.gameBoard.hexMap[3, 8].GetOwnerMechs().Count > 0)
+						{
+							var mech = this.gameManager.gameBoard.hexMap[3, 8].GetOwnerMechs()[0];
+							var workers = this.gameManager.gameBoard.hexMap[3, 8].GetOwnerWorkers();
+							var passengers = new System.Collections.Generic.List<Unit>();
+							int wcnt = 0;
+							foreach (var w in workers) { if (wcnt < 4) { passengers.Add(w); wcnt++; } }
+
+							this.gameManager.moveManager.SelectUnit(mech);
+							// First leg: to 3,7 with 4 workers
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 7], null, passengers);
+							// Second leg: continue to 4,7 with only 2 workers
+							var subset = new System.Collections.Generic.List<Unit>();
+							if (passengers.Count > 2) { subset.Add(passengers[0]); subset.Add(passengers[1]); }
+							else { subset = passengers; }
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, subset);
+						}
 						this.gameManager.moveManager.Clear();
 						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
 			case 5:
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[4, 7];
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
 				return;
 			case 6:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
+				// Skip/Standard turn - skipping in switch will use default AI logic, but user might want a specific action.
+				// Since it's missing, let's just bolster for power or trade.
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
 				{
-					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
-					{
-						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
-						this.gameManager.moveManager.SetMoveAction(gainMove);
-						var hex = this.gameManager.gameBoard.hexMap[3, 8];
-						if(hex.GetOwnerWorkers().Count > 0) {
-							this.gameManager.moveManager.SelectUnit(hex.GetOwnerWorkers()[0]);
-							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, null);
-						}
-						if(hex.GetOwnerWorkers().Count > 0) {
-							this.gameManager.moveManager.SelectUnit(hex.GetOwnerWorkers()[0]);
-							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, null);
-						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
-					}
+					tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food }
 				});
 				return;
 			case 7:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
-				return;
-			case 8:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
 				{
 					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
@@ -2967,24 +2975,51 @@ namespace Scythe.GameLogic
 						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
 						this.gameManager.moveManager.SetMoveAction(gainMove);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 6], null, null);
-						if(this.gameManager.gameBoard.hexMap[3, 7].GetOwnerMechs().Count > 0){
-							var mech = this.gameManager.gameBoard.hexMap[3, 7].GetOwnerMechs()[0];
-							var list = new System.Collections.Generic.List<Unit>();
-							int wcount = 0;
-							foreach (var worker in this.gameManager.gameBoard.hexMap[3, 7].GetOwnerWorkers())
-							{
-								if (wcount < 3) { list.Add(worker); wcount++; }
-							}
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 6], null, null);
+						
+						Mech mech = null;
+						foreach (var m in player.player.matFaction.mechs) { if (m.position != null && m.position.posX == 4 && m.position.posY == 7) { mech = m; break; } }
+						if (mech != null)
+						{
 							this.gameManager.moveManager.SelectUnit(mech);
-							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 6], this.HexResources(mech.position), list);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 6], null, null);
 						}
 						this.gameManager.moveManager.Clear();
 						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
+			case 8:
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[4, 7];
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				return;
 			case 9:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
+				{
+					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
+					{
+						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
+						this.gameManager.moveManager.SetMoveAction(gainMove);
+						this.gameManager.moveManager.SelectUnit(player.player.character);
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 4], null, null);
+
+						Mech mech = null;
+						foreach (var m in player.player.matFaction.mechs) { if (m.position != null && m.position.posX == 4 && m.position.posY == 7) { mech = m; break; } }
+						if (mech != null)
+						{
+							var workers = new System.Collections.Generic.List<Unit>();
+							int wcnt = 0;
+							foreach (var w in mech.position.GetOwnerWorkers()) { if (wcnt < 3) { workers.Add(w); wcnt++; } }
+							this.gameManager.moveManager.SelectUnit(mech);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 5], this.HexResources(mech.position), workers);
+						}
+						this.gameManager.moveManager.Clear();
+						this.gameManager.actionManager.PrepareNextAction();
+					}
+				});
+				return;
+			case 10:
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[5, 5];
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
 				return;
 			default:

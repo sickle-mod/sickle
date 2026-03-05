@@ -17,12 +17,14 @@ namespace Scythe.GameLogic
 		// Token: 0x06002DFD RID: 11773 RVA: 0x00112770 File Offset: 0x00110970
 		public virtual void Run(AiPlayer aiPlayer, int priMoveToProduction1, int priMoveToProduction2, int priMoveToEncounter, int priMoveToFight, int priMoveToBuild)
 		{
+			this.priorityFight = priMoveToFight;
 			this.preferredDeployPosition = null;
 			this.UpdateEncounterAndFactory(aiPlayer);
 			this.UpdateResourceAccess(aiPlayer);
 			this.UpdateTradeLoop(aiPlayer);
 			this.UpdateResourceDemand(aiPlayer);
 			this.UpdateResourceDemandPriority(aiPlayer, this.resourceDemandTotal);
+			this.SortResourcePriority();
 			this.UpdateProduceLoop(aiPlayer);
 			this.canUpgrade = aiPlayer.player.GetNumberOfStars(StarType.Upgrades) == 0 && aiPlayer.AiActions[aiPlayer.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions();
 			this.canDeploy = aiPlayer.player.GetNumberOfStars(StarType.Mechs) == 0 && aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.CanPlayerPayActions();
@@ -94,7 +96,7 @@ namespace Scythe.GameLogic
 				this.tradeLoopPresent = amount <= 2 + aiPlayer.player.Resources(false)[this.tradeLoopResource] && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable();
 				return;
 			}
-			this.tradeLoopPresent = amount <= 2 && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable();
+			this.tradeLoopPresent = amount <= 3 && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable();
 		}
 
 		// Token: 0x06002E00 RID: 11776 RVA: 0x00112B9C File Offset: 0x00110D9C
@@ -238,6 +240,20 @@ namespace Scythe.GameLogic
 			if (this.resourceDemandPriority[this.resourceHighestPriorityNoProduce] == 0 || this.resourceAccess[this.resourceHighestPriorityNoProduce] > 0)
 			{
 				this.resourceHighestPriorityNoProduce = ResourceType.combatCard;
+			}
+		}
+
+		public void SortResourcePriority()
+		{
+			this.resourcePrioritySorted = new SortedList<int, ResourceType>(new InvertedComparer());
+			foreach (ResourceType resourceType in this.resourceDemandPriority.Keys)
+			{
+				int num = this.resourceDemandPriority[resourceType];
+				while (this.resourcePrioritySorted.ContainsKey(num))
+				{
+					num--;
+				}
+				this.resourcePrioritySorted.Add(num, resourceType);
 			}
 		}
 
@@ -825,6 +841,36 @@ namespace Scythe.GameLogic
 						this.workersOutOfBase++;
 					}
 				}
+				if (this.pursuingWorkerStar && this.workersInaVillage < 3)
+				{
+					int num = 0;
+					int num2 = 3 - this.workersInaVillage;
+					foreach (Worker worker4 in aiPlayer.player.matPlayer.workers)
+					{
+						if (num >= num2)
+						{
+							break;
+						}
+						if (worker4.position.hexType != HexType.village && !this.movePriority.ContainsKey(worker4))
+						{
+							GameHex gameHex = null;
+							foreach (GameHex gameHex2 in worker4.position.GetFieldsAccessible(worker4, false))
+							{
+								if (gameHex2.hexType == HexType.village && (gameHex == null || this.ResourcePriority(aiPlayer, gameHex2) > this.ResourcePriority(aiPlayer, gameHex)))
+								{
+									gameHex = gameHex2;
+								}
+							}
+							if (gameHex != null)
+							{
+								this.movePriority.Add(worker4, 9790);
+								this.moveTarget.Add(worker4, new List<GameHex> { gameHex });
+								this.moveDistance.Add(worker4, 1);
+								num++;
+							}
+						}
+					}
+				}
 				if (this.workersInaVillage == 0)
 				{
 					Worker worker4 = null;
@@ -1018,21 +1064,29 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
-			if (aiPlayer.player.matPlayer.matPlayerSectionsCount <= 4 && this.factoryDistance <= (int)aiPlayer.player.character.MaxMoveCount && !this.movePriority.ContainsKey(aiPlayer.player.character) && (this.gameManager.gameBoard.factory.Owner == aiPlayer.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0))
+			if (aiPlayer.player.matPlayer.matPlayerSectionsCount <= 4 && !this.movePriority.ContainsKey(aiPlayer.player.character))
 			{
-				this.movePriority.Add(aiPlayer.player.character, priEncounter + 35);
-				this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { this.gameManager.gameBoard.factory });
-				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance[this.gameManager.gameBoard.factory]);
+				GameHex factory = this.gameManager.gameBoard.factory;
+				if (this.characterDistance.ContainsKey(factory))
+				{
+					int dist = this.characterDistance[factory];
+					int p = priEncounter + (dist <= (int)aiPlayer.player.character.MaxMoveCount ? 35 : 10);
+					this.movePriority.Add(aiPlayer.player.character, p);
+					this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { factory });
+					this.moveDistance.Add(aiPlayer.player.character, dist);
+				}
 			}
-			else if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null && this.characterDistance[this.encounterNearestHex] <= (int)aiPlayer.player.character.MaxMoveCount)
+			else if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null && this.characterDistance.ContainsKey(this.encounterNearestHex) && this.characterDistance[this.encounterNearestHex] <= (int)aiPlayer.player.character.MaxMoveCount)
 			{
 				this.movePriority.Add(aiPlayer.player.character, priEncounter);
 				this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { this.encounterNearestHex });
 				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance[this.encounterNearestHex]);
 			}
+			int moveTieBreaker = 0;
 			foreach (KeyValuePair<Unit, int> keyValuePair2 in this.movePriority)
 			{
-				this.movePrioritySorted.Add(keyValuePair2.Value, keyValuePair2.Key);
+				int key = keyValuePair2.Value * 100 + moveTieBreaker++;
+				this.movePrioritySorted.Add(key, keyValuePair2.Key);
 			}
 			if (this.movePriority.Values.Count > 0)
 			{
@@ -1575,24 +1629,36 @@ namespace Scythe.GameLogic
 		public virtual void UpdateWorkerCountTarget(AiPlayer aiPlayer)
 		{
 			this.workerCountTarget = 5;
-			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && aiPlayer.TradeResourceType() == ResourceType.combatCard)
+			this.pursuingWorkerStar = false;
+			// Once 2+ of the 4 bottom-row stars (Mechs, Recruits, Structures, Upgrades) are earned,
+			// raise the worker count target to 8 and pursue the Workers star
+			int bottomRowStars = 0;
+			if (aiPlayer.player.GetNumberOfStars(StarType.Mechs) > 0) bottomRowStars++;
+			if (aiPlayer.player.GetNumberOfStars(StarType.Recruits) > 0) bottomRowStars++;
+			if (aiPlayer.player.GetNumberOfStars(StarType.Structures) > 0) bottomRowStars++;
+			if (aiPlayer.player.GetNumberOfStars(StarType.Upgrades) > 0) bottomRowStars++;
+			if (bottomRowStars >= 2 && aiPlayer.player.GetNumberOfStars(StarType.Workers) == 0)
 			{
 				this.workerCountTarget = 8;
+				this.pursuingWorkerStar = true;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.workerCountTarget = 8;
+				this.pursuingWorkerStar = true;
 			}
 		}
 
 		// Token: 0x06002E0F RID: 11791 RVA: 0x00117688 File Offset: 0x00115888
 		public virtual void UpdateRecruitOneTimeOrder(AiPlayer aiPlayer)
 		{
-			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType != PlayerMatType.Patriotic)
+			if (aiPlayer.player.Power < 3)
 			{
-				this.recruitOneTimePriority[GainType.Power] = 20;
+				this.recruitOneTimePriority[GainType.Power] = 30;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
 			{
 				this.recruitOneTimePriority[GainType.Power] = 20;
-				this.recruitOneTimePriority[GainType.CombatCard] = 20;
-				return;
 			}
 			if (aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2)
 			{
@@ -1732,6 +1798,8 @@ namespace Scythe.GameLogic
 		// Token: 0x04001F2A RID: 7978
 		public SortedList<int, Unit> movePrioritySorted = new SortedList<int, Unit>(new InvertedComparer());
 
+		public SortedList<int, ResourceType> resourcePrioritySorted = new SortedList<int, ResourceType>(new InvertedComparer());
+
 		// Token: 0x04001F2B RID: 7979
 		public Dictionary<Unit, List<GameHex>> moveTarget = new Dictionary<Unit, List<GameHex>>();
 
@@ -1746,6 +1814,9 @@ namespace Scythe.GameLogic
 
 		// Token: 0x04001F2F RID: 7983
 		public int workerCountTarget = 3;
+
+		// Flag: AI is actively pursuing the Workers star (workerCountTarget raised to 8)
+		public bool pursuingWorkerStar;
 
 		// Token: 0x04001F30 RID: 7984
 		public int workersInaVillage;
@@ -1813,7 +1884,7 @@ namespace Scythe.GameLogic
 			},
 			{
 				GainType.Popularity,
-				9
+				7
 			},
 			{
 				GainType.Coin,
@@ -1821,7 +1892,7 @@ namespace Scythe.GameLogic
 			},
 			{
 				GainType.Power,
-				7
+				9
 			}
 		};
 
@@ -1851,6 +1922,15 @@ namespace Scythe.GameLogic
 
 		// Token: 0x04001F3E RID: 7998
 		public bool objectiveMachineOverMuscle;
+
+		public int priorityFight;
+
+		// 3-turn cycle system: repeating pattern of top-action types after kickstart
+		// Step 0: e.g. Produce, Step 1: e.g. Trade(AnyResource), Step 2: e.g. Move
+		public bool turnCyclePresent;
+		public GainType[] turnCycleSteps; // length 3
+		public ResourceType turnCycleTradeResource; // what resource to trade for in the trade step
+		public int turnCycleStartTurn; // the turn number at which the cycle begins (after kickstart)
 
 		// Token: 0x04001F3F RID: 7999
 		protected GameManager gameManager;
