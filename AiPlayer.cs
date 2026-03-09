@@ -1513,13 +1513,8 @@ namespace Scythe.GameLogic
 				{
 					return options[0];
 				}
-				int num3 = options[0];
-				int num4 = options[1];
-				if (this.TradeResourceType() == ResourceType.combatCard)
-				{
-					return num4;
-				}
-				return num3;
+				// Saxony trade: always pick resources, never fall back to popularity
+				return options[0];
 			}
 		}
 
@@ -2332,6 +2327,10 @@ namespace Scythe.GameLogic
 				{
 					this.TradeLoop(sortedList, 170);
 				}
+				
+				// Inject 49 combinations of Star Priorities
+				this.InjectStarPriorities(sortedList);
+
 				// 3-turn cycle: runs at priority 220 to override star actions while active
 				this.TurnCycle(sortedList, 220);
 				this.CoinIfPoor(sortedList, 142);
@@ -2722,303 +2721,648 @@ namespace Scythe.GameLogic
 
 		private int CalculateEncounterWeight(SectionAction action)
 		{
-			if (this.player.matFaction.faction == Faction.Crimea && this.player.matPlayer.matType == PlayerMatType.Innovative)
-			{
-				return this.CalculateEncounterWeightCrimeaInnovative(action);
-			}
-			int weight = 0;
-			for (int i = 0; i < action.gainActionsCount; i++)
-			{
-				GainAction ga = action.GetGainAction(i);
-				if (ga == null) continue;
-				GainType gt = ga.GetGainType();
-				switch (gt)
-				{
-				case GainType.Recruit:
-					if (this.player.GetNumberOfStars(StarType.Recruits) == 0)
-					{
-						weight += 200;
-					}
-					break;
-				case GainType.Mech:
-					if (this.player.GetNumberOfStars(StarType.Mechs) == 0)
-					{
-						weight += 200;
-					}
-					break;
-				case GainType.Upgrade:
-					if (this.player.GetNumberOfStars(StarType.Upgrades) == 0)
-					{
-						weight += 150;
-					}
-					break;
-				case GainType.Building:
-					if (this.player.GetNumberOfStars(StarType.Structures) == 0)
-					{
-						weight += 100;
-					}
-					break;
-				case GainType.Power:
-					// Power star is 16 power.
-					if (this.player.Power < 16)
-					{
-						weight += 120;
-					}
-					break;
-				case GainType.Popularity:
-					// Popularity star is 18 popularity.
-					if (this.player.Popularity < 18)
-					{
-						weight += 100;
-					}
-					break;
-				case GainType.CombatCard:
-					weight += 80;
-					break;
-				case GainType.Coin:
-					weight += 60;
-					break;
-				case GainType.Resource:
-				{
-					if (!(ga is GainResource))
-					{
-						weight += 40;
-						break;
-					}
-					GainResource gainResource = (GainResource)ga;
-					if (gainResource.ResourceToGain == ResourceType.metal && this.player.GetNumberOfStars(StarType.Mechs) == 0)
-					{
-						weight += 110;
-					}
-					else if (gainResource.ResourceToGain == ResourceType.food && this.player.GetNumberOfStars(StarType.Recruits) == 0)
-					{
-						weight += 110;
-					}
-					else if (gainResource.ResourceToGain == ResourceType.oil && this.player.GetNumberOfStars(StarType.Upgrades) == 0)
-					{
-						weight += 90;
-					}
-					else if (gainResource.ResourceToGain == ResourceType.wood && this.player.GetNumberOfStars(StarType.Structures) == 0)
-					{
-						weight += 70;
-					}
-					else
-					{
-						weight += 20;
-					}
-					break;
-				}
-				case GainType.AnyResource:
-					weight += 100;
-					break;
-				case GainType.Worker:
-					if (this.player.matPlayer.workers.Count < 5)
-					{
-						weight += 100;
-					}
-					break;
-				default:
-					weight += 30;
-					break;
-				}
-			}
-			return weight;
-		}
+			Faction faction = this.player.matFaction.faction;
+			PlayerMatType matType = this.player.matPlayer.matType;
 
-		private int CalculateEncounterWeightCrimeaInnovative(SectionAction action)
-		{
+			// Crimea Coercion values combat cards highly; avoid paying them if possible.
+			bool paysCombatCard = false;
+			for (int p = 0; p < action.GetNumberOfPayActions(); p++)
+			{
+				if (action.GetPayAction(p).GetPayType() == PayType.CombatCard)
+				{
+					paysCombatCard = true;
+				}
+			}
+
+			if (faction == Faction.Crimea && paysCombatCard)
+			{
+				return -1; // Actively avoid options that require paying combat cards
+			}
+
 			int weight = 0;
 			for (int i = 0; i < action.gainActionsCount; i++)
 			{
 				GainAction ga = action.GetGainAction(i);
 				if (ga == null) continue;
 				GainType gt = ga.GetGainType();
+
 				switch (gt)
 				{
-				case GainType.Power:
-					if (this.player.Power < 16) weight += 200;
-					break;
-				case GainType.CombatCard:
-					weight += 190;
-					break;
-				case GainType.Resource:
-					if (ga is GainResource)
-					{
-						GainResource gr = (GainResource)ga;
-						if (gr.ResourceToGain == ResourceType.oil && this.player.GetNumberOfStars(StarType.Upgrades) == 0) weight += 180;
-						else weight += 20;
-					}
-					else weight += 20;
-					break;
-				case GainType.Upgrade:
-					if (this.player.GetNumberOfStars(StarType.Upgrades) == 0) weight += 150;
-					break;
-				case GainType.Popularity:
-					if (this.player.Popularity < 18) weight += 100;
-					break;
-				case GainType.Coin:
-					weight += 60;
-					break;
-				default:
-					weight += 20;
-					break;
+					case GainType.Mech:
+						if (this.player.GetNumberOfStars(StarType.Mechs) == 0)
+						{
+							weight += (faction == Faction.Nordic || faction == Faction.Rusviet) ? 250 : 200;
+							if (faction == Faction.Nordic && matType == PlayerMatType.Innovative) weight -= 150; // Nordic Innovative prefers raw resources
+						}
+						break;
+					case GainType.Recruit:
+						if (this.player.GetNumberOfStars(StarType.Recruits) == 0)
+						{
+							weight += (faction == Faction.Rusviet) ? 200 : 180;
+							if (faction == Faction.Nordic && matType == PlayerMatType.Innovative) weight -= 100;
+						}
+						break;
+					case GainType.Building:
+						if (this.player.GetNumberOfStars(StarType.Structures) == 0)
+						{
+							weight += 160;
+							if (faction == Faction.Nordic && matType == PlayerMatType.Innovative) weight -= 100;
+						}
+						break;
+					case GainType.Upgrade:
+						if (this.player.GetNumberOfStars(StarType.Upgrades) == 0)
+						{
+							weight += (faction == Faction.Rusviet) ? 170 : 140;
+							if (faction == Faction.Nordic && matType == PlayerMatType.Innovative) weight -= 80; // Prefers paying oil via Upgrade bottom action
+						}
+						break;
+					case GainType.Resource:
+						if (ga is GainResource)
+						{
+							GainResource gainResource = (GainResource)ga;
+							if (gainResource.ResourceToGain == ResourceType.metal && this.player.GetNumberOfStars(StarType.Mechs) == 0)
+							{
+								if (matType == PlayerMatType.Industrial || matType == PlayerMatType.Patriotic || matType == PlayerMatType.Mechanical || matType == PlayerMatType.Militant)
+								{
+									weight += 260; // Higher than mech deploy (max 250)
+								}
+								else
+								{
+									weight += 120;
+								}
+								if (faction == Faction.Nordic && matType == PlayerMatType.Innovative) weight += 150; // Innovative needs metal
+							}
+							else if (gainResource.ResourceToGain == ResourceType.food && this.player.GetNumberOfStars(StarType.Recruits) == 0)
+							{
+								if (matType == PlayerMatType.Mechanical || matType == PlayerMatType.Patriotic || matType == PlayerMatType.Agricultural)
+								{
+									weight += 210; // Higher than recruit (max 200)
+								}
+								else
+								{
+									weight += 120;
+								}
+							}
+							else if (gainResource.ResourceToGain == ResourceType.oil && this.player.GetNumberOfStars(StarType.Upgrades) == 0)
+							{
+								weight += 120;
+								if (faction == Faction.Nordic && matType == PlayerMatType.Innovative) weight += 150; // Innovative needs oil explicitly
+							}
+							else
+							{
+								weight += (faction == Faction.Togawa) ? 130 : 120;
+							}
+						}
+						else
+						{
+							weight += (faction == Faction.Togawa) ? 130 : 120;
+						}
+						break;
+					case GainType.AnyResource:
+						if (faction == Faction.Togawa)
+						{
+							weight += 130; // Togawa needs resources for traps
+						}
+						else if (faction == Faction.Nordic && matType == PlayerMatType.Innovative)
+						{
+							weight += 200; // Nordic Innovative strongly prefers resources
+						}
+						else
+						{
+							weight += 120; // Resources are generally highly useful for bottom actions
+						}
+						break;
+					case GainType.Power:
+						if (this.player.GetNumberOfStars(StarType.Combat) < 2)
+						{
+							weight += (faction == Faction.Saxony || faction == Faction.Togawa) ? 150 : 110;
+							if (faction == Faction.Nordic && this.player.Power < 16) weight += 200; // Nordic high priority for power
+						}
+						break;
+					case GainType.CombatCard:
+						if (this.player.GetNumberOfStars(StarType.Combat) < 2)
+						{
+							weight += (faction == Faction.Saxony) ? 120 : 100;
+							if (faction == Faction.Nordic) weight += 150; // Nordic high priority for combat cards
+						}
+						break;
+					case GainType.Popularity:
+						if (this.player.Popularity < 7)
+						{
+							weight += (faction == Faction.Nordic) ? 50 : 90; // Nordic deprioritizes popularity early
+						}
+						break;
+					case GainType.Coin:
+						weight += 80; // Default safe option
+						break;
+					case GainType.Worker:
+						if (this.player.matPlayer.workers.Count < 5)
+						{
+							weight += 70;
+						}
+						break;
+					default:
+						weight += 30;
+						break;
 				}
 			}
+
 			return weight;
 		}
 
 		// Token: 0x06002DE2 RID: 11746 RVA: 0x001120C8 File Offset: 0x001102C8
 		private int SelectBestFactoryCard(List<FactoryCard> factoryCards)
 		{
-			List<int> list = new List<int>();
-			int numberOfStars = this.player.GetNumberOfStars(StarType.Combat);
-			int numberOfStars2 = this.player.GetNumberOfStars(StarType.Mechs);
-			int numberOfStars3 = this.player.GetNumberOfStars(StarType.Recruits);
-			int num = numberOfStars2 + numberOfStars3;
-			int count = this.player.matFaction.mechs.Count;
-			int count2 = this.player.matPlayer.buildings.Count;
-			int numberOfStars4 = this.player.GetNumberOfStars(StarType.Upgrades);
-			int coins = this.player.Coins;
-			int power = this.player.Power;
-			int count3 = this.player.combatCards.Count;
-			bool flag = this.player.matFaction.faction == Faction.Saxony;
-			bool flag2 = this.player.matFaction.faction == Faction.Polania || this.player.matFaction.faction == Faction.Nordic;
-			bool flag3 = this.player.matPlayer.matType == PlayerMatType.Agricultural || this.player.matPlayer.matType == PlayerMatType.Engineering || this.player.matPlayer.matType == PlayerMatType.Mechanical;
-			
-			if (this.player.matFaction.faction == Faction.Rusviet && this.player.matPlayer.matType == PlayerMatType.Engineering)
+			Faction faction = this.player.matFaction.faction;
+			PlayerMatType matType = this.player.matPlayer.matType;
+			int bestIndex = 0;
+			int highestPriority = -1;
+
+			for (int i = 0; i < factoryCards.Count; i++)
 			{
-				if (this.player.matPlayer.RecruitsEnlisted < 3)
+				int cardId = factoryCards[i].CardId;
+				int priority = GetFactoryCardPriority(cardId, faction, matType);
+
+				// Avoid rules based on mat
+				if ((matType == PlayerMatType.Agricultural || matType == PlayerMatType.Mechanical) && (cardId == 2 || cardId == 12))
 				{
-					if (this.player.Popularity > 2) list.Add(2);
-					list.Add(12);
-					list.Add(8);
-					list.Add(18);
+					priority = 0;
 				}
-				else
+				if ((matType == PlayerMatType.Patriotic || matType == PlayerMatType.Militant) && (cardId == 7 || cardId == 10))
 				{
-					list.AddRange(new int[] { 15, 16, 17 });
-					if (this.player.GetNumberOfStars(StarType.Combat) >= 2)
+					priority = 0;
+				}
+
+				// Innovative and Engineering mat-specific overrides
+				if (matType == PlayerMatType.Innovative || matType == PlayerMatType.Engineering)
+				{
+					if (cardId == 5 || cardId == 6)
 					{
-						list.AddRange(new int[] { 3, 4, 5, 6 });
+						priority = 0; // Avoid paying power
 					}
-					list.AddRange(new int[] { 9, 2 });
+					else if (cardId == 15)
+					{
+						priority = 25; // Highest priority
+					}
+					else if (matType == PlayerMatType.Innovative)
+					{
+						if (faction == Faction.Nordic && (cardId == 7 || cardId == 10 || cardId == 13))
+						{
+							priority = 0; // Deprioritize gain mech for Nordic Innovative
+						}
+						else if (cardId == 1 || cardId == 2 || cardId == 8 || cardId == 9 || cardId == 12 || cardId == 18)
+						{
+							priority = 20; // Good for Innovative
+						}
+					}
+					else if ((cardId == 1 || cardId == 8) && this.player.combatCards.Count >= 4 && faction != Faction.Crimea)
+					{
+						priority = 15;
+					}
+					else if (cardId == 12)
+					{
+						priority = 12;
+					}
+					else if (cardId == 2 && this.player.Popularity > 3)
+					{
+						priority = 10;
+					}
+				}
+
+				// Avoid rules based on star progress
+				if (this.player.GetNumberOfStars(StarType.Upgrades) > 0 && (cardId == 9 || cardId == 17))
+				{
+					priority = 0;
+				}
+				if (this.player.GetNumberOfStars(StarType.Mechs) > 0 && (cardId == 10 || cardId == 13))
+				{
+					priority = 0;
+				}
+
+				if (priority > highestPriority)
+				{
+					highestPriority = priority;
+					bestIndex = i;
 				}
 			}
-			else if (this.player.matFaction.faction == Faction.Crimea && this.player.matPlayer.matType == PlayerMatType.Innovative)
+
+			return bestIndex;
+		}
+
+		private int GetFactoryCardPriority(int cardId, Faction faction, PlayerMatType matType)
+		{
+			// Default base priority (safe middle ground)
+			int priority = 3;
+
+			// Faction top picks (as per strategy analysis)
+			switch (faction)
 			{
-				int[] avoid = { 9, 21, 16 };
-				int[] impossible = { 7, 15, 20, 8, 14, 17, 23 };
-				int obj1 = (this.player.objectiveCards != null && this.player.objectiveCards.Count > 0) ? this.player.objectiveCards[0].CardId : -1;
-				int obj2 = (this.player.objectiveCards != null && this.player.objectiveCards.Count > 1) ? this.player.objectiveCards[1].CardId : -1;
+				case Faction.Polania:
+					if (cardId == 8 || cardId == 2 || cardId == 13 || cardId == 11 || cardId == 16) priority = 10;
+					break;
+				case Faction.Nordic:
+					if (cardId == 15 || cardId == 10 || cardId == 6 || cardId == 4 || cardId == 8) priority = 10;
+					break;
+				case Faction.Rusviet:
+					if (cardId == 2 || cardId == 17 || cardId == 8 || cardId == 13 || cardId == 18) priority = 10;
+					break;
+				case Faction.Crimea:
+					if (cardId == 2 || cardId == 8 || cardId == 12 || cardId == 15 || cardId == 13) priority = 10;
+					break;
+				case Faction.Saxony:
+					if (cardId == 15 || cardId == 4 || cardId == 6 || cardId == 10 || cardId == 17) priority = 10;
+					break;
+				case Faction.Albion:
+					if (cardId == 8 || cardId == 13 || cardId == 2 || cardId == 11 || cardId == 16) priority = 10;
+					break;
+				case Faction.Togawa:
+					if (cardId == 8 || cardId == 2 || cardId == 15 || cardId == 13 || cardId == 17) priority = 10;
+					break;
+			}
 
-				bool obj1Achieved = (this.player.objectiveCards != null && this.player.objectiveCards.Count > 0 && (this.player.objectiveCards[0].status == ObjectiveCard.ObjectiveStatus.Completed || this.player.objectiveCards[0].CheckCondition() || (obj1 == 22 && this.player.matPlayer.UpgradesDone == 0)));
-				bool obj2Achieved = (this.player.objectiveCards != null && this.player.objectiveCards.Count > 1 && (this.player.objectiveCards[1].status == ObjectiveCard.ObjectiveStatus.Completed || this.player.objectiveCards[1].CheckCondition() || (obj2 == 22 && this.player.matPlayer.UpgradesDone == 0)));
+			return priority;
+		}
 
-				bool isObj1Impossible = System.Array.IndexOf(impossible, obj1) >= 0;
-				bool isObj2Impossible = System.Array.IndexOf(impossible, obj2) >= 0 || (this.player.objectiveCards != null && this.player.objectiveCards.Count < 2);
-				bool isObj1Avoid = System.Array.IndexOf(avoid, obj1) >= 0;
-				bool isObj2Avoid = System.Array.IndexOf(avoid, obj2) >= 0;
 
-				bool isObj1Easy = obj1Achieved || obj1 == 13 || obj1 == 22;
-				bool isObj2Easy = obj2Achieved || obj2 == 13 || obj2 == 22;
-
-				if (obj1Achieved || obj2Achieved || isObj1Easy || isObj2Easy)
+		private void TryPushDeployStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
+		{
+			if (this.player.GetNumberOfStars(StarType.Mechs) == 0)
+			{
+				if (this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
 				{
-					list.AddRange(new int[] { 15, 16, 6, 5, 4, 3 });
+					sortedList.Add(priorityBase, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], logPrefix + ": Mech Star Priority"));
 				}
-				else if (isObj1Impossible && isObj2Impossible)
+				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.metal] < 2)
 				{
-					list.AddRange(new int[] { 8, 9, 17, 18, 2 });
-				}
-				else if ((isObj1Impossible && isObj1Easy == false && isObj2Avoid) || (isObj2Impossible && isObj2Easy == false && isObj1Avoid))
-				{
-					list.AddRange(new int[] { 8, 1 });
-				}
-				else if ((obj1 == 18 && !isObj1Impossible && !isObj1Avoid) || (obj2 == 18 && !isObj2Impossible && !isObj2Avoid))
-				{
-					list.AddRange(new int[] { 3, 5, 9 });
-				}
-				else if ((obj1 == 12 && !isObj1Impossible && !isObj1Avoid) || (obj2 == 12 && !isObj2Impossible && !isObj2Avoid))
-				{
-					list.AddRange(new int[] { 15, 6, 4, 16 });
-				}
-				else
-				{
-					list.AddRange(new int[] { 15, 16, 6, 5, 4, 3 });
+					sortedList.Add(priorityBase - 50, new AiRecipe(this.AiTopActions[GainType.AnyResource], logPrefix + ": Trade Metal for Mech") { tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal } });
 				}
 			}
-			else
+		}
+
+		private void TryPushUpgradeStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
+		{
+			if (this.player.GetNumberOfStars(StarType.Upgrades) == 0)
 			{
-				if (flag || numberOfStars == 0)
+				if (this.AiActions[this.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions())
 				{
-					list.Add(15);
+					sortedList.Add(priorityBase, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], logPrefix + ": Upgrade Star Priority"));
 				}
-				if (numberOfStars3 == 0)
+				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.oil] < 2)
 				{
-					list.Add(18);
-				}
-				if (numberOfStars3 == 0 && coins >= 4)
-				{
-					list.Add(12);
-				}
-				if (count < 3 && coins >= 4)
-				{
-					list.Add(10);
-					list.Add(13);
-				}
-				if (count2 < 3 && flag3 && flag2)
-				{
-					list.Add(11);
-					list.Add(13);
-				}
-				if (numberOfStars4 == 0 && coins >= 4)
-				{
-					list.Add(9);
-				}
-				if (numberOfStars4 == 0 && count3 >= 2)
-				{
-					list.Add(17);
-				}
-				if (!flag && numberOfStars == 2 && num < 2 && count3 >= 2 && coins >= 3)
-				{
-					list.Add(8);
-					list.Add(1);
-				}
-				if (!flag && numberOfStars == 2)
-				{
-					if (power >= 4)
-					{
-						list.Add(5);
-					}
-					if (count3 >= 2)
-					{
-						list.Add(3);
-					}
-					if (power >= 4)
-					{
-						list.Add(6);
-					}
-					if (count3 >= 2)
-					{
-						list.Add(4);
-					}
-				}
-				list.Add(7);
-				list.Add(2);
-				list.Add(16);
-				list.Add(14);
-			}
-			foreach (int num2 in list)
-			{
-				for (int i = 0; i < factoryCards.Count; i++)
-				{
-					if (factoryCards[i].CardId == num2)
-					{
-						return i;
-					}
+					sortedList.Add(priorityBase - 50, new AiRecipe(this.AiTopActions[GainType.AnyResource], logPrefix + ": Trade Oil for Upgrade") { tradeResource = new ResourceType[] { ResourceType.oil, ResourceType.oil } });
 				}
 			}
-			return 0;
+		}
+
+		private void TryPushEnlistStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
+		{
+			if (this.player.GetNumberOfStars(StarType.Recruits) == 0)
+			{
+				if (this.AiActions[this.gainRecruitActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					sortedList.Add(priorityBase, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], logPrefix + ": Enlist Star Priority"));
+				}
+				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.food] < 2)
+				{
+					sortedList.Add(priorityBase - 50, new AiRecipe(this.AiTopActions[GainType.AnyResource], logPrefix + ": Trade Food for Enlist") { tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food } });
+				}
+			}
+		}
+
+		private void TryPushBuildStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
+		{
+			if (this.player.GetNumberOfStars(StarType.Structures) == 0)
+			{
+				if (this.AiActions[this.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					sortedList.Add(priorityBase, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainBuildingActionPosition)], logPrefix + ": Build Star Priority"));
+				}
+				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.wood] < 2)
+				{
+					sortedList.Add(priorityBase - 50, new AiRecipe(this.AiTopActions[GainType.AnyResource], logPrefix + ": Trade Wood for Build") { tradeResource = new ResourceType[] { ResourceType.wood, ResourceType.wood } });
+				}
+			}
+		}
+
+		private void TryPushWorkerStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
+		{
+			if (this.player.GetNumberOfStars(StarType.Workers) == 0 && this.player.matPlayer.workers.Count < 8)
+			{
+				if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage >= 2)
+				{
+					sortedList.Add(priorityBase, new AiRecipe(this.AiTopActions[GainType.Produce], logPrefix + ": Produce for Worker Star"));
+				}
+			}
+		}
+
+		private void InjectStarPriorities(SortedList<int, AiRecipe> sortedList)
+		{
+			// Using 9000-level priorities to ensure they override normal baseline (150-280) and cycle (220) priorities
+			switch (this.player.matFaction.faction)
+			{
+				case Faction.Polania:
+					switch (this.player.matPlayer.matType)
+					{
+						case PlayerMatType.Industrial:
+							TryPushDeployStar(sortedList, 9600, "Polania Industrial 1st");
+							TryPushUpgradeStar(sortedList, 9500, "Polania Industrial 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Polania Industrial 3rd");
+							break;
+						case PlayerMatType.Engineering:
+							TryPushEnlistStar(sortedList, 9600, "Polania Engineering 1st");
+							TryPushBuildStar(sortedList, 9500, "Polania Engineering 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Polania Engineering 3rd");
+							TryPushUpgradeStar(sortedList, 9300, "Polania Engineering 4th");
+							break;
+						case PlayerMatType.Patriotic:
+							TryPushDeployStar(sortedList, 9600, "Polania Patriotic 1st");
+							TryPushEnlistStar(sortedList, 9500, "Polania Patriotic 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Polania Patriotic 3rd");
+							break;
+						case PlayerMatType.Mechanical:
+							TryPushDeployStar(sortedList, 9600, "Polania Mechanical 1st");
+							TryPushEnlistStar(sortedList, 9500, "Polania Mechanical 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Polania Mechanical 3rd");
+							break;
+						case PlayerMatType.Agricultural:
+							TryPushEnlistStar(sortedList, 9600, "Polania Agricultural 1st");
+							TryPushDeployStar(sortedList, 9500, "Polania Agricultural 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Polania Agricultural 3rd");
+							break;
+						case PlayerMatType.Militant:
+							TryPushDeployStar(sortedList, 9600, "Polania Militant 1st");
+							TryPushEnlistStar(sortedList, 9500, "Polania Militant 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Polania Militant 3rd");
+							break;
+						case PlayerMatType.Innovative:
+							TryPushUpgradeStar(sortedList, 9600, "Polania Innovative 1st");
+							TryPushEnlistStar(sortedList, 9500, "Polania Innovative 2nd");
+							TryPushDeployStar(sortedList, 9400, "Polania Innovative 3rd");
+							TryPushWorkerStar(sortedList, 9300, "Polania Innovative 4th");
+							break;
+					}
+					break;
+				
+				case Faction.Nordic:
+					switch (this.player.matPlayer.matType)
+					{
+						case PlayerMatType.Industrial:
+							TryPushDeployStar(sortedList, 9600, "Nordic Industrial 1st");
+							TryPushUpgradeStar(sortedList, 9500, "Nordic Industrial 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Nordic Industrial 3rd");
+							break;
+						case PlayerMatType.Engineering:
+							TryPushEnlistStar(sortedList, 9600, "Nordic Engineering 1st");
+							TryPushBuildStar(sortedList, 9500, "Nordic Engineering 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Nordic Engineering 3rd");
+							TryPushUpgradeStar(sortedList, 9300, "Nordic Engineering 4th");
+							break;
+						case PlayerMatType.Patriotic:
+							TryPushDeployStar(sortedList, 9600, "Nordic Patriotic 1st");
+							TryPushEnlistStar(sortedList, 9500, "Nordic Patriotic 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Nordic Patriotic 3rd");
+							break;
+						case PlayerMatType.Mechanical:
+							TryPushDeployStar(sortedList, 9600, "Nordic Mechanical 1st");
+							TryPushEnlistStar(sortedList, 9500, "Nordic Mechanical 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Nordic Mechanical 3rd");
+							break;
+						case PlayerMatType.Agricultural:
+							TryPushEnlistStar(sortedList, 9600, "Nordic Agricultural 1st");
+							TryPushDeployStar(sortedList, 9500, "Nordic Agricultural 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Nordic Agricultural 3rd");
+							break;
+						case PlayerMatType.Militant:
+							TryPushDeployStar(sortedList, 9600, "Nordic Militant 1st");
+							TryPushEnlistStar(sortedList, 9500, "Nordic Militant 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Nordic Militant 3rd");
+							break;
+						case PlayerMatType.Innovative:
+							TryPushDeployStar(sortedList, 9600, "Nordic Innovative 1st");
+							TryPushWorkerStar(sortedList, 9500, "Nordic Innovative 2nd");
+							TryPushUpgradeStar(sortedList, 9400, "Nordic Innovative 3rd");
+							TryPushEnlistStar(sortedList, 9300, "Nordic Innovative 4th");
+							break;
+					}
+					break;
+				
+				case Faction.Rusviet:
+					switch (this.player.matPlayer.matType)
+					{
+						case PlayerMatType.Industrial:
+							TryPushDeployStar(sortedList, 9600, "Rusviet Industrial 1st");
+							TryPushUpgradeStar(sortedList, 9500, "Rusviet Industrial 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Rusviet Industrial 3rd");
+							break;
+						case PlayerMatType.Engineering:
+							// Custom logic for Rusviet Engineering is already handled around line 2040, but keeping this for fallback
+							TryPushEnlistStar(sortedList, 9600, "Rusviet Engineering 1st");
+							TryPushBuildStar(sortedList, 9500, "Rusviet Engineering 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Rusviet Engineering 3rd");
+							TryPushUpgradeStar(sortedList, 9300, "Rusviet Engineering 4th");
+							break;
+						case PlayerMatType.Patriotic:
+							TryPushDeployStar(sortedList, 9600, "Rusviet Patriotic 1st");
+							TryPushEnlistStar(sortedList, 9500, "Rusviet Patriotic 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Rusviet Patriotic 3rd");
+							break;
+						case PlayerMatType.Mechanical:
+							TryPushDeployStar(sortedList, 9600, "Rusviet Mechanical 1st");
+							TryPushEnlistStar(sortedList, 9500, "Rusviet Mechanical 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Rusviet Mechanical 3rd");
+							break;
+						case PlayerMatType.Agricultural:
+							TryPushEnlistStar(sortedList, 9600, "Rusviet Agricultural 1st");
+							TryPushDeployStar(sortedList, 9500, "Rusviet Agricultural 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Rusviet Agricultural 3rd");
+							break;
+						case PlayerMatType.Militant:
+							TryPushDeployStar(sortedList, 9600, "Rusviet Militant 1st");
+							TryPushEnlistStar(sortedList, 9500, "Rusviet Militant 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Rusviet Militant 3rd");
+							break;
+						case PlayerMatType.Innovative:
+							TryPushUpgradeStar(sortedList, 9600, "Rusviet Innovative 1st");
+							TryPushEnlistStar(sortedList, 9500, "Rusviet Innovative 2nd");
+							TryPushDeployStar(sortedList, 9400, "Rusviet Innovative 3rd");
+							TryPushWorkerStar(sortedList, 9300, "Rusviet Innovative 4th");
+							break;
+					}
+					break;
+				
+				case Faction.Crimea:
+					switch (this.player.matPlayer.matType)
+					{
+						case PlayerMatType.Industrial:
+							TryPushDeployStar(sortedList, 9600, "Crimea Industrial 1st");
+							TryPushUpgradeStar(sortedList, 9500, "Crimea Industrial 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Crimea Industrial 3rd");
+							break;
+						case PlayerMatType.Engineering:
+							TryPushEnlistStar(sortedList, 9600, "Crimea Engineering 1st");
+							TryPushBuildStar(sortedList, 9500, "Crimea Engineering 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Crimea Engineering 3rd");
+							TryPushUpgradeStar(sortedList, 9300, "Crimea Engineering 4th");
+							break;
+						case PlayerMatType.Patriotic:
+							TryPushDeployStar(sortedList, 9600, "Crimea Patriotic 1st");
+							TryPushEnlistStar(sortedList, 9500, "Crimea Patriotic 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Crimea Patriotic 3rd");
+							break;
+						case PlayerMatType.Mechanical:
+							TryPushDeployStar(sortedList, 9600, "Crimea Mechanical 1st");
+							TryPushEnlistStar(sortedList, 9500, "Crimea Mechanical 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Crimea Mechanical 3rd");
+							break;
+						case PlayerMatType.Agricultural:
+							TryPushEnlistStar(sortedList, 9600, "Crimea Agricultural 1st");
+							TryPushDeployStar(sortedList, 9500, "Crimea Agricultural 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Crimea Agricultural 3rd");
+							break;
+						case PlayerMatType.Militant:
+							TryPushDeployStar(sortedList, 9600, "Crimea Militant 1st");
+							TryPushEnlistStar(sortedList, 9500, "Crimea Militant 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Crimea Militant 3rd");
+							break;
+						case PlayerMatType.Innovative:
+							// Crimea Innovative has custom logic in Bot() as well, but this sets base priorities
+							TryPushUpgradeStar(sortedList, 9600, "Crimea Innovative 1st");
+							TryPushEnlistStar(sortedList, 9500, "Crimea Innovative 2nd");
+							TryPushDeployStar(sortedList, 9400, "Crimea Innovative 3rd");
+							TryPushWorkerStar(sortedList, 9300, "Crimea Innovative 4th");
+							break;
+					}
+					break;
+				
+				case Faction.Saxony:
+					switch (this.player.matPlayer.matType)
+					{
+						case PlayerMatType.Industrial:
+							TryPushDeployStar(sortedList, 9600, "Saxony Industrial 1st");
+							TryPushUpgradeStar(sortedList, 9500, "Saxony Industrial 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Saxony Industrial 3rd");
+							break;
+						case PlayerMatType.Engineering:
+							TryPushEnlistStar(sortedList, 9600, "Saxony Engineering 1st");
+							TryPushBuildStar(sortedList, 9500, "Saxony Engineering 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Saxony Engineering 3rd");
+							TryPushUpgradeStar(sortedList, 9300, "Saxony Engineering 4th");
+							break;
+						case PlayerMatType.Patriotic:
+							TryPushDeployStar(sortedList, 9600, "Saxony Patriotic 1st");
+							TryPushEnlistStar(sortedList, 9500, "Saxony Patriotic 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Saxony Patriotic 3rd");
+							break;
+						case PlayerMatType.Mechanical:
+							TryPushDeployStar(sortedList, 9600, "Saxony Mechanical 1st");
+							TryPushEnlistStar(sortedList, 9500, "Saxony Mechanical 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Saxony Mechanical 3rd");
+							break;
+						case PlayerMatType.Agricultural:
+							TryPushEnlistStar(sortedList, 9600, "Saxony Agricultural 1st");
+							TryPushDeployStar(sortedList, 9500, "Saxony Agricultural 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Saxony Agricultural 3rd");
+							break;
+						case PlayerMatType.Militant:
+							TryPushDeployStar(sortedList, 9600, "Saxony Militant 1st");
+							TryPushEnlistStar(sortedList, 9500, "Saxony Militant 2nd");
+							TryPushUpgradeStar(sortedList, 9400, "Saxony Militant 3rd");
+							break;
+						case PlayerMatType.Innovative:
+							TryPushUpgradeStar(sortedList, 9600, "Saxony Innovative 1st");
+							TryPushEnlistStar(sortedList, 9500, "Saxony Innovative 2nd");
+							TryPushDeployStar(sortedList, 9400, "Saxony Innovative 3rd");
+							TryPushWorkerStar(sortedList, 9300, "Saxony Innovative 4th");
+							break;
+					}
+					break;
+				
+				case Faction.Albion:
+					switch (this.player.matPlayer.matType)
+					{
+						case PlayerMatType.Industrial:
+							TryPushDeployStar(sortedList, 9600, "Albion Industrial 1st");
+							TryPushUpgradeStar(sortedList, 9500, "Albion Industrial 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Albion Industrial 3rd");
+							break;
+						case PlayerMatType.Engineering:
+							TryPushEnlistStar(sortedList, 9600, "Albion Engineering 1st");
+							TryPushBuildStar(sortedList, 9500, "Albion Engineering 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Albion Engineering 3rd");
+							TryPushUpgradeStar(sortedList, 9300, "Albion Engineering 4th");
+							break;
+						case PlayerMatType.Patriotic:
+							TryPushDeployStar(sortedList, 9600, "Albion Patriotic 1st");
+							TryPushEnlistStar(sortedList, 9500, "Albion Patriotic 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Albion Patriotic 3rd");
+							break;
+						case PlayerMatType.Mechanical:
+							TryPushDeployStar(sortedList, 9600, "Albion Mechanical 1st");
+							TryPushEnlistStar(sortedList, 9500, "Albion Mechanical 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Albion Mechanical 3rd");
+							break;
+						case PlayerMatType.Agricultural:
+							TryPushEnlistStar(sortedList, 9600, "Albion Agricultural 1st");
+							TryPushDeployStar(sortedList, 9500, "Albion Agricultural 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Albion Agricultural 3rd");
+							break;
+						case PlayerMatType.Militant:
+							TryPushDeployStar(sortedList, 9600, "Albion Militant 1st");
+							TryPushEnlistStar(sortedList, 9500, "Albion Militant 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Albion Militant 3rd");
+							break;
+						case PlayerMatType.Innovative:
+							TryPushUpgradeStar(sortedList, 9600, "Albion Innovative 1st");
+							TryPushEnlistStar(sortedList, 9500, "Albion Innovative 2nd");
+							TryPushDeployStar(sortedList, 9400, "Albion Innovative 3rd");
+							TryPushWorkerStar(sortedList, 9300, "Albion Innovative 4th");
+							break;
+					}
+					break;
+				
+				case Faction.Togawa:
+					switch (this.player.matPlayer.matType)
+					{
+						case PlayerMatType.Industrial:
+							TryPushDeployStar(sortedList, 9600, "Togawa Industrial 1st");
+							TryPushUpgradeStar(sortedList, 9500, "Togawa Industrial 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Togawa Industrial 3rd");
+							break;
+						case PlayerMatType.Engineering:
+							TryPushEnlistStar(sortedList, 9600, "Togawa Engineering 1st");
+							TryPushBuildStar(sortedList, 9500, "Togawa Engineering 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Togawa Engineering 3rd");
+							TryPushUpgradeStar(sortedList, 9300, "Togawa Engineering 4th");
+							break;
+						case PlayerMatType.Patriotic:
+							TryPushDeployStar(sortedList, 9600, "Togawa Patriotic 1st");
+							TryPushEnlistStar(sortedList, 9500, "Togawa Patriotic 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Togawa Patriotic 3rd");
+							break;
+						case PlayerMatType.Mechanical:
+							TryPushDeployStar(sortedList, 9600, "Togawa Mechanical 1st");
+							TryPushEnlistStar(sortedList, 9500, "Togawa Mechanical 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Togawa Mechanical 3rd");
+							break;
+						case PlayerMatType.Agricultural:
+							TryPushEnlistStar(sortedList, 9600, "Togawa Agricultural 1st");
+							TryPushDeployStar(sortedList, 9500, "Togawa Agricultural 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Togawa Agricultural 3rd");
+							break;
+						case PlayerMatType.Militant:
+							TryPushDeployStar(sortedList, 9600, "Togawa Militant 1st");
+							TryPushEnlistStar(sortedList, 9500, "Togawa Militant 2nd");
+							TryPushWorkerStar(sortedList, 9400, "Togawa Militant 3rd");
+							break;
+						case PlayerMatType.Innovative:
+							TryPushUpgradeStar(sortedList, 9600, "Togawa Innovative 1st");
+							TryPushEnlistStar(sortedList, 9500, "Togawa Innovative 2nd");
+							TryPushDeployStar(sortedList, 9400, "Togawa Innovative 3rd");
+							TryPushWorkerStar(sortedList, 9300, "Togawa Innovative 4th");
+							break;
+					}
+					break;
+			}
 		}
 
 		private bool AreAllObjectivesImpossible()

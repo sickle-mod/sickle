@@ -4,10 +4,10 @@ using Scythe.GameLogic.Actions;
 
 namespace Scythe.GameLogic
 {
-	// Token: 0x02000566 RID: 1382
+	// Token: 0x0200056B RID: 1387
 	public class AiAction
 	{
-		// Token: 0x06002C77 RID: 11383 RVA: 0x00044449 File Offset: 0x00042649
+		// Token: 0x06002C95 RID: 11413 RVA: 0x000444AA File Offset: 0x000426AA
 		public AiAction(int matSectionId, TopAction topAction, int gainActionId, DownAction downAction, GameManager gameManager)
 		{
 			this.matSectionId = matSectionId;
@@ -17,7 +17,7 @@ namespace Scythe.GameLogic
 			this.gameManager = gameManager;
 		}
 
-		// Token: 0x06002C78 RID: 11384 RVA: 0x000F71D0 File Offset: 0x000F53D0
+		// Token: 0x06002C96 RID: 11414 RVA: 0x000F804C File Offset: 0x000F624C
 		public void ActionTopExecute(AiRecipe recipe, AiPlayer player)
 		{
 			switch (this.topAction.GetGainAction(this.gainActionId).GetGainType())
@@ -45,12 +45,31 @@ namespace Scythe.GameLogic
 			case GainType.Move:
 				this.GainMove(recipe, player);
 				return;
+			case GainType.Upgrade:
+				this.PerformGainUpgrade(player, (GainUpgrade)this.topAction.GetGainAction(this.gainActionId), "Gain Upgrade");
+				return;
+			case GainType.Mech:
+				if (player.player.aiDifficulty == AIDifficulty.Hard)
+				{
+					this.PerformGainMechAdvanced(player, (GainMech)this.topAction.GetGainAction(this.gainActionId), "Gain Mech");
+				}
+				else
+				{
+					this.PerformGainMechBasic(player, (GainMech)this.topAction.GetGainAction(this.gainActionId), "Gain Mech");
+				}
+				return;
+			case GainType.Building:
+				this.PerformGainBuilding(player, (GainBuilding)this.topAction.GetGainAction(this.gainActionId), "Gain Building");
+				return;
+			case GainType.Recruit:
+				this.PerformGainRecruit(player, (GainRecruit)this.topAction.GetGainAction(this.gainActionId), "Gain Recruit");
+				return;
 			default:
 				return;
 			}
 		}
 
-		// Token: 0x06002C79 RID: 11385 RVA: 0x000F725C File Offset: 0x000F545C
+		// Token: 0x06002C97 RID: 11415 RVA: 0x000F80D8 File Offset: 0x000F62D8
 		public void ActionDownExecute(AiPlayer player)
 		{
 			switch (this.downAction.GetGainAction(0).GetGainType())
@@ -74,28 +93,28 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002C7A RID: 11386 RVA: 0x00044476 File Offset: 0x00042676
+		// Token: 0x06002C98 RID: 11416 RVA: 0x000444D7 File Offset: 0x000426D7
 		public GainAction GetTopGainAction()
 		{
 			return this.topAction.GetGainAction(this.gainActionId);
 		}
 
-		// Token: 0x06002C7B RID: 11387 RVA: 0x00027EF0 File Offset: 0x000260F0
+		// Token: 0x06002C99 RID: 11417 RVA: 0x00027EF0 File Offset: 0x000260F0
 		public void GainPower(AiRecipe recipe, AiPlayer player)
 		{
 		}
 
-		// Token: 0x06002C7C RID: 11388 RVA: 0x00027EF0 File Offset: 0x000260F0
+		// Token: 0x06002C9A RID: 11418 RVA: 0x00027EF0 File Offset: 0x000260F0
 		public void GainPopularity(AiRecipe recipe, AiPlayer player)
 		{
 		}
 
-		// Token: 0x06002C7D RID: 11389 RVA: 0x00027EF0 File Offset: 0x000260F0
+		// Token: 0x06002C9B RID: 11419 RVA: 0x00027EF0 File Offset: 0x000260F0
 		public void GainCoin(AiRecipe recipe, AiPlayer player)
 		{
 		}
 
-		// Token: 0x06002C7E RID: 11390 RVA: 0x000F72B8 File Offset: 0x000F54B8
+		// Token: 0x06002C9C RID: 11420 RVA: 0x000F8134 File Offset: 0x000F6334
 		public static int FindResourceGain(SectionAction action)
 		{
 			for (int i = 0; i < action.gainActionsCount; i++)
@@ -109,7 +128,7 @@ namespace Scythe.GameLogic
 			return -1;
 		}
 
-		// Token: 0x06002C7F RID: 11391 RVA: 0x000F72F4 File Offset: 0x000F54F4
+		// Token: 0x06002C9D RID: 11421 RVA: 0x000F8170 File Offset: 0x000F6370
 		public bool ShouldTakeResources(Unit unit, List<GameHex> target)
 		{
 			foreach (GameHex gameHex in target)
@@ -136,7 +155,7 @@ namespace Scythe.GameLogic
 			return true;
 		}
 
-		// Token: 0x06002C80 RID: 11392 RVA: 0x000F7468 File Offset: 0x000F5668
+		// Token: 0x06002C9E RID: 11422 RVA: 0x000F82E4 File Offset: 0x000F64E4
 		public void MoveByAnalysisPriority(AiRecipe recipe, AiPlayer player)
 		{
 			GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
@@ -189,7 +208,7 @@ namespace Scythe.GameLogic
 			this.gameManager.actionManager.PrepareNextAction();
 		}
 
-		// Token: 0x06002C81 RID: 11393 RVA: 0x000F7774 File Offset: 0x000F5974
+		// Token: 0x06002C9F RID: 11423 RVA: 0x000F85F0 File Offset: 0x000F67F0
 		public void GainMove(AiRecipe recipe, AiPlayer aiPlayer)
 		{
 			if (recipe.moveAction != null)
@@ -211,7 +230,7 @@ namespace Scythe.GameLogic
 			aiPlayer.HandleEncounterAndFactory();
 		}
 
-		// Token: 0x06002C82 RID: 11394 RVA: 0x000F77D4 File Offset: 0x000F59D4
+		// Token: 0x06002CA0 RID: 11424 RVA: 0x000F8650 File Offset: 0x000F6850
 		private int MechDeployPriorityV1(GameHex hex)
 		{
 			int num = hex.GetOwnerWorkers().Count;
@@ -226,7 +245,7 @@ namespace Scythe.GameLogic
 			return num;
 		}
 
-		// Token: 0x06002C83 RID: 11395 RVA: 0x000F780C File Offset: 0x000F5A0C
+		// Token: 0x06002CA1 RID: 11425 RVA: 0x000F8688 File Offset: 0x000F6888
 		private int MechDeployPriorityV2(GameHex hex)
 		{
 			int num = hex.GetOwnerWorkers().Count * 10;
@@ -241,7 +260,7 @@ namespace Scythe.GameLogic
 			return num;
 		}
 
-		// Token: 0x06002C84 RID: 11396 RVA: 0x000F784C File Offset: 0x000F5A4C
+		// Token: 0x06002CA2 RID: 11426 RVA: 0x000F86C8 File Offset: 0x000F68C8
 		private int MechDeployPriorityV3(GameHex hex)
 		{
 			int num = hex.GetOwnerWorkers().Count * 10;
@@ -257,7 +276,7 @@ namespace Scythe.GameLogic
 			return num;
 		}
 
-		// Token: 0x06002C85 RID: 11397 RVA: 0x000F7898 File Offset: 0x000F5A98
+		// Token: 0x06002CA3 RID: 11427 RVA: 0x000F8714 File Offset: 0x000F6914
 		private int MechDeployPriorityV4(GameHex hex)
 		{
 			int num = hex.GetOwnerWorkers().Count * 10;
@@ -273,7 +292,7 @@ namespace Scythe.GameLogic
 			return num;
 		}
 
-		// Token: 0x06002C86 RID: 11398 RVA: 0x000F7898 File Offset: 0x000F5A98
+		// Token: 0x06002CA4 RID: 11428 RVA: 0x000F8714 File Offset: 0x000F6914
 		private int MechDeployPriorityV5(GameHex hex)
 		{
 			int num = hex.GetOwnerWorkers().Count * 10;
@@ -289,7 +308,7 @@ namespace Scythe.GameLogic
 			return num;
 		}
 
-		// Token: 0x06002C87 RID: 11399 RVA: 0x00044489 File Offset: 0x00042689
+		// Token: 0x06002CA5 RID: 11429 RVA: 0x000444EA File Offset: 0x000426EA
 		public void GainMech(AiPlayer aiPlayer)
 		{
 			if (aiPlayer.player.aiDifficulty == AIDifficulty.Hard)
@@ -300,7 +319,7 @@ namespace Scythe.GameLogic
 			this.GainMechBasic(aiPlayer);
 		}
 
-		// Token: 0x06002C88 RID: 11400 RVA: 0x000F78E4 File Offset: 0x000F5AE4
+		// Token: 0x06002CA6 RID: 11430 RVA: 0x000F8760 File Offset: 0x000F6960
 		private void GainMechBasic(AiPlayer aiPlayer)
 		{
 			string text = "Gain Mech";
@@ -310,6 +329,11 @@ namespace Scythe.GameLogic
 				return;
 			}
 			GainMech gainMech = (GainMech)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetGainAction(0);
+			this.PerformGainMechBasic(aiPlayer, gainMech, text);
+		}
+
+		private void PerformGainMechBasic(AiPlayer aiPlayer, GainMech gainMech, string text)
+		{
 			if (!gainMech.GainAvaliable())
 			{
 				text += " ...Mech gain unavailable";
@@ -382,99 +406,14 @@ namespace Scythe.GameLogic
 			text += "...No suitable place to Deploy";
 		}
 
-		// Token: 0x06002C89 RID: 11401 RVA: 0x000F7E60 File Offset: 0x000F6060
+		// Token: 0x06002CA7 RID: 11431 RVA: 0x000F8CDC File Offset: 0x000F6EDC
 		public void GainBuilding(AiPlayer aiPlayer)
 		{
 			string text = "Gain Building";
 			if (aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetPayAction(0)))
 			{
 				GainBuilding gainBuilding = (GainBuilding)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetGainAction(0);
-				if (!gainBuilding.GainAvaliable())
-				{
-					text += " ...Construction gain unavailable";
-					return;
-				}
-				Building building = null;
-				GameHex gameHex = null;
-				for (int i = 0; i < 4; i++)
-				{
-					if (aiPlayer.player.matPlayer.GetPlayerMatSection(i).ActionTop.Structure.position == null && aiPlayer.player.matPlayer.GetPlayerMatSection(i).ActionTop.Structure.buildingType == aiPlayer.strategicAnalysis.buildingNext)
-					{
-						building = aiPlayer.player.matPlayer.GetPlayerMatSection(i).ActionTop.Structure;
-					}
-				}
-				if (aiPlayer.player.matFaction.faction == Faction.Polania && building != null && building.buildingType == BuildingType.Mine)
-				{
-					if (this.gameManager.gameBoard.hexMap[1, 4].Building == null && this.gameManager.gameBoard.hexMap[1, 4].GetOwnerWorkers().Count > 0)
-					{
-						gameHex = this.gameManager.gameBoard.hexMap[1, 4];
-					}
-					else if (aiPlayer.player.character.position.Building == null && aiPlayer.player.character.position.GetOwnerWorkers().Count > 0 && (aiPlayer.player.character.position.hexType == HexType.farm || aiPlayer.player.character.position.hexType == HexType.forest || aiPlayer.player.character.position.hexType == HexType.mountain || aiPlayer.player.character.position.hexType == HexType.tundra || aiPlayer.player.character.position.hexType == HexType.village))
-					{
-						gameHex = aiPlayer.player.character.position;
-					}
-				}
-				if ((aiPlayer.player.matFaction.faction == Faction.Saxony || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType != PlayerMatType.Mechanical)) && building != null && building.buildingType == BuildingType.Mill && gameHex == null)
-				{
-					foreach (Worker worker in aiPlayer.player.matPlayer.workers)
-					{
-						if (worker.position.Building == null && (worker.position.hexType == HexType.farm || worker.position.hexType == HexType.forest || worker.position.hexType == HexType.mountain || worker.position.hexType == HexType.tundra))
-						{
-							gameHex = worker.position;
-						}
-					}
-				}
-				if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && building != null && building.buildingType == BuildingType.Mill && gameHex == null)
-				{
-					foreach (Worker worker2 in aiPlayer.player.matPlayer.workers)
-					{
-						if (worker2.position.Building == null && worker2.position.hexType == HexType.forest)
-						{
-							gameHex = worker2.position;
-						}
-					}
-				}
-				if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && building != null && building.buildingType == BuildingType.Mill && gameHex == null)
-				{
-					foreach (Worker worker3 in aiPlayer.player.matPlayer.workers)
-					{
-						if (worker3.position.Building == null && worker3.position.hexType == HexType.farm)
-						{
-							gameHex = worker3.position;
-						}
-					}
-				}
-				if (gameHex == null)
-				{
-					int bestScore = -99999;
-					foreach (Worker worker4 in aiPlayer.player.matPlayer.workers)
-					{
-						if (worker4.position.Building == null && (worker4.position.hexType == HexType.farm || worker4.position.hexType == HexType.forest || worker4.position.hexType == HexType.mountain || worker4.position.hexType == HexType.tundra || worker4.position.hexType == HexType.village))
-						{
-							int buildingValue = 0;
-							if (building != null && building.buildingType == BuildingType.Mill && worker4.position.hexType == HexType.village)
-							{
-								buildingValue -= 500;
-								if (aiPlayer.player.matPlayer.workers.Count >= 4)
-								{
-									buildingValue -= 1000;
-								}
-							}
-							if (buildingValue > bestScore)
-							{
-								bestScore = buildingValue;
-								gameHex = worker4.position;
-							}
-						}
-					}
-				}
-				if (building != null && gameHex != null)
-				{
-					gainBuilding.SetStructureAndLocation(building, gameHex);
-					this.gameManager.actionManager.PrepareNextAction();
-					text = text + " ..." + building.buildingType.ToString() + " built";
-					return;
-				}
+				this.PerformGainBuilding(aiPlayer, gainBuilding, text);
 			}
 			else
 			{
@@ -482,7 +421,97 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		// Token: 0x06002C8A RID: 11402 RVA: 0x000F83E4 File Offset: 0x000F65E4
+		private void PerformGainBuilding(AiPlayer aiPlayer, GainBuilding gainBuilding, string text)
+		{
+			if (!gainBuilding.GainAvaliable())
+			{
+				text += " ...Construction gain unavailable";
+				return;
+			}
+			Building building = null;
+			GameHex gameHex = null;
+			for (int i = 0; i < 4; i++)
+			{
+				if (aiPlayer.player.matPlayer.GetPlayerMatSection(i).ActionTop.Structure.position == null && aiPlayer.player.matPlayer.GetPlayerMatSection(i).ActionTop.Structure.buildingType == aiPlayer.strategicAnalysis.buildingNext)
+				{
+					building = aiPlayer.player.matPlayer.GetPlayerMatSection(i).ActionTop.Structure;
+				}
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && building != null && building.buildingType == BuildingType.Mine)
+			{
+				if (this.gameManager.gameBoard.hexMap[1, 4].Building == null && this.gameManager.gameBoard.hexMap[1, 4].GetOwnerWorkers().Count > 0)
+				{
+					gameHex = this.gameManager.gameBoard.hexMap[1, 4];
+				}
+				else if (aiPlayer.player.character.position.Building == null && aiPlayer.player.character.position.GetOwnerWorkers().Count > 0 && (aiPlayer.player.character.position.hexType == HexType.farm || aiPlayer.player.character.position.hexType == HexType.forest || aiPlayer.player.character.position.hexType == HexType.mountain || aiPlayer.player.character.position.hexType == HexType.tundra || aiPlayer.player.character.position.hexType == HexType.village))
+				{
+					gameHex = aiPlayer.player.character.position;
+				}
+			}
+			if ((aiPlayer.player.matFaction.faction == Faction.Saxony || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType != PlayerMatType.Mechanical)) && building != null && building.buildingType == BuildingType.Mill && gameHex == null)
+			{
+				foreach (Worker worker in aiPlayer.player.matPlayer.workers)
+				{
+					if (worker.position.Building == null && (worker.position.hexType == HexType.farm || worker.position.hexType == HexType.forest || worker.position.hexType == HexType.mountain || worker.position.hexType == HexType.tundra))
+					{
+						gameHex = worker.position;
+					}
+				}
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && building != null && building.buildingType == BuildingType.Mill && gameHex == null)
+			{
+				foreach (Worker worker2 in aiPlayer.player.matPlayer.workers)
+				{
+					if (worker2.position.Building == null && worker2.position.hexType == HexType.forest)
+					{
+						gameHex = worker2.position;
+					}
+				}
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && building != null && building.buildingType == BuildingType.Mill && gameHex == null)
+			{
+				foreach (Worker worker3 in aiPlayer.player.matPlayer.workers)
+				{
+					if (worker3.position.Building == null && worker3.position.hexType == HexType.farm)
+					{
+						gameHex = worker3.position;
+					}
+				}
+			}
+			if (gameHex == null)
+			{
+				int num = -99999;
+				foreach (Worker worker4 in aiPlayer.player.matPlayer.workers)
+				{
+					if (worker4.position.Building == null && (worker4.position.hexType == HexType.farm || worker4.position.hexType == HexType.forest || worker4.position.hexType == HexType.mountain || worker4.position.hexType == HexType.tundra || worker4.position.hexType == HexType.village))
+					{
+						int num2 = 0;
+						if (building != null && building.buildingType == BuildingType.Mill && worker4.position.hexType == HexType.village)
+						{
+							num2 -= 500;
+							if (aiPlayer.player.matPlayer.workers.Count >= 4)
+							{
+								num2 -= 1000;
+							}
+						}
+						if (num2 > num)
+						{
+							num = num2;
+							gameHex = worker4.position;
+						}
+					}
+				}
+			}
+			if (building != null && gameHex != null)
+			{
+				gainBuilding.SetStructureAndLocation(building, gameHex);
+				this.gameManager.actionManager.PrepareNextAction();
+				text = text + " ..." + building.buildingType.ToString() + " built";
+				return;
+			}
+		}
+
+		// Token: 0x06002CA8 RID: 11432 RVA: 0x000F92C8 File Offset: 0x000F74C8
 		public void GainRecruit(AiPlayer aiPlayer)
 		{
 			string text = "Gain Recruit";
@@ -492,6 +521,11 @@ namespace Scythe.GameLogic
 				return;
 			}
 			GainRecruit gainRecruit = (GainRecruit)aiPlayer.AiActions[aiPlayer.gainRecruitActionPosition[0]].downAction.GetGainAction(0);
+			this.PerformGainRecruit(aiPlayer, gainRecruit, text);
+		}
+
+		private void PerformGainRecruit(AiPlayer aiPlayer, GainRecruit gainRecruit, string text)
+		{
 			if (gainRecruit.GainAvaliable())
 			{
 				DownActionType downActionType = DownActionType.Factory;
@@ -526,7 +560,7 @@ namespace Scythe.GameLogic
 			text += " ...Recruit gain unavailable";
 		}
 
-		// Token: 0x06002C8B RID: 11403 RVA: 0x000444A8 File Offset: 0x000426A8
+		// Token: 0x06002CA9 RID: 11433 RVA: 0x00044509 File Offset: 0x00042709
 		private int UpgradePriority(GainType gainType, AiPlayer player)
 		{
 			if (player.player.aiDifficulty == AIDifficulty.Hard)
@@ -536,23 +570,33 @@ namespace Scythe.GameLogic
 			return this.UpgradePriorityBasic(gainType, player);
 		}
 
-		// Token: 0x06002C8C RID: 11404 RVA: 0x000F85E8 File Offset: 0x000F67E8
+		// Token: 0x06002CAA RID: 11434 RVA: 0x000F94CC File Offset: 0x000F76CC
 		private int UpgradePriorityBasic(GainType gainType, AiPlayer player)
 		{
 			if (player.player.matFaction.faction == Faction.Nordic && player.player.matPlayer.matType == PlayerMatType.Agricultural)
 			{
 				switch (gainType)
 				{
-				case GainType.Move: return 200;
-				case GainType.Power: return 190;
-				case GainType.Mech: return 200;
-				case GainType.Coin: return 140;
-				case GainType.Popularity: return 150;
-				case GainType.CombatCard: return 160;
-				case GainType.Produce: return 170;
-				case GainType.Upgrade: return 90;
-				case GainType.Building: return 80;
-				case GainType.Recruit: return 70;
+				case GainType.Coin:
+					return 140;
+				case GainType.Popularity:
+					return 150;
+				case GainType.Power:
+					return 190;
+				case GainType.CombatCard:
+					return 160;
+				case GainType.Produce:
+					return 170;
+				case GainType.Move:
+					return 200;
+				case GainType.Upgrade:
+					return 90;
+				case GainType.Mech:
+					return 200;
+				case GainType.Building:
+					return 80;
+				case GainType.Recruit:
+					return 70;
 				}
 				return 1;
 			}
@@ -685,14 +729,26 @@ namespace Scythe.GameLogic
 				case GainType.Popularity:
 					return 150;
 				case GainType.Power:
-					if (player.player.stars[StarType.Combat] < 2) return 210;
+					if (player.player.stars[StarType.Combat] < 2)
+					{
+						return 210;
+					}
 					return 190;
 				case GainType.CombatCard:
-					if (player.player.stars[StarType.Combat] < 2) return 180;
+					if (player.player.stars[StarType.Combat] < 2)
+					{
+						return 180;
+					}
 					return 160;
 				case GainType.Produce:
-					if (player.player.matPlayer.workers.Count >= 6) return 0;
-					if (player.player.matPlayer.workers.Count == 5) return 20;
+					if (player.player.matPlayer.workers.Count >= 6)
+					{
+						return 0;
+					}
+					if (player.player.matPlayer.workers.Count == 5)
+					{
+						return 20;
+					}
 					return 170;
 				case GainType.Move:
 					return 180;
@@ -751,8 +807,14 @@ namespace Scythe.GameLogic
 				case GainType.CombatCard:
 					return 160;
 				case GainType.Produce:
-					if (player.player.matPlayer.workers.Count >= 6) return 0;
-					if (player.player.matPlayer.workers.Count == 5) return 20;
+					if (player.player.matPlayer.workers.Count >= 6)
+					{
+						return 0;
+					}
+					if (player.player.matPlayer.workers.Count == 5)
+					{
+						return 20;
+					}
 					return 170;
 				case GainType.Move:
 					return 190;
@@ -998,27 +1060,49 @@ namespace Scythe.GameLogic
 			return 1;
 		}
 
-		// Token: 0x06002C8D RID: 11405 RVA: 0x000F8F70 File Offset: 0x000F7170
+		// Token: 0x06002CAB RID: 11435 RVA: 0x000F9F94 File Offset: 0x000F8194
 		public void GainUpgrade(AiPlayer player)
 		{
 			string text = "Gain Upgrade";
+			GainUpgrade gainUpgrade = (GainUpgrade)player.AiActions[player.gainUpgradeActionPosition[0]].downAction.GetGainAction(0);
+			if (!gainUpgrade.GainAvaliable())
+			{
+				text += " ...Upgrade gain unavailable";
+				return;
+			}
+			this.SetUpgradeActions(player, gainUpgrade);
+			if (gainUpgrade.GainToUpgrade == null || gainUpgrade.PayToUpgrade == null)
+			{
+				text += " ...Upgrade logic failed";
+				return;
+			}
 			if (!player.Pay4Action((PayResource)player.AiActions[player.gainUpgradeActionPosition[0]].downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
+				gainUpgrade.Clear();
 				return;
 			}
-			GainUpgrade gainUpgrade = (GainUpgrade)player.AiActions[player.gainUpgradeActionPosition[0]].downAction.GetGainAction(0);
-			if (gainUpgrade.GainAvaliable())
-			{
-				this.SetUpgradeActions(player, gainUpgrade);
-				this.gameManager.actionManager.PrepareNextAction();
-				text += " ...Upgrade performed";
-				return;
-			}
-			text += " ...Upgrade gain unavailable";
+			this.gameManager.actionManager.PrepareNextAction();
+			text += " ...Upgrade performed";
 		}
 
-		// Token: 0x06002C8E RID: 11406 RVA: 0x000F9020 File Offset: 0x000F7220
+		private void PerformGainUpgrade(AiPlayer player, GainUpgrade gainUpgrade, string text)
+		{
+			if (!gainUpgrade.GainAvaliable())
+			{
+				text += " ...Upgrade gain unavailable";
+				return;
+			}
+			this.SetUpgradeActions(player, gainUpgrade);
+			if (gainUpgrade.GainToUpgrade == null || gainUpgrade.PayToUpgrade == null)
+			{
+				text += " ...Upgrade logic failed";
+				return;
+			}
+			this.gameManager.actionManager.PrepareNextAction();
+			text += " ...Upgrade performed";
+		}
+
 		public void SetUpgradeActions(AiPlayer player, GainUpgrade gainUpgrade)
 		{
 			GainAction gainAction = null;
@@ -1039,7 +1123,7 @@ namespace Scythe.GameLogic
 			gainUpgrade.SetPayAndGainActions(gainAction, payAction);
 		}
 
-		// Token: 0x06002C8F RID: 11407 RVA: 0x000F9178 File Offset: 0x000F7378
+		// Token: 0x06002CAD RID: 11437 RVA: 0x000FA19C File Offset: 0x000F839C
 		public void GainTrade(AiRecipe receipe, AiPlayer aiPlayer)
 		{
 			if (!this.topAction.ActionPayed())
@@ -1089,7 +1173,7 @@ namespace Scythe.GameLogic
 			this.gameManager.actionManager.PrepareNextAction();
 		}
 
-		// Token: 0x06002C90 RID: 11408 RVA: 0x000F9344 File Offset: 0x000F7544
+		// Token: 0x06002CAE RID: 11438 RVA: 0x000FA368 File Offset: 0x000F8568
 		public void GainProduce(AiPlayer aiPlayer)
 		{
 			if (!this.topAction.ActionPayed())
@@ -1117,29 +1201,39 @@ namespace Scythe.GameLogic
 			gainProduce.Clear();
 		}
 
-		// Token: 0x06002C91 RID: 11409 RVA: 0x000444C9 File Offset: 0x000426C9
+		// Token: 0x06002CAF RID: 11439 RVA: 0x0004452A File Offset: 0x0004272A
 		public override string ToString()
 		{
 			return "top: " + this.topAction.GetGainAction(this.gainActionId).ToString() + " bottom: " + this.downAction.GetGainAction(0).ToString();
 		}
 
-		// Token: 0x06002C92 RID: 11410 RVA: 0x000F94E8 File Offset: 0x000F76E8
+		// Token: 0x06002CB0 RID: 11440 RVA: 0x000FA50C File Offset: 0x000F870C
 		private int UpgradePriorityAdvanced(GainType gainType, AiPlayer player)
 		{
 			if (player.player.matFaction.faction == Faction.Nordic && player.player.matPlayer.matType == PlayerMatType.Agricultural)
 			{
 				switch (gainType)
 				{
-				case GainType.Move: return 200;
-				case GainType.Power: return 190;
-				case GainType.Mech: return 200;
-				case GainType.Coin: return 140;
-				case GainType.Popularity: return 150;
-				case GainType.CombatCard: return 160;
-				case GainType.Produce: return 170;
-				case GainType.Upgrade: return 90;
-				case GainType.Building: return 80;
-				case GainType.Recruit: return 70;
+				case GainType.Coin:
+					return 140;
+				case GainType.Popularity:
+					return 150;
+				case GainType.Power:
+					return 190;
+				case GainType.CombatCard:
+					return 160;
+				case GainType.Produce:
+					return 170;
+				case GainType.Move:
+					return 200;
+				case GainType.Upgrade:
+					return 90;
+				case GainType.Mech:
+					return 200;
+				case GainType.Building:
+					return 80;
+				case GainType.Recruit:
+					return 70;
 				}
 				return 1;
 			}
@@ -1185,7 +1279,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 180;
 				case GainType.Move:
-					return 190;
+					return 200;
 				case GainType.Upgrade:
 					return 10;
 				case GainType.Mech:
@@ -1332,7 +1426,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 190;
 				case GainType.Move:
-					return 180;
+					return 200;
 				case GainType.Upgrade:
 					return 80;
 				case GainType.Mech:
@@ -1390,7 +1484,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 180;
 				case GainType.Move:
-					return 170;
+					return 200;
 				case GainType.Upgrade:
 					return 10;
 				case GainType.Mech:
@@ -1545,7 +1639,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 170;
 				case GainType.Move:
-					return 190;
+					return 200;
 				case GainType.Upgrade:
 					return 80;
 				case GainType.Mech:
@@ -1603,19 +1697,15 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 170;
 				case GainType.Move:
-					return 180;
+					return 200;
 				case GainType.Upgrade:
-					return 80;
-				case GainType.Mech:
 					return 70;
+				case GainType.Mech:
+					return 80;
 				case GainType.Building:
 					return 10;
 				case GainType.Recruit:
-					if (player.player.matFaction.mechs.Count >= 2)
-					{
-						return 85;
-					}
-					return 60;
+					return 90;
 				}
 				return 1;
 			}
@@ -1700,11 +1790,7 @@ namespace Scythe.GameLogic
 				case GainType.Building:
 					return 10;
 				case GainType.Recruit:
-					if (player.player.matFaction.mechs.Count >= 2)
-					{
-						return 85;
-					}
-					return 60;
+					return 90;
 				}
 				return 1;
 			}
@@ -1750,7 +1836,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 190;
 				case GainType.Move:
-					return 180;
+					return 200;
 				case GainType.Upgrade:
 					return 80;
 				case GainType.Mech:
@@ -1804,7 +1890,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 170;
 				case GainType.Move:
-					return 180;
+					return 200;
 				case GainType.Upgrade:
 					return 80;
 				case GainType.Mech:
@@ -2168,7 +2254,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 170;
 				case GainType.Move:
-					return 180;
+					return 200;
 				case GainType.Upgrade:
 					return 80;
 				case GainType.Mech:
@@ -2226,7 +2312,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 170;
 				case GainType.Move:
-					return 180;
+					return 200;
 				case GainType.Upgrade:
 					return 80;
 				case GainType.Mech:
@@ -2410,7 +2496,7 @@ namespace Scythe.GameLogic
 				case GainType.Move:
 					return 180;
 				case GainType.Upgrade:
-					return 80;
+					return 90;
 				case GainType.Mech:
 					return 70;
 				case GainType.Building:
@@ -2441,6 +2527,10 @@ namespace Scythe.GameLogic
 				case GainType.Move:
 					return 190;
 				case GainType.Upgrade:
+					if (player.player.matPlayer.UpgradesDone >= 2)
+					{
+						return 20;
+					}
 					return 90;
 				case GainType.Mech:
 					return 80;
@@ -2468,6 +2558,10 @@ namespace Scythe.GameLogic
 				case GainType.Move:
 					return 180;
 				case GainType.Upgrade:
+					if (player.player.matPlayer.UpgradesDone >= 2)
+					{
+						return 20;
+					}
 					return 80;
 				case GainType.Mech:
 					return 70;
@@ -2594,7 +2688,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 180;
 				case GainType.Move:
-					return 170;
+					return 200;
 				case GainType.Upgrade:
 					return 90;
 				case GainType.Mech:
@@ -2636,7 +2730,7 @@ namespace Scythe.GameLogic
 			return 1;
 		}
 
-		// Token: 0x06002C93 RID: 11411 RVA: 0x000FB60C File Offset: 0x000F980C
+		// Token: 0x06002CB1 RID: 11441 RVA: 0x000FC6D0 File Offset: 0x000FA8D0
 		private void GainMechAdvanced(AiPlayer aiPlayer)
 		{
 			string text = "Gain Mech";
@@ -2646,6 +2740,11 @@ namespace Scythe.GameLogic
 				return;
 			}
 			GainMech gainMech = (GainMech)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetGainAction(0);
+			this.PerformGainMechAdvanced(aiPlayer, gainMech, text);
+		}
+
+		private void PerformGainMechAdvanced(AiPlayer aiPlayer, GainMech gainMech, string text)
+		{
 			if (!gainMech.GainAvaliable())
 			{
 				text += " ...Mech gain unavailable";
@@ -2718,7 +2817,7 @@ namespace Scythe.GameLogic
 			text += "...No suitable place to Deploy";
 		}
 
-		// Token: 0x06002C94 RID: 11412 RVA: 0x000FBCF0 File Offset: 0x000F9EF0
+		// Token: 0x06002CB2 RID: 11442 RVA: 0x000FCDB4 File Offset: 0x000FAFB4
 		public void GainCombatCard(AiRecipe recipe, AiPlayer player)
 		{
 			GainCombatCard gainCombatCard = (GainCombatCard)this.GetTopGainAction();
@@ -2730,29 +2829,29 @@ namespace Scythe.GameLogic
 			this.gameManager.actionManager.PrepareNextAction();
 		}
 
-		// Token: 0x06002C95 RID: 11413 RVA: 0x00044501 File Offset: 0x00042701
+		// Token: 0x06002CB3 RID: 11443 RVA: 0x00044562 File Offset: 0x00042762
 		private bool IsValidDeployHex(GameHex hex, Player owner)
 		{
 			return hex != null && hex.hexType != HexType.capital && hex.GetOwnerWorkers().Count != 0;
 		}
 
-		// Token: 0x04001E70 RID: 7792
+		// Token: 0x04001E81 RID: 7809
 		private GameManager gameManager;
 
-		// Token: 0x04001E71 RID: 7793
+		// Token: 0x04001E82 RID: 7810
 		public readonly int matSectionId;
 
-		// Token: 0x04001E72 RID: 7794
+		// Token: 0x04001E83 RID: 7811
 		public readonly TopAction topAction;
 
-		// Token: 0x04001E73 RID: 7795
+		// Token: 0x04001E84 RID: 7812
 		public readonly int gainActionId;
 
-		// Token: 0x04001E74 RID: 7796
+		// Token: 0x04001E85 RID: 7813
 		public readonly DownAction downAction;
 
-		// Token: 0x02000567 RID: 1383
-		// (Invoke) Token: 0x06002C97 RID: 11415
+		// Token: 0x0200056C RID: 1388
+		// (Invoke) Token: 0x06002CB5 RID: 11445
 		public delegate void ActionExecute(AiRecipe recipe, AiPlayer player);
 	}
 }

@@ -1192,24 +1192,24 @@ namespace Scythe.GameLogic
 			{
 				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic || aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
 				{
-					this.buildingPriority[BuildingType.Mill] = 10;
-					this.buildingPriority[BuildingType.Armory] = 8;
-					this.buildingPriority[BuildingType.Monument] = 6;
-					this.buildingPriority[BuildingType.Mine] = 4;
+					this.buildingPriority[BuildingType.Mill] = 8;
+					this.buildingPriority[BuildingType.Armory] = 6;
+					this.buildingPriority[BuildingType.Monument] = 4;
+					this.buildingPriority[BuildingType.Mine] = 10;
 				}
 				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 				{
-					this.buildingPriority[BuildingType.Mill] = 10;
-					this.buildingPriority[BuildingType.Monument] = 8;
+					this.buildingPriority[BuildingType.Mill] = 8;
 					this.buildingPriority[BuildingType.Armory] = 6;
-					this.buildingPriority[BuildingType.Mine] = 4;
+					this.buildingPriority[BuildingType.Monument] = 4;
+					this.buildingPriority[BuildingType.Mine] = 10;
 				}
 				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
 				{
-					this.buildingPriority[BuildingType.Armory] = 10;
 					this.buildingPriority[BuildingType.Mill] = 8;
-					this.buildingPriority[BuildingType.Monument] = 6;
-					this.buildingPriority[BuildingType.Mine] = 4;
+					this.buildingPriority[BuildingType.Armory] = 6;
+					this.buildingPriority[BuildingType.Monument] = 4;
+					this.buildingPriority[BuildingType.Mine] = 10;
 				}
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType != PlayerMatType.Agricultural && aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial)
@@ -1219,6 +1219,27 @@ namespace Scythe.GameLogic
 				this.buildingPriority[BuildingType.Mill] = 6;
 				this.buildingPriority[BuildingType.Mine] = 4;
 			}
+			
+			bool ignoreBuilding = false;
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Albion) {
+				ignoreBuilding = true;
+			}
+			if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative || aiPlayer.player.matPlayer.matType == PlayerMatType.Militant || aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) {
+				ignoreBuilding = true;
+			}
+			if (ignoreBuilding) {
+				bool objNeedsBuilding = false;
+				foreach (var obj in aiPlayer.player.objectiveCards) {
+					if (obj.CardId == 20 || obj.CardId == 27) objNeedsBuilding = true;
+				}
+				if (!objNeedsBuilding) {
+					this.buildingPriority[BuildingType.Mine] = 0;
+					this.buildingPriority[BuildingType.Mill] = 0;
+					this.buildingPriority[BuildingType.Armory] = 0;
+					this.buildingPriority[BuildingType.Monument] = 0;
+				}
+			}
+
 			foreach (BuildingType buildingType2 in this.buildingPriority.Keys)
 			{
 				if (aiPlayer.player.matPlayer.GetBuilding(buildingType2) == null && (aiPlayer.player.matPlayer.GetBuilding(buildingType) != null || this.buildingPriority[buildingType2] > this.buildingPriority[buildingType]))
@@ -1642,7 +1663,7 @@ namespace Scythe.GameLogic
 				this.workerCountTarget = 8;
 				this.pursuingWorkerStar = true;
 			}
-			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			if ((aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic) && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
 			{
 				this.workerCountTarget = 8;
 				this.pursuingWorkerStar = true;

@@ -1023,53 +1023,41 @@ namespace Scythe.GameLogic
 				}
 				break;
 			case Faction.Saxony:
-				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
 				{
 					this.resourceDemandPriority[ResourceType.metal] = 11;
 					this.resourceDemandPriority[ResourceType.oil] = 10;
-					this.resourceDemandPriority[ResourceType.food] = 3;
-					this.resourceDemandPriority[ResourceType.wood] = 2;
-				}
-				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
-				{
-					this.resourceDemandPriority[ResourceType.metal] = 11;
-					this.resourceDemandPriority[ResourceType.oil] = 10;
-					this.resourceDemandPriority[ResourceType.food] = 3;
-					this.resourceDemandPriority[ResourceType.wood] = 2;
-				}
-				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-				{
-					this.resourceDemandPriority[ResourceType.metal] = 11;
-					this.resourceDemandPriority[ResourceType.oil] = 10;
-					this.resourceDemandPriority[ResourceType.food] = 3;
-					this.resourceDemandPriority[ResourceType.wood] = 2;
-				}
-				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-				{
-					this.resourceDemandPriority[ResourceType.metal] = 11;
-					this.resourceDemandPriority[ResourceType.oil] = 10;
-					this.resourceDemandPriority[ResourceType.food] = 3;
-					this.resourceDemandPriority[ResourceType.wood] = 2;
-				}
-				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
-				{
-					this.resourceDemandPriority[ResourceType.metal] = 11;
-					this.resourceDemandPriority[ResourceType.oil] = 10;
-					this.resourceDemandPriority[ResourceType.food] = 3;
-					this.resourceDemandPriority[ResourceType.wood] = 2;
-				}
-				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
-				{
-					this.resourceDemandPriority[ResourceType.oil] = 11;
-					this.resourceDemandPriority[ResourceType.metal] = 10;
 					this.resourceDemandPriority[ResourceType.food] = 3;
 					this.resourceDemandPriority[ResourceType.wood] = 2;
 				}
 				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
 				{
-					this.resourceDemandPriority[ResourceType.oil] = 11;
-					this.resourceDemandPriority[ResourceType.metal] = 10;
-					this.resourceDemandPriority[ResourceType.food] = 3;
+					if (aiPlayer.player.matPlayer.UpgradesDone < 2) {
+						this.resourceDemandPriority[ResourceType.oil] = 11;
+						this.resourceDemandPriority[ResourceType.metal] = 10;
+						this.resourceDemandPriority[ResourceType.food] = 3;
+					} else if (aiPlayer.player.matFaction.mechs.Count < 4) {
+						this.resourceDemandPriority[ResourceType.metal] = 11;
+						this.resourceDemandPriority[ResourceType.oil] = 10;
+						this.resourceDemandPriority[ResourceType.food] = 3;
+					} else {
+						this.resourceDemandPriority[ResourceType.oil] = 11;
+						this.resourceDemandPriority[ResourceType.metal] = 10;
+						this.resourceDemandPriority[ResourceType.food] = 3;
+					}
+					this.resourceDemandPriority[ResourceType.wood] = 2;
+				}
+				else
+				{
+					if (aiPlayer.player.matPlayer.UpgradesDone < 2) {
+						this.resourceDemandPriority[ResourceType.oil] = 11;
+						this.resourceDemandPriority[ResourceType.metal] = 10;
+						this.resourceDemandPriority[ResourceType.food] = 9;
+					} else {
+						this.resourceDemandPriority[ResourceType.metal] = 11;
+						this.resourceDemandPriority[ResourceType.food] = 10;
+						this.resourceDemandPriority[ResourceType.oil] = 3;
+					}
 					this.resourceDemandPriority[ResourceType.wood] = 2;
 				}
 				break;
@@ -1091,6 +1079,24 @@ namespace Scythe.GameLogic
 			}
 			this.resourceHighestPriority = ResourceType.oil;
 			this.resourceHighestPriorityNoProduce = ResourceType.oil;
+
+			bool ignoreBuilding = false;
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Albion) {
+				ignoreBuilding = true;
+			}
+			if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative || aiPlayer.player.matPlayer.matType == PlayerMatType.Militant || aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) {
+				ignoreBuilding = true;
+			}
+			if (ignoreBuilding) {
+				bool objNeedsBuilding = false;
+				foreach (var obj in aiPlayer.player.objectiveCards) {
+					if (obj.Id == 20 || obj.Id == 27) objNeedsBuilding = true;
+				}
+				if (!objNeedsBuilding) {
+					this.resourceDemandPriority[ResourceType.wood] = 0;
+				}
+			}
+
 			foreach (ResourceType resourceType2 in resourceDemand.Keys)
 			{
 				if (this.resourceDemandPriority[resourceType2] > this.resourceDemandPriority[this.resourceHighestPriority])
@@ -1217,21 +1223,17 @@ namespace Scythe.GameLogic
 		private void UpdateObjectiveArea(AiPlayer aiPlayer)
 		{
 			int num = 0;
-			Dictionary<int, int> dictionary = new Dictionary<int, int>
-			{
-				{ 1, 9 },
-				{ 2, 10 },
-				{ 3, 9 },
-				{ 4, 9 },
-				{ 10, 9 },
-				{ 11, 9 },
-				{ 17, 8 }
-			};
+			int highestPriority = -1;
 			foreach (ObjectiveCard objectiveCard in aiPlayer.player.objectiveCards)
 			{
-				if (dictionary.ContainsKey(objectiveCard.CardId) && objectiveCard.status == ObjectiveCard.ObjectiveStatus.Open && (num == 0 || dictionary[objectiveCard.CardId] > dictionary[num]))
+				if (objectiveCard.status == ObjectiveCard.ObjectiveStatus.Open)
 				{
-					num = objectiveCard.CardId;
+					int priority = this.GetObjectivePriority(objectiveCard.CardId, aiPlayer);
+					if (num == 0 || priority > highestPriority)
+					{
+						num = objectiveCard.CardId;
+						highestPriority = priority;
+					}
 				}
 			}
 			HashSet<GameHex> hashSet = new HashSet<GameHex>();
@@ -1266,6 +1268,14 @@ namespace Scythe.GameLogic
 			case 11:
 				hashSet = new HashSet<GameHex>(this.gameManager.gameBoard.villages);
 				this.objectiveTarget = 3;
+				break;
+			case 19:
+				hashSet = new HashSet<GameHex>(this.gameManager.gameBoard.lakes);
+				this.objectiveTarget = 1;
+				break;
+			case 24:
+				hashSet = new HashSet<GameHex>(this.gameManager.gameBoard.factory.GetNeighboursAll());
+				this.objectiveTarget = 5;
 				break;
 			default:
 				if (num == 17 && aiPlayer.player.matPlayer.matPlayerSectionsCount <= 4)
@@ -1520,7 +1530,7 @@ namespace Scythe.GameLogic
 		// Token: 0x06002E26 RID: 11814
 		protected void UpdateMoveTargetsObjective(AiPlayer aiPlayer, int priProduce1, int priProduce2, int priEncounter, int priFight, int priBuildSpot)
 		{
-			if (this.objectiveArea.Count > 0 && (aiPlayer.player.matFaction.faction == Faction.Saxony || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)))
+			if (this.objectiveArea.Count > 0 && (aiPlayer.player.matFaction.faction == Faction.Saxony || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)))
 			{
 				int num = 0;
 				Dictionary<Unit, int> dictionary = new Dictionary<Unit, int>();
@@ -2705,7 +2715,7 @@ namespace Scythe.GameLogic
 				this.workerCountTarget = 8;
 				this.pursuingWorkerStar = true;
 			}
-			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			if ((aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic) && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
 			{
 				this.workerCountTarget = 8;
 				this.pursuingWorkerStar = true;
@@ -2739,6 +2749,86 @@ namespace Scythe.GameLogic
 		private int CalculateObjectiveProgress(ObjectiveCard objective)
 		{
 			return 0;
+		}
+
+		// Objective Priority Matrix Implementation
+		public int GetObjectivePriority(int objId, AiPlayer aiPlayer)
+		{
+			Faction faction = aiPlayer.player.matFaction.faction;
+			PlayerMatType matType = aiPlayer.player.matPlayer.matType;
+			int priority = 0;
+
+			// Base Faction Matrix
+			switch (objId)
+			{
+				case 1: priority = (faction == Faction.Nordic || faction == Faction.Saxony || faction == Faction.Albion) ? 9 : ((faction == Faction.Crimea || faction == Faction.Togawa) ? 7 : 8); break;
+				case 2: priority = (faction == Faction.Saxony) ? 10 : ((faction == Faction.Rusviet || faction == Faction.Togawa) ? 8 : 9); break;
+				case 3: priority = (faction == Faction.Polania || faction == Faction.Togawa) ? 9 : ((faction == Faction.Saxony) ? 7 : 8); break;
+				case 4: priority = (faction == Faction.Nordic) ? 9 : ((faction == Faction.Crimea || faction == Faction.Togawa) ? 7 : 8); break;
+				case 5: priority = (faction == Faction.Nordic || faction == Faction.Crimea || faction == Faction.Saxony) ? 7 : ((faction == Faction.Polania) ? 4 : ((faction == Faction.Togawa) ? 3 : 5)); break;
+				case 6: priority = (faction == Faction.Crimea) ? 10 : ((faction == Faction.Nordic || faction == Faction.Saxony) ? 9 : ((faction == Faction.Rusviet) ? 8 : ((faction == Faction.Polania || faction == Faction.Albion) ? 6 : 5))); break;
+				case 7: priority = (faction == Faction.Rusviet) ? 3 : ((faction == Faction.Saxony) ? 1 : 2); break;
+				case 8: priority = 1; break;
+				case 9: priority = 3; break;
+				case 10: priority = (faction == Faction.Polania) ? 9 : ((faction == Faction.Saxony) ? 10 : ((faction == Faction.Crimea || faction == Faction.Togawa) ? 7 : 8)); break;
+				case 11: priority = (faction == Faction.Saxony) ? 7 : 8; break;
+				case 12: priority = (faction == Faction.Rusviet) ? 10 : ((faction == Faction.Crimea) ? 8 : 9); break;
+				case 13: priority = (faction == Faction.Nordic || faction == Faction.Saxony) ? 9 : 10; break;
+				case 14: priority = (faction == Faction.Polania || faction == Faction.Rusviet || faction == Faction.Saxony || faction == Faction.Albion) ? 7 : 6; break;
+				case 15: priority = (faction == Faction.Crimea) ? 4 : ((faction == Faction.Polania || faction == Faction.Togawa) ? 3 : ((faction == Faction.Nordic || faction == Faction.Saxony) ? 1 : 2)); break;
+				case 16: priority = (faction == Faction.Togawa) ? 4 : 5; break;
+				case 17: priority = 2; break;
+				case 18: priority = (faction == Faction.Polania) ? 2 : 1; break;
+				case 19: priority = (faction == Faction.Albion) ? 8 : 7; break;
+				case 20: priority = (faction == Faction.Polania) ? 3 : ((faction == Faction.Albion) ? 4 : ((faction == Faction.Togawa) ? 2 : 1)); break;
+				case 21: priority = 3; break;
+				case 22: priority = (faction == Faction.Nordic || faction == Faction.Rusviet || faction == Faction.Crimea || faction == Faction.Albion || faction == Faction.Togawa) ? 5 : 4; break;
+				case 23: priority = (faction == Faction.Nordic || faction == Faction.Crimea) ? 5 : ((faction == Faction.Saxony) ? 7 : 3); break;
+				case 24: priority = 4; break;
+				case 25: priority = (faction == Faction.Nordic || faction == Faction.Crimea) ? 6 : ((faction == Faction.Saxony) ? 8 : ((faction == Faction.Albion) ? 3 : ((faction == Faction.Polania || faction == Faction.Togawa) ? 2 : 4))); break;
+				case 26: priority = (faction == Faction.Polania || faction == Faction.Togawa) ? 10 : ((faction == Faction.Saxony) ? 8 : 9); break;
+				case 27: priority = (faction == Faction.Albion) ? 3 : 1; break;
+				default: priority = 0; break;
+			}
+
+			// Mat Type Modifiers
+			if (matType == PlayerMatType.Patriotic || matType == PlayerMatType.Militant)
+			{
+				if (objId == 6) priority += 1;
+				if (objId == 12) priority += 1;
+			}
+			if (matType == PlayerMatType.Industrial)
+			{
+				if (objId == 12) priority += 1;
+			}
+			if (matType == PlayerMatType.Mechanical)
+			{
+				if (objId == 7) priority += 2;
+				if (objId == 25) priority += 1;
+			}
+			if (matType == PlayerMatType.Agricultural)
+			{
+				if (objId == 15) priority += 3;
+				if (objId == 20) priority += 1;
+			}
+			if (matType == PlayerMatType.Engineering)
+			{
+				if (objId == 20) priority += 2;
+				if (objId == 22) priority += 2;
+			}
+			if (matType == PlayerMatType.Militant)
+			{
+				if (objId == 23) priority += 2;
+				if (objId == 25) priority += 2;
+			}
+			if (matType == PlayerMatType.Innovative)
+			{
+				if (objId == 22) priority += 1;
+			}
+
+			// Boundary Check
+			if (priority > 10) priority = 10;
+			return priority;
 		}
 
 		// Token: 0x04001F45 RID: 8005
