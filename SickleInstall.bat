@@ -1,13 +1,31 @@
 @echo off
 setlocal
 
-echo Downloading SickleModManager.ps1...
+:: Target folder
+set TARGET=%LOCALAPPDATA%\SickleMod
 
-:: Use GitHub raw URL (NOT the blob URL)
+:: Create folder if missing
+if not exist "%TARGET%" (
+    mkdir "%TARGET%"
+)
+
+:: Move this batch file into the target folder if not already there
+set CURRENT_DIR=%~dp0
+if /I not "%CURRENT_DIR%"=="%TARGET%\" (
+    echo Moving launcher to %TARGET%...
+    copy "%~f0" "%TARGET%\SickleModManager.bat" >nul
+    echo Relaunching from new location...
+    start "" "%TARGET%\SickleModManager.bat"
+    exit /b
+)
+
+echo Launcher running from %TARGET%
+
+:: Download the PowerShell script
 set SCRIPT_URL=https://raw.githubusercontent.com/sickle-mod/sickle/main/SickleModManager.ps1
-set SCRIPT_FILE=SickleModManager.ps1
+set SCRIPT_FILE=%TARGET%\SickleModManager.ps1
 
-:: Download using PowerShell (works on all modern Windows)
+echo Downloading SickleModManager.ps1...
 powershell -NoLogo -NoProfile -Command ^
     "try { Invoke-WebRequest -Uri '%SCRIPT_URL%' -OutFile '%SCRIPT_FILE%' -UseBasicParsing } catch { exit 1 }"
 
