@@ -73,7 +73,7 @@ $form.Controls.Add($versionLabel)
 # --- BROWSE BUTTON ---------------------------------------------------------
 
 $browseBtn = New-Object System.Windows.Forms.Button
-$browseBtn.Text = "Browse Game Folder"
+$browseBtn.Text = "Browse to Game Folder"
 $browseBtn.Size = New-Object System.Drawing.Size(150,30)
 $browseBtn.Location = New-Object System.Drawing.Point(20,90)
 
@@ -143,12 +143,12 @@ $installBtn.Add_Click({
     # 4. Create logs folder
     if (!(Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
 
-    # 5. Create desktop shortcut to logs
-    $ShortcutPath = "$([Environment]::GetFolderPath('Desktop'))\SickleMod Logs.lnk"
+    # 5. Create desktop shortcut to Sickle mod folder
+    $ShortcutPath = "$([Environment]::GetFolderPath('Desktop'))\SickleMod.lnk"
     if (!(Test-Path $ShortcutPath)) {
         $WScriptShell = New-Object -ComObject WScript.Shell
         $Shortcut = $WScriptShell.CreateShortcut($ShortcutPath)
-        $Shortcut.TargetPath = $LogDir
+        $Shortcut.TargetPath = $LocalModDir
         $Shortcut.Save()
     }
 
@@ -212,4 +212,5 @@ $form.Add_Shown({
 
 $form.Topmost = $true
 $form.Add_Shown({ $form.Activate() })
+
 [void]$form.ShowDialog()
