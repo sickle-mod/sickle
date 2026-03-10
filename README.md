@@ -27,9 +27,10 @@ SickleInstaller.exe This installs/uninstalls/updates the mod.
 
 # Cheat sheet
 Upgrade: AiAction.cs look for: UpgradePriorityAdvanced  
-Deploy: AiStrategicAnalysisAdv.cs: look for public override void UpdateMechOrder(AiPlayer aiPlayer)  
-Recruit: AiStrategicAnalysis.cs: Look for public void UpdateRecruitOrder(AiPlayer aiPlayer)  
-Build: AiStrategicAnalysis.cs: Look for public void UpdateBuildingOrder(AiPlayer aiPlayer)  
+Deploy: AiStrategicAnalysisAdv.cs: UpdateMechOrder
+Recruit: AiStrategicAnalysis.cs: UpdateRecruitOrder
+Recruit One Time Bonus: AiStrategicAnalysis.cs: UpdateRecruitOneTimeOrder
+Build: AiStrategicAnalysis.cs: UpdateBuildingOrder
 
 # AiAction.cs — “How the AI executes actions”
 This file defines the core execution engine for AI actions.
