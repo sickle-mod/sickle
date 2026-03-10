@@ -2,12 +2,7 @@
 Sickle is a mod for Scythe Digital Edition to improve the bots to make them more of a challenge.
 
 # How to Install
-1. Download and run https://github.com/sickle-mod/sickle/blob/main/SickleInstall.bat 
-2. This will install the Sickle Mod Manager.
-3. Sickle Mod will Launch
-4. Click Install to install the mod. This will back up the current game file to %localappdata%\SickleMod\ and download the latest release from the Sickle website. A shortcut to the Sickle mod folder will also be dropped on your desktop.
-
-I don't know if this AI will work with multiplayer; if it does, then it is probably the host's version of the AI that runs. Or, it may crash the game. Submit an Issue if the game crashes.
+See new installer here: https://github.com/sickle-mod/sickle-installer
 
 # Special version--Friends list Clear
 Do you have too many friends on your friends list, and it isn't working properly? Use the version from the Friends-List-Clear branch.
@@ -17,7 +12,6 @@ Do you have too many friends on your friends list, and it isn't working properly
 3. Run a game, Play Online, and view your friends list
 4. This will clear your friends list.
 5. Put back the original file.
-
 
 # Bugs?
 Submit Issues to the Issues tab. 
