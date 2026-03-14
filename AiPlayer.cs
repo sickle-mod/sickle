@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Scythe.GameLogic.Actions;
 using Scythe.Multiplayer.Messages;
 
@@ -624,8 +625,16 @@ namespace Scythe.GameLogic
 					int oppCardsPossible = Math.Min(opponent.combatCards.Count, oppUnits);
 					int oppPotentialTotal = oppPowerLimit + (oppCardsPossible * 5); // Assume all cards are 5s
 
-					// 2. We WANT to spend as much physical power as possible (max 7) to reach 0 for Objective 18.
+					// Revised Power Star Logic Step 2 + Step 2c (Weak Defender)
+					bool isHoardingPower = this.player.Power >= 13 && this.player.GetNumberOfStars(StarType.Combat) < 2 && this.player.matFaction.faction != Faction.Saxony;
+					bool weakDefenderException = oppUnits == 1 && opponent.Power < 3;
+					
+					// 2. Determine physical power based on hoarding state
 					int myPowerToSpend = Math.Min(this.player.Power, 7);
+					if (isHoardingPower && !weakDefenderException)
+					{
+						myPowerToSpend = 0; // Step 2b: Capping to 0
+					}
 
 					// 3. Winning Target (Attacker wins ties in Scythe)
 					bool isAttacker = (this.gameManager.combatManager.GetAttacker() == this.player);
@@ -714,7 +723,10 @@ namespace Scythe.GameLogic
 					num4 = opponent.combatCards.Count;
 				}
 				this.player.combatCards.Sort((CombatCard A, CombatCard B) => B.CombatBonus.CompareTo(A.CombatBonus));
-				int num5 = this.player.Power;
+				bool pursuingPowerStar = this.player.Power >= 13 && this.player.GetNumberOfStars(StarType.Power) == 0 && this.player.matFaction.faction != Faction.Saxony && this.player.GetNumberOfStars(StarType.Combat) == 2;
+				int availablePower = pursuingPowerStar ? 0 : this.player.Power;
+				
+				int num5 = availablePower;
 				int num6 = opponent.Power;
 				for (int i = 0; i < num3; i++)
 				{
@@ -725,7 +737,7 @@ namespace Scythe.GameLogic
 					num6 += 5;
 				}
 				bool flag2 = true;
-				if (Math.Min(this.player.Power, 7) >= Math.Min(power, 7) && (!flag || this.player.combatCards.Count != 0))
+				if (Math.Min(availablePower, 7) >= Math.Min(power, 7) && (!flag || this.player.combatCards.Count != 0))
 				{
 					flag2 = false;
 				}
@@ -736,7 +748,7 @@ namespace Scythe.GameLogic
 				if (flag2)
 				{
 					int num7 = 0;
-					if (this.player.Power > 0)
+					if (availablePower > 0)
 					{
 						num7 = 1;
 					}
@@ -798,7 +810,9 @@ namespace Scythe.GameLogic
 				}
 				return !flag2;
 			}
-			int num11 = this.player.Power;
+			bool pursuingPowerStarFallback = this.player.Power >= 13 && this.player.GetNumberOfStars(StarType.Power) == 0 && this.player.matFaction.faction != Faction.Saxony && this.player.GetNumberOfStars(StarType.Combat) == 2;
+			int availablePowerFallback = pursuingPowerStarFallback ? 0 : this.player.Power;
+			int num11 = availablePowerFallback;
 			if (num11 > 7)
 			{
 				num11 = 7;
@@ -1398,16 +1412,16 @@ namespace Scythe.GameLogic
 		{
 			if (this.player.GetNumberOfStars(StarType.Popularity) == 0 && this.CanPlayTopAction(GainType.Popularity))
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Popularity], "Star Popularity"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Popularity], "Star Popularity"));
 			}
 		}
 
 		// Token: 0x06002DC0 RID: 11712 RVA: 0x0010F714 File Offset: 0x0010D914
 		private void StarPower(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			if (this.player.GetNumberOfStars(StarType.Power) == 0 && this.player.Power >= 10 && this.CanPlayTopAction(GainType.Power))
+			if (this.player.GetNumberOfStars(StarType.Power) == 0 && this.player.Power >= 13 && this.CanPlayTopAction(GainType.Power) && this.player.matFaction.faction != Faction.Saxony)
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Power], "Star Power"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Power], "Star Power"));
 			}
 		}
 
@@ -1416,7 +1430,15 @@ namespace Scythe.GameLogic
 		{
 			if (this.player.Power <= 2 && this.CanPlayTopAction(GainType.Power))
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Power], "Low Power -> Bolster"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Power], "Low Power -> Bolster"));
+			}
+		}
+
+		public void PopularityIfHated(SortedList<int, AiRecipe> actionOptions, int priority)
+		{
+			if (this.player.Popularity < 1 && this.player.Coins > 0 && this.CanPlayTopAction(GainType.Popularity))
+			{
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Popularity], "Emergency: Gain Popularity (Hated)"));
 			}
 		}
 
@@ -1425,7 +1447,7 @@ namespace Scythe.GameLogic
 		{
 			if (this.CanPlayTopAction(GainType.AnyResource) && this.strategicAnalysis.resourceHighestPriority != ResourceType.combatCard && this.strategicAnalysis.workersOutOfBase > 0)
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Trade for resource"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Trade for resource"));
 			}
 		}
 
@@ -1436,15 +1458,15 @@ namespace Scythe.GameLogic
 		{
 			if (this.player.Coins == 0 && this.CanPlayTopAction(GainType.Coin))
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Coin], "No cash -> get Coin"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Coin], "No cash -> get Coin"));
 			}
 		}
 
 		private void MoveToBuild(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			if (!this.strategicAnalysis.canBuild && this.player.GetNumberOfStars(StarType.Structures) == 0 && this.AiActions[this.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions() && this.CanPlayTopAction(GainType.Move))
+			if (this.player.matFaction.faction != Faction.Crimea && !this.strategicAnalysis.canBuild && this.player.GetNumberOfStars(StarType.Structures) == 0 && this.AiActions[this.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions() && this.CanPlayTopAction(GainType.Move))
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Move], "Move workers to build")
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Move], "Move workers to build")
 				{
 					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
 					{
@@ -1468,7 +1490,7 @@ namespace Scythe.GameLogic
 		{
 			if (this.CanPlayTopAction(GainType.Move))
 			{
-				actionOptions.Add(this.strategicAnalysis.movePriorityHighest, new AiRecipe(this.AiTopActions[GainType.Move], "Move by priority"));
+				this.SafeAdd(actionOptions, this.strategicAnalysis.movePriorityHighest, new AiRecipe(this.AiTopActions[GainType.Move], "Move by priority"));
 			}
 		}
 
@@ -1523,7 +1545,7 @@ namespace Scythe.GameLogic
 		{
 			if (this.strategicAnalysis.canBuild && this.CanPlayDownAction(this.AiActions[this.gainBuildingActionPosition[0]]))
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainBuildingActionPosition)], "Star Constructions"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainBuildingActionPosition)], "Star Constructions"));
 			}
 		}
 
@@ -1532,7 +1554,7 @@ namespace Scythe.GameLogic
 		{
 			if (this.strategicAnalysis.canDeploy && this.CanPlayDownAction(this.AiActions[this.gainMechActionPosition[0]]))
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Star Mechs"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Star Mechs"));
 			}
 		}
 
@@ -1541,7 +1563,7 @@ namespace Scythe.GameLogic
 		{
 			if (this.strategicAnalysis.canEnlist && this.CanPlayDownAction(this.AiActions[this.gainRecruitActionPosition[0]]))
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], "Star Recruits"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], "Star Recruits"));
 			}
 		}
 
@@ -1550,7 +1572,7 @@ namespace Scythe.GameLogic
 		{
 			if (this.strategicAnalysis.canUpgrade && this.CanPlayDownAction(this.AiActions[this.gainUpgradeActionPosition[0]]))
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], "Star Upgrades"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], "Star Upgrades"));
 			}
 		}
 
@@ -1559,7 +1581,7 @@ namespace Scythe.GameLogic
 		{
 			if (this.strategicAnalysis.tradeLoopPresent && this.CanPlayTopAction(GainType.AnyResource) && this.AiTopActions[GainType.AnyResource].topAction.CanPlayerPayActions())
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Trade Loop")
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Trade Loop")
 				{
 					tradeResource = new ResourceType[]
 					{
@@ -1573,10 +1595,22 @@ namespace Scythe.GameLogic
 		// Token: 0x06002DCF RID: 11727 RVA: 0x0010FDC8 File Offset: 0x0010DFC8
 		private void ProduceLoop(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			if (this.strategicAnalysis.produceLoopPresent && this.CanPlayTopAction(GainType.Produce) && this.AiTopActions[GainType.Produce].topAction.CanPlayerPayActions())
+			if (this.strategicAnalysis.produceLoopPresent && this.CanPlayTopAction(GainType.Produce) && this.AiTopActions[GainType.Produce].topAction.CanPlayerPayActions() && this.ProduceWillYieldSomething())
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Produce], "Produce Loop"));
+				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Produce], "Produce Loop"));
 			}
+		}
+
+		public void SafeAdd(SortedList<int, AiRecipe> list, int priority, AiRecipe recipe)
+		{
+			int num = priority;
+			int safety = 0;
+			while (list.ContainsKey(num))
+			{
+				num++;
+				if (safety++ > 100) break;
+			}
+			list.Add(num, recipe);
 		}
 
 		// 3-turn cycle: determines which step we're on based on turn count after kickstart,
@@ -1596,9 +1630,9 @@ namespace Scythe.GameLogic
 			{
 			case GainType.Produce:
 				// Step 1: Produce food and metal (Produce top action, Upgrade bottom action on Engineering)
-				if (this.CanPlayTopAction(GainType.Produce) && this.AiTopActions[GainType.Produce].topAction.CanPlayerPayActions())
+				if (this.CanPlayTopAction(GainType.Produce) && this.AiTopActions[GainType.Produce].topAction.CanPlayerPayActions() && this.player.OwnedFields(false).Count > 0)
 				{
-					actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Produce], "Turn Cycle: Produce"));
+					this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Produce], "Turn Cycle: Produce"));
 				}
 				break;
 			case GainType.AnyResource:
@@ -1610,7 +1644,7 @@ namespace Scythe.GameLogic
 				}
 				if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0)
 				{
-					actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Turn Cycle: Trade Metal")
+					this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Turn Cycle: Trade Metal")
 					{
 						tradeResource = new ResourceType[] { this.strategicAnalysis.turnCycleTradeResource, this.strategicAnalysis.turnCycleTradeResource }
 					});
@@ -1625,14 +1659,14 @@ namespace Scythe.GameLogic
 				}
 				if (this.CanPlayTopAction(GainType.Move))
 				{
-					actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Move], "Turn Cycle: Move/Enlist"));
+					this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Move], "Turn Cycle: Move/Enlist"));
 				}
 				break;
 			default:
 				// Generic fallback
 				if (this.AiTopActions.ContainsKey(cycleAction) && this.CanPlayTopAction(cycleAction))
 				{
-					actionOptions.Add(priority, new AiRecipe(this.AiTopActions[cycleAction], "Turn Cycle: " + cycleAction.ToString()));
+					this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[cycleAction], "Turn Cycle: " + cycleAction.ToString()));
 				}
 				break;
 			}
@@ -1646,13 +1680,13 @@ namespace Scythe.GameLogic
 			{
 				num = this.gameManager.random.Next(0, this.AiActions.Count - 1);
 			}
-			actionOptions.Add(priority, new AiRecipe(this.AiActions[num], "Random allowed"));
+			this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiActions[num], "Random allowed"));
 		}
 
 		// Token: 0x06002DD1 RID: 11729 RVA: 0x0010FEB8 File Offset: 0x0010E0B8
 		private void ProduceForDemand(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			if (this.CanPlayTopAction(GainType.Produce))
+			if (this.CanPlayTopAction(GainType.Produce) && this.ProduceWillYieldSomething())
 			{
 				int num = 0;
 				bool flag = false;
@@ -1668,24 +1702,50 @@ namespace Scythe.GameLogic
 					num++;
 					flag = true;
 				}
-				if (num >= 2)
+				// CRIMEA STABILITY FIX: Only produce if at least one resource/worker is actually gained!
+				if (num >= 2 && this.player.OwnedFields(false).Count > 0 && this.ProduceWillYieldSomething())
 				{
 					int num2 = priority;
 					if (flag && this.player.matPlayer.workers.Count < 5)
 					{
 						num2 = priority + 75;
 					}
-					actionOptions.Add(num2, new AiRecipe(this.AiTopActions[GainType.Produce], "Produce for demand"));
+					this.SafeAdd(actionOptions, num2, new AiRecipe(this.AiTopActions[GainType.Produce], "Produce for demand"));
 				}
 			}
 		}
 
 		private void ProduceForWorkerStar(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			if (this.strategicAnalysis.pursuingWorkerStar && this.strategicAnalysis.workersInaVillage > 0 && this.player.matPlayer.workers.Count < 8 && this.CanPlayTopAction(GainType.Produce))
+			if (this.strategicAnalysis.pursuingWorkerStar && this.strategicAnalysis.workersInaVillage > 0 && this.player.matPlayer.workers.Count < 8 && this.CanPlayTopAction(GainType.Produce) && this.player.OwnedFields(false).Count > 0 && this.ProduceWillYieldSomething())
 			{
-				actionOptions.Add(priority, new AiRecipe(this.AiTopActions[GainType.Produce], "Produce for worker star"));
+				int p = priority;
+				if (this.player.matFaction.faction == Faction.Saxony || this.player.matFaction.faction == Faction.Crimea)
+				{
+					p = 430;
+				}
+				this.SafeAdd(actionOptions, p, new AiRecipe(this.AiTopActions[GainType.Produce], "Produce for worker star"));
 			}
+		}
+
+		public bool ProduceWillYieldSomething()
+		{
+			foreach (GameHex gameHex in this.player.OwnedFields(false))
+			{
+				int count = gameHex.GetOwnerWorkers().Count;
+				if (count > 0 && (gameHex.Building == null || gameHex.Building.buildingType != BuildingType.Mill || gameHex.Building.player != this.player) && (gameHex.hexType == HexType.farm || gameHex.hexType == HexType.forest || gameHex.hexType == HexType.mountain || gameHex.hexType == HexType.tundra || (gameHex.hexType == HexType.village && this.player.matPlayer.workers.Count < this.strategicAnalysis.workerCountTarget)))
+				{
+					return true;
+				}
+			}
+			foreach (GameHex gameHex2 in this.player.FieldsWithPlayerBuildings())
+			{
+				if (gameHex2.Building.buildingType == BuildingType.Mill && gameHex2.Owner == this.player)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		private void TradeForBottomAction(SortedList<int, AiRecipe> actionOptions, int priority)
@@ -1718,7 +1778,7 @@ namespace Scythe.GameLogic
 
 					actionOptions.Add(priority, new AiRecipe(aiAction, "Trade for bottom action resource")
 					{
-						tradeResource = new ResourceType[] { resourceType, resourceType }
+						tradeResource = (this.player.matFaction.faction == Faction.Crimea && resourceType == ResourceType.wood) ? new ResourceType[] { ResourceType.combatCard, ResourceType.combatCard } : new ResourceType[] { resourceType, resourceType }
 					});
 				}
 			}
@@ -1766,6 +1826,7 @@ namespace Scythe.GameLogic
 			List<int> list = new List<int>();
 			for (int i = 0; i < actionOptions.Count; i++)
 			{
+				if (actionOptions.Keys[i] >= 1000000) continue; // Do not purge kickstart sequences
 				AiAction action = actionOptions.Values[i].action;
 				if ((action == player.AiTopActions[GainType.Produce] || action == player.AiTopActions[GainType.AnyResource]) && this.strategicAnalysis.workersOutOfBase == 0)
 				{
@@ -1785,6 +1846,11 @@ namespace Scythe.GameLogic
 			if (this.player.matFaction.faction == Faction.Saxony)
 			{
 				num = 650;
+				// Saxony Priority Shift: Deprioritize combat until core star economy is built
+				if (this.player.matPlayer.UpgradesDone < 2 || this.player.matFaction.mechs.Count < 4)
+				{
+					num = 150;
+				}
 			}
 			else if (this.player.matFaction.faction == Faction.Crimea && this.player.matPlayer.matType == PlayerMatType.Innovative && this.gameManager.TurnCount >= 11)
 			{
@@ -1794,6 +1860,22 @@ namespace Scythe.GameLogic
 			{
 				num = 250;
 			}
+			
+			// Revised Power Star Logic Step 2 + 3
+			if (this.player.matFaction.faction != Faction.Saxony)
+			{
+				if (this.player.GetNumberOfStars(StarType.Power) > 0 && this.player.GetNumberOfStars(StarType.Combat) < 2)
+				{
+					// Step 3: Aggression - Has power star, needs combat stars.
+					num += 500;
+				}
+				else if (this.player.Power >= 13 && this.player.GetNumberOfStars(StarType.Combat) < 2 && this.player.matFaction.faction != Faction.Saxony)
+				{
+					// Step 2: Hoarding - Less than 2 combat stars, but hovering near power star.
+					num = 50; // Massively crater combat priority to prioritize Bolster
+				}
+			}
+
 			if (this.player.stars[StarType.Power] > 0)
 			{
 				if (this.player.matFaction.faction == Faction.Saxony)
@@ -1839,37 +1921,41 @@ namespace Scythe.GameLogic
 			{
 				if (this.player.stars[StarType.Popularity] == 0 && this.player.GetNumberOfStars(StarType.Popularity) == 0 && this.CanPlayTopAction(GainType.Popularity))
 				{
-					sortedList.Add(10000, new AiRecipe(this.AiTopActions[GainType.Popularity], "WIN: 6th Star - Popularity"));
+					this.SafeAdd(sortedList, 10000, new AiRecipe(this.AiTopActions[GainType.Popularity], "WIN: 6th Star - Popularity"));
 					return sortedList.Values[0];
 				}
 				if (this.player.stars[StarType.Power] == 0 && this.player.GetNumberOfStars(StarType.Power) == 0 && this.CanPlayTopAction(GainType.Power))
 				{
-					sortedList.Add(10000, new AiRecipe(this.AiTopActions[GainType.Power], "WIN: 6th Star - Power"));
+					this.SafeAdd(sortedList, 10000, new AiRecipe(this.AiTopActions[GainType.Power], "WIN: 6th Star - Power"));
 					return sortedList.Values[0];
 				}
-				if (this.player.stars[StarType.Combat] == 0)
+				if (this.player.stars[StarType.Combat] < (this.player.matFaction.faction == Faction.Saxony ? 6 : 2))
 				{
-					int count = this.strategicAnalysis.movePriority.Count;
+					if (this.strategicAnalysis.movePriority.Values.Any(p => p >= this.strategicAnalysis.priorityFight))
+					{
+						this.SafeAdd(sortedList, 10001, new AiRecipe(this.AiTopActions[GainType.Move], "WIN: 6th Star - Combat"));
+						return sortedList.Values[0];
+					}
 				}
 				int num2 = this.player.stars[StarType.Objective];
 				if (this.player.stars[StarType.Upgrades] == 0 && this.player.GetNumberOfStars(StarType.Upgrades) == 0 && this.AiActions[this.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions())
 				{
-					sortedList.Add(10000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], "WIN: 6th Star - Upgrades"));
+					this.SafeAdd(sortedList, 10000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], "WIN: 6th Star - Upgrades"));
 					return sortedList.Values[0];
 				}
 				if (this.player.stars[StarType.Mechs] == 0 && this.player.GetNumberOfStars(StarType.Mechs) == 0 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
 				{
-					sortedList.Add(10000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "WIN: 6th Star - Mechs"));
+					this.SafeAdd(sortedList, 10000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "WIN: 6th Star - Mechs"));
 					return sortedList.Values[0];
 				}
 				if (this.player.stars[StarType.Structures] == 0 && this.player.GetNumberOfStars(StarType.Structures) == 0 && this.AiActions[this.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions())
 				{
-					sortedList.Add(10000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainBuildingActionPosition)], "WIN: 6th Star - Structures"));
+					this.SafeAdd(sortedList, 10000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainBuildingActionPosition)], "WIN: 6th Star - Structures"));
 					return sortedList.Values[0];
 				}
 				if (this.player.stars[StarType.Recruits] == 0 && this.player.GetNumberOfStars(StarType.Recruits) == 0 && this.AiActions[this.gainRecruitActionPosition[0]].downAction.CanPlayerPayActions())
 				{
-					sortedList.Add(10000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], "WIN: 6th Star - Recruits"));
+					this.SafeAdd(sortedList, 10000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], "WIN: 6th Star - Recruits"));
 					return sortedList.Values[0];
 				}
 			}
@@ -2009,7 +2095,7 @@ namespace Scythe.GameLogic
 					}
 					else
 					{
-						dictionary[DownActionType.Enlist] = 275;
+						dictionary[DownActionType.Enlist] = (matType2 == PlayerMatType.Patriotic) ? 295 : 275;
 						dictionary[DownActionType.Deploy] = 270;
 					}
 				}
@@ -2037,25 +2123,25 @@ namespace Scythe.GameLogic
 				// 1. Mech star completion (one more trade/deploy should do it)
 				if (this.player.GetNumberOfStars(StarType.Mechs) == 0)
 				{
-					if (this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
+				if (this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					this.SafeAdd(sortedList, 350, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Rusviet Engineering: Mech Star Priority"));
+				}
+				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0)
+				{
+					this.SafeAdd(sortedList, 345, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Rusviet Engineering: Trade Metal for Mech")
 					{
-						sortedList.Add(9300, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Rusviet Engineering: Mech Star Priority"));
-					}
-					else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0)
-					{
-						sortedList.Add(9250, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Rusviet Engineering: Trade Metal for Mech")
-						{
-							tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal }
-						});
-					}
+						tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal }
+					});
+				}
 				}
 
 				// 2. Worker star (via village production)
 				if (this.player.GetNumberOfStars(StarType.Workers) == 0 && this.player.matPlayer.workers.Count < 8)
 				{
-					if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage >= 3)
+					if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage >= 3 && this.player.OwnedFields(false).Count > 0)
 					{
-						sortedList.Add(9200, new AiRecipe(this.AiTopActions[GainType.Produce], "Rusviet Engineering: Produce for Worker Star"));
+						this.SafeAdd(sortedList, 340, new AiRecipe(this.AiTopActions[GainType.Produce], "Rusviet Engineering: Produce for Worker Star"));
 					}
 				}
 
@@ -2064,12 +2150,12 @@ namespace Scythe.GameLogic
 				{
 					if (this.AiActions[this.gainRecruitActionPosition[0]].downAction.CanPlayerPayActions())
 					{
-						sortedList.Add(9150, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], "Rusviet Engineering: Enlist Priority"));
+						this.SafeAdd(sortedList, 330, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], "Rusviet Engineering: Enlist Priority"));
 					}
 					else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.food] < 3)
 					{
 						// 4. Fallback trade for food (if less than 3 food)
-						sortedList.Add(9100, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Rusviet Engineering: Trade Food for Enlist")
+						this.SafeAdd(sortedList, 320, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Rusviet Engineering: Trade Food for Enlist")
 						{
 							tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food }
 						});
@@ -2081,11 +2167,11 @@ namespace Scythe.GameLogic
 				int count3 = this.player.matFaction.mechs.Count;
 				if (count3 < 2 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
 				{
-					sortedList.Add(9000, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Nordic: Deploy Mech " + (count3 + 1).ToString() + "/2"));
+					this.SafeAdd(sortedList, 350, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Nordic: Deploy Mech " + (count3 + 1).ToString() + "/2"));
 				}
 				else if (count3 >= 2 && this.player.matPlayer.matPlayerSectionsCount <= 4 && this.strategicAnalysis.factoryDistance <= (int)this.player.character.MaxMoveCount && (this.gameManager.gameBoard.factory.Owner == this.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0) && this.CanPlayTopAction(GainType.Move))
 				{
-					sortedList.Add(8500, new AiRecipe(this.AiTopActions[GainType.Move], "Nordic: Move to Factory for card"));
+					this.SafeAdd(sortedList, 340, new AiRecipe(this.AiTopActions[GainType.Move], "Nordic: Move to Factory for card"));
 				}
 			}
 			if (this.player.matFaction.faction == Faction.Saxony)
@@ -2093,26 +2179,36 @@ namespace Scythe.GameLogic
 				int count4 = this.player.matPlayer.workers.Count;
 				int upgradesDone = this.player.matPlayer.UpgradesDone;
 				int count5 = this.player.matFaction.mechs.Count;
+
+				// Saxony Core Star Priorities (Apply to all mats)
+				// Upgrades (First 2)
+				if (upgradesDone < 2 && this.AiActions[this.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					this.SafeAdd(sortedList, 450, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], "Saxony: Core Upgrade Priority"));
+				}
+				// Mechs (All 4)
+				if (count5 < 4 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					this.SafeAdd(sortedList, 440, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Saxony: Core Mech Priority"));
+				}
+
 				if (count4 < 5)
 				{
-					if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage > 0)
+					if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage > 0 && this.player.OwnedFields(false).Count > 0)
 					{
-						sortedList.Add(9500, new AiRecipe(this.AiTopActions[GainType.Produce], "Saxony: Produce workers (" + count4.ToString() + "/5)"));
+						this.SafeAdd(sortedList, 400, new AiRecipe(this.AiTopActions[GainType.Produce], "Saxony: Produce workers (" + count4.ToString() + "/5)"));
 					}
 				}
-				else if (upgradesDone < 1 && this.AiActions[this.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions())
+				
+				// Post-core priorities
+				if (upgradesDone >= 1 && count5 >= 2)
 				{
-					sortedList.Add(9400, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], "Saxony: First upgrade"));
-				}
-				else if (upgradesDone >= 1 && count5 < 2 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
-				{
-					sortedList.Add(9300, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Saxony: Deploy Mech " + (count5 + 1).ToString() + "/2"));
-				}
-				else if (upgradesDone >= 1 && count5 >= 2)
-				{
-					if (this.player.Power < 3 && this.CanPlayTopAction(GainType.Power))
+					int powerThreshold = (num == 5) ? 7 : 3; // Increase threshold if missing 6th star
+					if (this.player.Power < powerThreshold && this.CanPlayTopAction(GainType.Power))
 					{
-						sortedList.Add(9200, new AiRecipe(this.AiTopActions[GainType.Power], "Saxony: Gain power for combat"));
+						// Engineering avoids power star, so use lower priority for generic power gain
+						int powPri = (this.player.matPlayer.matType == PlayerMatType.Engineering) ? 250 : 255;
+						this.SafeAdd(sortedList, powPri, new AiRecipe(this.AiTopActions[GainType.Power], "Saxony: Gain power for combat"));
 					}
 					else if (count5 < 3 && this.strategicAnalysis.enemyCanBeAttackedBy.Count > 0 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
 					{
@@ -2127,9 +2223,46 @@ namespace Scythe.GameLogic
 						}
 						if (flag2)
 						{
-							sortedList.Add(9100, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Saxony: Additional mech for combat"));
+							this.SafeAdd(sortedList, 200, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Saxony: Additional mech for combat"));
 						}
 					}
+				}
+				
+				// Engineering specific star completions (missing stars)
+				if (this.player.matPlayer.matType == PlayerMatType.Engineering)
+				{
+					// Factory Card (if missing, but have at least 1 mech to defend/carry)
+					if (count5 >= 1 && this.player.matPlayer.matPlayerSectionsCount <= 4 && this.strategicAnalysis.factoryDistance <= (int)this.player.character.MaxMoveCount && (this.gameManager.gameBoard.factory.Owner == this.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0) && this.CanPlayTopAction(GainType.Move))
+					{
+						this.SafeAdd(sortedList, 380, new AiRecipe(this.AiTopActions[GainType.Move], "Saxony: Move to Factory for card"));
+					}
+					// Buildings (if missing)
+					if (this.player.GetNumberOfStars(StarType.Structures) == 0 && this.AiActions[this.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions())
+					{
+						this.SafeAdd(sortedList, 350, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainBuildingActionPosition)], "Saxony: Priority Build"));
+					}
+					// Popularity (if missing, but only if we have high popularity already)
+					if (this.player.GetNumberOfStars(StarType.Popularity) == 0 && this.player.Popularity >= 13 && this.CanPlayTopAction(GainType.Popularity))
+					{
+						this.SafeAdd(sortedList, 300, new AiRecipe(this.AiTopActions[GainType.Popularity], "Saxony: Priority Popularity Star"));
+					}
+				}
+			}
+			if (this.player.matFaction.faction == Faction.Polania)
+			{
+				int workerCount = this.player.matPlayer.workers.Count;
+				if (workerCount < 5 && this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage > 0 && this.player.OwnedFields(false).Count > 0 && this.ProduceWillYieldSomething())
+				{
+					int p = 430;
+					this.SafeAdd(sortedList, p, new AiRecipe(this.AiTopActions[GainType.Produce], "Polania: Produce for 5 workers"));
+				}
+			}
+			if (this.player.matFaction.faction == Faction.Crimea)
+			{
+				int mechsCount = this.player.matFaction.mechs.Count;
+				if (mechsCount < 4 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					this.SafeAdd(sortedList, 440, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Crimea: Core Mech Priority"));
 				}
 			}
 			if (this.player.matFaction.faction == Faction.Crimea && this.player.matPlayer.matType == PlayerMatType.Innovative)
@@ -2142,11 +2275,11 @@ namespace Scythe.GameLogic
 					AiAction mechAction = this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)];
 					if (mechAction.downAction.CanPlayerPayActions())
 					{
-						sortedList.Add(9990, new AiRecipe(mechAction, "Crimea Innovative: Mechs Star Priority"));
+						this.SafeAdd(sortedList, 450, new AiRecipe(mechAction, "Crimea Innovative: Mechs Star Priority"));
 					}
 					else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0)
 					{
-						sortedList.Add(9985, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Crimea Innovative: Trade Metal for Mechs") { tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal } });
+						this.SafeAdd(sortedList, 445, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Crimea Innovative: Trade Metal for Mechs") { tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal } });
 					}
 				}
 
@@ -2159,24 +2292,24 @@ namespace Scythe.GameLogic
 
 					if (canPayEnlist || canPayWithCoercion)
 					{
-						sortedList.Add(9980, new AiRecipe(enlistAction, "Crimea Innovative: Recruits Star Priority (Coercion-aware)"));
+						this.SafeAdd(sortedList, 440, new AiRecipe(enlistAction, "Crimea Innovative: Recruits Star Priority (Coercion-aware)"));
 					}
 					else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0)
 					{
-						sortedList.Add(9975, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Crimea Innovative: Trade Food for Enlist") { tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food } });
+						this.SafeAdd(sortedList, 435, new AiRecipe(this.AiTopActions[GainType.AnyResource], "Crimea Innovative: Trade Food for Enlist") { tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food } });
 					}
-					else if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.resourceAccess[ResourceType.food] > 0)
+					else if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.resourceAccess[ResourceType.food] > 0 && this.player.OwnedFields(false).Count > 0 && this.ProduceWillYieldSomething())
 					{
-						sortedList.Add(9972, new AiRecipe(this.AiTopActions[GainType.Produce], "Crimea Innovative: Produce Food for Enlist"));
+						this.SafeAdd(sortedList, 432, new AiRecipe(this.AiTopActions[GainType.Produce], "Crimea Innovative: Produce Food for Enlist"));
 					}
 				}
 
 				// 3. Workers Star Priority (8 workers - StarType is Workers)
 				if (this.player.stars[StarType.Workers] == 0 && this.player.matPlayer.workers.Count < 8)
 				{
-					if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage > 0)
+					if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage > 0 && this.player.OwnedFields(false).Count > 0 && this.ProduceWillYieldSomething())
 					{
-						sortedList.Add(9970, new AiRecipe(this.AiTopActions[GainType.Produce], "Crimea Innovative: Workers Star Priority"));
+						this.SafeAdd(sortedList, 430, new AiRecipe(this.AiTopActions[GainType.Produce], "Crimea Innovative: Workers Star Priority"));
 					}
 				}
 
@@ -2189,11 +2322,11 @@ namespace Scythe.GameLogic
 					AiAction upgradeAction = this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)];
 					if (this.player.stars[StarType.Upgrades] == 0 && upgradeAction.downAction.CanPlayerPayActions())
 					{
-						sortedList.Add(9700, new AiRecipe(upgradeAction, "Crimea Innovative: Impossible Objectives -> Upgrade Focus"));
+						this.SafeAdd(sortedList, 410, new AiRecipe(upgradeAction, "Crimea Innovative: Impossible Objectives -> Upgrade Focus"));
 					}
 					if (this.player.stars[StarType.Power] == 0 && this.player.Power < 16 && this.CanPlayTopAction(GainType.Power))
 					{
-						sortedList.Add(9650, new AiRecipe(this.AiTopActions[GainType.Power], "Crimea Innovative: Impossible Objectives -> Power Focus"));
+						this.SafeAdd(sortedList, 400, new AiRecipe(this.AiTopActions[GainType.Power], "Crimea Innovative: Impossible Objectives -> Power Focus"));
 					}
 				}
 
@@ -2201,7 +2334,7 @@ namespace Scythe.GameLogic
 				{
 					if (this.CanPlayTopAction(GainType.Move))
 					{
-						sortedList.Add(9800, new AiRecipe(this.AiTopActions[GainType.Move], "Crimea Innovative: Combat/Objective Focus"));
+						this.SafeAdd(sortedList, 420, new AiRecipe(this.AiTopActions[GainType.Move], "Crimea Innovative: Combat/Objective Focus"));
 					}
 				}
 
@@ -2219,7 +2352,7 @@ namespace Scythe.GameLogic
 					}
 					if (!hasWorkersOnFarm && this.CanPlayTopAction(GainType.Move))
 					{
-						sortedList.Add(9110, new AiRecipe(this.AiTopActions[GainType.Move], "Crimea Innovative: Move Workers to Farm for Food"));
+						this.SafeAdd(sortedList, 390, new AiRecipe(this.AiTopActions[GainType.Move], "Crimea Innovative: Move Workers to Farm for Food"));
 					}
 				}
 			}
@@ -2290,8 +2423,8 @@ namespace Scythe.GameLogic
 
 								if (mover != null)
 								{
-									if (!this.strategicAnalysis.movePriority.ContainsKey(mover)) this.strategicAnalysis.movePriority.Add(mover, 9960);
-									else this.strategicAnalysis.movePriority[mover] = 9960;
+									if (!this.strategicAnalysis.movePriority.ContainsKey(mover)) this.strategicAnalysis.movePriority.Add(mover, 350);
+									else this.strategicAnalysis.movePriority[mover] = 350;
 									
 									if (!this.strategicAnalysis.moveTarget.ContainsKey(mover)) this.strategicAnalysis.moveTarget.Add(mover, new List<GameHex> { hub });
 									else this.strategicAnalysis.moveTarget[mover] = new List<GameHex> { hub };
@@ -2305,7 +2438,7 @@ namespace Scythe.GameLogic
 									}
 								}
 							}
-							sortedList.Add(9960, new AiRecipe(this.AiTopActions[GainType.Move], "Objective 13 Priority (Grouping units)"));
+							sortedList.Add(350, new AiRecipe(this.AiTopActions[GainType.Move], "Objective 13 Priority (Grouping units)"));
 						}
 						break;
 					}
@@ -2319,20 +2452,31 @@ namespace Scythe.GameLogic
 				this.StarRecruits(sortedList, dictionary[DownActionType.Enlist]);
 				this.StarMechs(sortedList, dictionary[DownActionType.Deploy]);
 				this.StarConstructions(sortedList, dictionary[DownActionType.Build]);
+				int bottomStarsEarned = this.player.stars[StarType.Upgrades] + this.player.stars[StarType.Mechs] + this.player.stars[StarType.Structures] + this.player.stars[StarType.Recruits] + this.player.stars[StarType.Workers];
+				int produceLoopWeight = bottomStarsEarned >= 3 ? 50 : 180;
 				if (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Industrial)
 				{
-					this.ProduceLoop(sortedList, 180);
+					this.ProduceLoop(sortedList, produceLoopWeight);
 				}
 				if ((this.player.matFaction.faction == Faction.Saxony && this.player.matPlayer.matType == PlayerMatType.Mechanical) || (this.player.matFaction.faction == Faction.Saxony && this.player.matPlayer.matType == PlayerMatType.Industrial) || (this.player.matFaction.faction == Faction.Nordic && this.player.matPlayer.matType == PlayerMatType.Mechanical) || (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Agricultural) || (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Industrial) || (this.player.matFaction.faction == Faction.Albion && this.player.matPlayer.matType == PlayerMatType.Innovative) || (this.player.matFaction.faction == Faction.Albion && this.player.matPlayer.matType == PlayerMatType.Industrial) || (this.player.matFaction.faction == Faction.Albion && this.player.matPlayer.matType == PlayerMatType.Mechanical) || (this.player.matFaction.faction == Faction.Albion && this.player.matPlayer.matType == PlayerMatType.Militant) || (this.player.matFaction.faction == Faction.Togawa && this.player.matPlayer.matType == PlayerMatType.Militant))
 				{
 					this.TradeLoop(sortedList, 170);
 				}
 				
-				// Inject 49 combinations of Star Priorities
-				this.InjectStarPriorities(sortedList);
+
 
 				// 3-turn cycle: runs at priority 220 to override star actions while active
 				this.TurnCycle(sortedList, 220);
+
+				// EMERGENCY RESOURCE FALLBACKS
+				AiStrategicAnalysisAdv adv = this.strategicAnalysis as AiStrategicAnalysisAdv;
+				if (adv != null)
+				{
+					if (adv.coinPanic) this.CoinIfPoor(sortedList, 500);
+					if (adv.powerPanic) this.PowerIfWeak(sortedList, 490);
+					if (adv.popularityPanic) this.PopularityIfHated(sortedList, 480);
+				}
+
 				this.CoinIfPoor(sortedList, 142);
 				if (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Agricultural)
 				{
@@ -2342,12 +2486,15 @@ namespace Scythe.GameLogic
 				{
 					this.PowerIfWeak(sortedList, 140);
 				}
-				if ((this.player.matFaction.faction != Faction.Saxony || this.player.matPlayer.matType != PlayerMatType.Engineering) && !this.strategicAnalysis.turnCyclePresent)
+				if (!this.strategicAnalysis.turnCyclePresent)
 				{
 					this.TradeForBottomAction(sortedList, 136);
 				}
-				this.ProduceForDemand(sortedList, 132);
-				this.ProduceForWorkerStar(sortedList, 205);
+				
+				int produceDemandWeight = bottomStarsEarned >= 3 ? 50 : 132;
+				int produceWorkerWeight = bottomStarsEarned >= 3 ? 50 : 205;
+				this.ProduceForDemand(sortedList, produceDemandWeight);
+				this.ProduceForWorkerStar(sortedList, produceWorkerWeight);
 				this.MoveByAnalysisPriority(sortedList);
 				this.TradeForResource(sortedList, 120);
 				this.StarPower(sortedList, num3);
@@ -2366,12 +2513,8 @@ namespace Scythe.GameLogic
 				}
 				this.MovePreparation(sortedList);
 				this.ProducePreparation(sortedList);
-				int factoryPriority = 250;
-				if (this.player.matFaction.faction == Faction.Crimea && this.player.matPlayer.matType == PlayerMatType.Innovative && this.AreAllObjectivesImpossible())
-				{
-					factoryPriority = 9000; // Boost factory card usage if objectives are impossible
-				}
-				this.FactoryCardUsage(sortedList, factoryPriority);
+				this.EvaluateFactoryCardUsage(sortedList);
+				// Removed FactoryCardUsage manual priority injection to prevent endless AI loops.
 			}
 			SortedList<int, AiRecipe> sortedList2 = new SortedList<int, AiRecipe>(new InvertedComparer());
 			foreach (KeyValuePair<int, AiRecipe> keyValuePair2 in sortedList)
@@ -2452,6 +2595,19 @@ namespace Scythe.GameLogic
 						{
 							num4 -= 1000;
 						}
+						var currentGainAction = action.topAction.GetGainAction(action.gainActionId);
+						if (this.player.matFaction.faction == Faction.Crimea && num4 < 1000000)
+						{
+							if (currentGainAction.GetGainType() == GainType.Building || (currentGainAction.GetGainType() == GainType.Resource && currentGainAction is GainResource && ((GainResource)currentGainAction).ResourceToGain == ResourceType.wood))
+							{
+								num4 = 50; // Deprioritize Crimea building/wood (below 100 as requested)
+							}
+							else if (action.downAction != null && (action.downAction.Type == DownActionType.Build || (action.downAction.GetGainAction(0).GetGainType() == GainType.Resource && action.downAction.GetGainAction(0) is GainResource && ((GainResource)action.downAction.GetGainAction(0)).ResourceToGain == ResourceType.wood)))
+							{
+								// Also deprioritize IF the bottom action is build/wood
+								num4 = 40; 
+							}
+						}
 						if (payType == PayType.Popularity && this.player.Popularity - amount < 1)
 						{
 							num4 -= 1000;
@@ -2462,13 +2618,36 @@ namespace Scythe.GameLogic
 						}
 					}
 				}
-				while (sortedList2.ContainsKey(num4))
-				{
-					num4--;
-				}
-				sortedList2.Add(num4, keyValuePair2.Value);
+				this.SafeAdd(sortedList2, num4, keyValuePair2.Value);
 			}
+			
+			// Safety check: if for some reason sortedList2 is empty, we MUST have a default action.
+			if (sortedList2.Count == 0)
+			{
+				AiAction fallbackAction = (this.player.Power < 16) ? this.AiTopActions[GainType.Power] : this.AiTopActions[GainType.Move];
+				sortedList2.Add(1, new AiRecipe(fallbackAction, "EMERGENCY FALLBACK: EMPTY LIST"));
+			}
+			
+			// Revised Power Star Logic Step 2 (Bolster Priority)
+			if (this.player.matFaction.faction != Faction.Saxony && this.player.Power >= 13 && this.player.GetNumberOfStars(StarType.Power) == 0 && this.player.GetNumberOfStars(StarType.Combat) < 2)
+			{
+				if (this.CanPlayTopAction(GainType.Power))
+				{
+					// If they can bolster, guarantee they do it over generic random moving.
+					int bolsterPri = 350;
+				this.SafeAdd(sortedList2, bolsterPri, new AiRecipe(this.AiTopActions[GainType.Power], "Power Star Hoard: Bolster Preference"));
+				}
+			}
+
+
 			sortedList = sortedList2;
+			if (sortedList.Count == 0)
+			{
+				if (this.CanPlayTopAction(GainType.Move))
+				{
+					this.SafeAdd(sortedList, 10, new AiRecipe(this.AiTopActions[GainType.Move], "Emergency Fallback: Move"));
+				}
+			}
 			this.Log(sortedList);
 			return sortedList.Values[0];
 		}
@@ -2595,7 +2774,7 @@ namespace Scythe.GameLogic
 				
 				if (amount - this.player.Resources(false)[resourceType] <= 2)
 				{
-					actionOptions.Add(this.ProducePreparationPriority(), new AiRecipe(this.AiTopActions[GainType.AnyResource], "Produce preparation")
+					this.SafeAdd(actionOptions, this.ProducePreparationPriority(), new AiRecipe(this.AiTopActions[GainType.AnyResource], "Produce preparation")
 					{
 						tradeResource = new ResourceType[] { resourceType, resourceType }
 					});
@@ -2621,6 +2800,179 @@ namespace Scythe.GameLogic
 			}
 		}
 
+		private void EvaluateFactoryCardUsage(SortedList<int, AiRecipe> actionOptions)
+		{
+			if (this.player.matPlayer.matPlayerSectionsCount < 5) return;
+
+			FactoryCard fCard = this.player.matPlayer.GetPlayerMatSection(4) as FactoryCard;
+			if (fCard == null) return;
+			
+			int cardId = fCard.CardId;
+
+			// Find the Factory Action
+			AiAction factoryAction = null;
+			foreach (AiAction action in this.AiActions)
+			{
+				if (action.matSectionId == 4)
+				{
+					factoryAction = action;
+					break;
+				}
+			}
+			
+			if (factoryAction == null || !this.CanPlayDownAction(factoryAction) || !factoryAction.topAction.CanPlayerPayActions()) return;
+
+			bool missingUpgrades = this.player.stars[StarType.Upgrades] == 0;
+			bool missingMechs = this.player.stars[StarType.Mechs] == 0;
+			bool missingBuildings = this.player.stars[StarType.Structures] == 0;
+			bool missingRecruits = this.player.stars[StarType.Recruits] == 0;
+			bool missingWorkers = this.player.stars[StarType.Workers] == 0;
+			int coins = this.player.Coins;
+			int pop = this.player.Popularity;
+			
+			int targetCombatStars = this.player.matFaction.faction == Faction.Saxony ? 6 : 2;
+
+			int priority = 0;
+			string reason = "";
+
+			switch(cardId)
+			{
+				case 17:
+				case 9:
+					if (missingUpgrades && coins > 2)
+					{
+						priority = 9900; reason = "Factory: Focus Upgrades Star";
+					}
+					break;
+				case 10:
+					if (missingMechs && coins > 2)
+					{
+						priority = 9900; reason = "Factory: Focus Mechs Star";
+					}
+					break;
+				case 11:
+					if (missingBuildings && coins > 2 && this.player.matFaction.faction != Faction.Crimea)
+					{
+						priority = 9900; reason = "Factory: Focus Buildings Star";
+					}
+					else if (this.player.matFaction.faction == Faction.Crimea)
+					{
+						priority = 50;
+						reason = "Crimea: Avoid Building Factory";
+					}
+					break;
+				case 12:
+					if (missingRecruits && coins > 2)
+					{
+						priority = 9900; reason = "Factory: Focus Recruits Star";
+					}
+					break;
+				case 18:
+				case 13:
+				case 2:
+				case 7:
+					if (pop > 1)
+					{
+						if (cardId == 2)
+						{
+							if (missingRecruits) { priority = 9850; reason = "Factory: Priority Recruits"; }
+							else if (missingUpgrades) { priority = 9840; reason = "Factory: Priority Upgrades"; }
+						}
+						else if (cardId == 7)
+						{
+							if (missingMechs) { priority = 9850; reason = "Factory: Priority Mechs"; }
+							else if (missingBuildings) { priority = 9840; reason = "Factory: Priority Buildings"; }
+						}
+						if (this.player.matFaction.faction == Faction.Crimea && (fCard.ActionTop.GetGainAction(0).GetGainType() == GainType.Building || fCard.CardId == 11))
+						{
+							priority = 50; // Deprioritize Crimea building/wood factory (below 100)
+							reason = "Crimea: Avoid Building/Wood Factory";
+						}
+						else
+						{
+							priority = 9800; reason = "Factory: Flexible Usage";
+						}
+					}
+					break;
+				case 3:
+				case 5:
+					if (pop < 3 || pop == 5 || pop == 6 || pop == 11 || pop == 12)
+					{
+						if (cardId == 5 && this.player.Power >= 3) { priority = 9950; reason = "Factory: Jump Pop Tier (Pwr)"; }
+						if (cardId == 3 && this.player.combatCards.Count >= 3) { priority = 9950; reason = "Factory: Jump Pop Tier (Card)"; }
+					}
+					else { priority = 50; reason = "Factory: Low Priority Pop"; }
+					break;
+				case 1:
+				case 8:
+					bool needsSuboptimalStars = missingUpgrades || missingBuildings;
+					if (missingMechs || missingRecruits || (needsSuboptimalStars && this.player.GetNumberOfStars() < 4))
+					{
+						priority = 9700; reason = "Factory: Resource Generation for Stars";
+					}
+					break;
+				case 4:
+				case 6:
+					bool ignoreLimits = this.player.stars[StarType.Combat] >= 2 && this.player.matFaction.faction != Faction.Saxony;
+					if (cardId == 6 && (this.player.Power > 7 || ignoreLimits)) { priority = 9600; reason = "Factory: Gain Coins (Power limit cleared)"; }
+					if (cardId == 4 && (this.player.combatCards.Count >= 4 || ignoreLimits)) { priority = 9600; reason = "Factory: Gain Coins (Card limit cleared)"; }
+					
+					if (priority == 0) // Check for encounter movement opportunity
+					{
+						bool hasEncounterFor46 = false;
+						if (this.strategicAnalysis is AiStrategicAnalysisAdv advAnalysis46 && advAnalysis46.moveRangeAll.ContainsKey(this.player.character))
+						{
+							foreach (GameHex hex46 in advAnalysis46.moveRangeAll[this.player.character].Keys)
+							{
+								if (hex46.hasEncounter && !hex46.encounterUsed && (hex46.Owner == null || hex46.Owner == this.player))
+								{
+									hasEncounterFor46 = true;
+									break;
+								}
+							}
+						}
+						if (hasEncounterFor46) { priority = 9550; reason = "Factory: Move Character to Encounter from Move Gain"; }
+					}
+					break;
+				case 14:
+					if (missingWorkers) { priority = 9900; reason = "Factory: Earn Workers Star"; }
+					break;
+				case 15:
+					if (this.player.stars[StarType.Combat] < targetCombatStars) { priority = 9900; reason = "Factory: Gain Power for Combat Targets"; }
+					break;
+				case 16:
+					if (this.player.Power == 0 || this.player.Popularity == 0 || this.player.Coins == 0)
+					{
+						priority = 9999; reason = "Factory: Top Priority Critical Resource fill";
+					}
+					else if (pop == 6 || pop == 12) { priority = 9950; reason = "Factory: Jump Pop Tier Limits"; }
+					else
+					{
+						// Low priority by default, but check for encounter movement opportunity
+						bool hasEncounterForCard16 = false;
+						if (this.strategicAnalysis is AiStrategicAnalysisAdv advAnalysis16 && advAnalysis16.moveRangeAll.ContainsKey(this.player.character))
+						{
+							foreach (GameHex hex16 in advAnalysis16.moveRangeAll[this.player.character].Keys)
+							{
+								if (hex16.hasEncounter && !hex16.encounterUsed && (hex16.Owner == null || hex16.Owner == this.player))
+								{
+									hasEncounterForCard16 = true;
+									break;
+								}
+							}
+						}
+						if (hasEncounterForCard16) { priority = 9550; reason = "Factory: Card 16 Move to Encounter"; }
+						else priority = 50;
+					}
+					break;
+			}
+
+			if (priority > 0)
+			{
+				this.SafeAdd(actionOptions, priority, new AiRecipe(factoryAction, reason));
+			}
+		}
+
 		private void FactoryCardUsage(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
 			if (this.player.matPlayer.matPlayerSectionsCount < 5)
@@ -2631,7 +2983,7 @@ namespace Scythe.GameLogic
 			{
 				if (action.matSectionId == 4 && this.CanPlayDownAction(action))
 				{
-					actionOptions.Add(priority, new AiRecipe(action, "Factory Card Usage"));
+					this.SafeAdd(actionOptions, priority, new AiRecipe(action, "Factory Card Usage"));
 				}
 			}
 		}
@@ -2690,6 +3042,7 @@ namespace Scythe.GameLogic
 					break;
 				case GainType.Resource:
 					ResourceType rt = (ResourceType)action.GetGainAction(i).Amount;
+					if (this.player.matFaction.faction == Faction.Crimea && (rt == ResourceType.wood || rt == ResourceType.oil)) return false; // Crimea avoids wood and building-related oil trades
 					if (rt == ResourceType.metal && this.player.GetNumberOfStars(StarType.Mechs) > 0) return false;
 					if (rt == ResourceType.food && this.player.GetNumberOfStars(StarType.Recruits) > 0) return false;
 					if (rt == ResourceType.oil && this.player.GetNumberOfStars(StarType.Upgrades) > 0) return false;
@@ -2697,6 +3050,7 @@ namespace Scythe.GameLogic
 					break;
 				case GainType.Building:
 				{
+					if (this.player.matFaction.faction == Faction.Crimea) return false;
 					if (this.player.matPlayer.buildings.Count >= 4)
 					{
 						return false;
@@ -2707,7 +3061,7 @@ namespace Scythe.GameLogic
 						return false;
 					}
 					Faction faction = this.player.matFaction.faction;
-					if (faction != Faction.Polania && faction != Faction.Nordic)
+					if (faction != Faction.Polania && faction != Faction.Nordic && (faction != Faction.Saxony || matType != PlayerMatType.Engineering))
 					{
 						return false;
 					}
@@ -2745,6 +3099,105 @@ namespace Scythe.GameLogic
 				GainAction ga = action.GetGainAction(i);
 				if (ga == null) continue;
 				GainType gt = ga.GetGainType();
+
+				// CRIMEA STRATEGY FIX: Deprioritize wood/building encounter options
+				if (faction == Faction.Crimea)
+				{
+					if (gt == GainType.Building)
+					{
+						return -1; // Hard skip building options
+					}
+					if (gt == GainType.Resource && ga is GainResource && ((GainResource)ga).ResourceToGain == ResourceType.wood)
+					{
+						return -1; // Hard skip wood options
+					}
+					if (gt == GainType.AnyResource)
+					{
+						// AnyResource is risky if it might be wood, but we usually pick metal/food. 
+						// Give it a low weight instead of a hard skip.
+						weight -= 100;
+					}
+				}
+
+				if (faction == Faction.Saxony && matType == PlayerMatType.Engineering)
+				{
+					switch (gt)
+					{
+					case GainType.Building:
+						if (this.player.matPlayer.buildings.Count < 1)
+						{
+							weight += 300; // Highest priority before first building
+						}
+						else
+						{
+							weight += 10; // Drop to low after 1 built
+						}
+						break;
+					case GainType.Power:
+						weight += 290;
+						break;
+					case GainType.Resource:
+						if (ga is GainResource)
+						{
+							GainResource gainResource = (GainResource)ga;
+							if (gainResource.ResourceToGain == ResourceType.wood && ga.Amount >= 3)
+							{
+								weight += 280; // Wood only high if 3+ can be gained
+							}
+							else if (gainResource.ResourceToGain == ResourceType.wood)
+							{
+								weight += 50; // Low wood if < 3
+							}
+							else if (gainResource.ResourceToGain == ResourceType.food)
+							{
+								weight += 260;
+							}
+							else if (gainResource.ResourceToGain == ResourceType.oil)
+							{
+								weight += 220;
+							}
+							else if (gainResource.ResourceToGain == ResourceType.metal)
+							{
+								weight += 200;
+							}
+							else
+							{
+								weight += 50;
+							}
+						}
+						break;
+					case GainType.CombatCard:
+						weight += 240;
+						break;
+					case GainType.Recruit:
+						weight += 250;
+						break;
+					case GainType.Mech:
+						weight += 230;
+						break;
+					case GainType.Upgrade:
+						weight += 210;
+						break;
+					case GainType.Worker:
+						if (this.player.matPlayer.workers.Count < 5)
+						{
+							weight += 270; // High priority before 5 workers
+						}
+						else if (this.player.matPlayer.workers.Count < 8)
+						{
+							weight += 235; // Medium priority before 8 workers
+						}
+						else
+						{
+							weight += 50; // Low priority when capped
+						}
+						break;
+					default:
+						weight += 50;
+						break;
+					}
+					continue;
+				}
 
 				switch (gt)
 				{
@@ -2984,386 +3437,7 @@ namespace Scythe.GameLogic
 		}
 
 
-		private void TryPushDeployStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
-		{
-			if (this.player.GetNumberOfStars(StarType.Mechs) == 0)
-			{
-				if (this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
-				{
-					sortedList.Add(priorityBase, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], logPrefix + ": Mech Star Priority"));
-				}
-				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.metal] < 2)
-				{
-					sortedList.Add(priorityBase - 50, new AiRecipe(this.AiTopActions[GainType.AnyResource], logPrefix + ": Trade Metal for Mech") { tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal } });
-				}
-			}
-		}
 
-		private void TryPushUpgradeStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
-		{
-			if (this.player.GetNumberOfStars(StarType.Upgrades) == 0)
-			{
-				if (this.AiActions[this.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions())
-				{
-					sortedList.Add(priorityBase, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], logPrefix + ": Upgrade Star Priority"));
-				}
-				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.oil] < 2)
-				{
-					sortedList.Add(priorityBase - 50, new AiRecipe(this.AiTopActions[GainType.AnyResource], logPrefix + ": Trade Oil for Upgrade") { tradeResource = new ResourceType[] { ResourceType.oil, ResourceType.oil } });
-				}
-			}
-		}
-
-		private void TryPushEnlistStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
-		{
-			if (this.player.GetNumberOfStars(StarType.Recruits) == 0)
-			{
-				if (this.AiActions[this.gainRecruitActionPosition[0]].downAction.CanPlayerPayActions())
-				{
-					sortedList.Add(priorityBase, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], logPrefix + ": Enlist Star Priority"));
-				}
-				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.food] < 2)
-				{
-					sortedList.Add(priorityBase - 50, new AiRecipe(this.AiTopActions[GainType.AnyResource], logPrefix + ": Trade Food for Enlist") { tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food } });
-				}
-			}
-		}
-
-		private void TryPushBuildStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
-		{
-			if (this.player.GetNumberOfStars(StarType.Structures) == 0)
-			{
-				if (this.AiActions[this.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions())
-				{
-					sortedList.Add(priorityBase, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainBuildingActionPosition)], logPrefix + ": Build Star Priority"));
-				}
-				else if (this.CanPlayTopAction(GainType.AnyResource) && this.player.Coins > 0 && this.player.Resources(false)[ResourceType.wood] < 2)
-				{
-					sortedList.Add(priorityBase - 50, new AiRecipe(this.AiTopActions[GainType.AnyResource], logPrefix + ": Trade Wood for Build") { tradeResource = new ResourceType[] { ResourceType.wood, ResourceType.wood } });
-				}
-			}
-		}
-
-		private void TryPushWorkerStar(SortedList<int, AiRecipe> sortedList, int priorityBase, string logPrefix)
-		{
-			if (this.player.GetNumberOfStars(StarType.Workers) == 0 && this.player.matPlayer.workers.Count < 8)
-			{
-				if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage >= 2)
-				{
-					sortedList.Add(priorityBase, new AiRecipe(this.AiTopActions[GainType.Produce], logPrefix + ": Produce for Worker Star"));
-				}
-			}
-		}
-
-		private void InjectStarPriorities(SortedList<int, AiRecipe> sortedList)
-		{
-			// Using 9000-level priorities to ensure they override normal baseline (150-280) and cycle (220) priorities
-			switch (this.player.matFaction.faction)
-			{
-				case Faction.Polania:
-					switch (this.player.matPlayer.matType)
-					{
-						case PlayerMatType.Industrial:
-							TryPushDeployStar(sortedList, 9600, "Polania Industrial 1st");
-							TryPushUpgradeStar(sortedList, 9500, "Polania Industrial 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Polania Industrial 3rd");
-							break;
-						case PlayerMatType.Engineering:
-							TryPushEnlistStar(sortedList, 9600, "Polania Engineering 1st");
-							TryPushBuildStar(sortedList, 9500, "Polania Engineering 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Polania Engineering 3rd");
-							TryPushUpgradeStar(sortedList, 9300, "Polania Engineering 4th");
-							break;
-						case PlayerMatType.Patriotic:
-							TryPushDeployStar(sortedList, 9600, "Polania Patriotic 1st");
-							TryPushEnlistStar(sortedList, 9500, "Polania Patriotic 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Polania Patriotic 3rd");
-							break;
-						case PlayerMatType.Mechanical:
-							TryPushDeployStar(sortedList, 9600, "Polania Mechanical 1st");
-							TryPushEnlistStar(sortedList, 9500, "Polania Mechanical 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Polania Mechanical 3rd");
-							break;
-						case PlayerMatType.Agricultural:
-							TryPushEnlistStar(sortedList, 9600, "Polania Agricultural 1st");
-							TryPushDeployStar(sortedList, 9500, "Polania Agricultural 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Polania Agricultural 3rd");
-							break;
-						case PlayerMatType.Militant:
-							TryPushDeployStar(sortedList, 9600, "Polania Militant 1st");
-							TryPushEnlistStar(sortedList, 9500, "Polania Militant 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Polania Militant 3rd");
-							break;
-						case PlayerMatType.Innovative:
-							TryPushUpgradeStar(sortedList, 9600, "Polania Innovative 1st");
-							TryPushEnlistStar(sortedList, 9500, "Polania Innovative 2nd");
-							TryPushDeployStar(sortedList, 9400, "Polania Innovative 3rd");
-							TryPushWorkerStar(sortedList, 9300, "Polania Innovative 4th");
-							break;
-					}
-					break;
-				
-				case Faction.Nordic:
-					switch (this.player.matPlayer.matType)
-					{
-						case PlayerMatType.Industrial:
-							TryPushDeployStar(sortedList, 9600, "Nordic Industrial 1st");
-							TryPushUpgradeStar(sortedList, 9500, "Nordic Industrial 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Nordic Industrial 3rd");
-							break;
-						case PlayerMatType.Engineering:
-							TryPushEnlistStar(sortedList, 9600, "Nordic Engineering 1st");
-							TryPushBuildStar(sortedList, 9500, "Nordic Engineering 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Nordic Engineering 3rd");
-							TryPushUpgradeStar(sortedList, 9300, "Nordic Engineering 4th");
-							break;
-						case PlayerMatType.Patriotic:
-							TryPushDeployStar(sortedList, 9600, "Nordic Patriotic 1st");
-							TryPushEnlistStar(sortedList, 9500, "Nordic Patriotic 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Nordic Patriotic 3rd");
-							break;
-						case PlayerMatType.Mechanical:
-							TryPushDeployStar(sortedList, 9600, "Nordic Mechanical 1st");
-							TryPushEnlistStar(sortedList, 9500, "Nordic Mechanical 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Nordic Mechanical 3rd");
-							break;
-						case PlayerMatType.Agricultural:
-							TryPushEnlistStar(sortedList, 9600, "Nordic Agricultural 1st");
-							TryPushDeployStar(sortedList, 9500, "Nordic Agricultural 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Nordic Agricultural 3rd");
-							break;
-						case PlayerMatType.Militant:
-							TryPushDeployStar(sortedList, 9600, "Nordic Militant 1st");
-							TryPushEnlistStar(sortedList, 9500, "Nordic Militant 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Nordic Militant 3rd");
-							break;
-						case PlayerMatType.Innovative:
-							TryPushDeployStar(sortedList, 9600, "Nordic Innovative 1st");
-							TryPushWorkerStar(sortedList, 9500, "Nordic Innovative 2nd");
-							TryPushUpgradeStar(sortedList, 9400, "Nordic Innovative 3rd");
-							TryPushEnlistStar(sortedList, 9300, "Nordic Innovative 4th");
-							break;
-					}
-					break;
-				
-				case Faction.Rusviet:
-					switch (this.player.matPlayer.matType)
-					{
-						case PlayerMatType.Industrial:
-							TryPushDeployStar(sortedList, 9600, "Rusviet Industrial 1st");
-							TryPushUpgradeStar(sortedList, 9500, "Rusviet Industrial 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Rusviet Industrial 3rd");
-							break;
-						case PlayerMatType.Engineering:
-							// Custom logic for Rusviet Engineering is already handled around line 2040, but keeping this for fallback
-							TryPushEnlistStar(sortedList, 9600, "Rusviet Engineering 1st");
-							TryPushBuildStar(sortedList, 9500, "Rusviet Engineering 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Rusviet Engineering 3rd");
-							TryPushUpgradeStar(sortedList, 9300, "Rusviet Engineering 4th");
-							break;
-						case PlayerMatType.Patriotic:
-							TryPushDeployStar(sortedList, 9600, "Rusviet Patriotic 1st");
-							TryPushEnlistStar(sortedList, 9500, "Rusviet Patriotic 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Rusviet Patriotic 3rd");
-							break;
-						case PlayerMatType.Mechanical:
-							TryPushDeployStar(sortedList, 9600, "Rusviet Mechanical 1st");
-							TryPushEnlistStar(sortedList, 9500, "Rusviet Mechanical 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Rusviet Mechanical 3rd");
-							break;
-						case PlayerMatType.Agricultural:
-							TryPushEnlistStar(sortedList, 9600, "Rusviet Agricultural 1st");
-							TryPushDeployStar(sortedList, 9500, "Rusviet Agricultural 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Rusviet Agricultural 3rd");
-							break;
-						case PlayerMatType.Militant:
-							TryPushDeployStar(sortedList, 9600, "Rusviet Militant 1st");
-							TryPushEnlistStar(sortedList, 9500, "Rusviet Militant 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Rusviet Militant 3rd");
-							break;
-						case PlayerMatType.Innovative:
-							TryPushUpgradeStar(sortedList, 9600, "Rusviet Innovative 1st");
-							TryPushEnlistStar(sortedList, 9500, "Rusviet Innovative 2nd");
-							TryPushDeployStar(sortedList, 9400, "Rusviet Innovative 3rd");
-							TryPushWorkerStar(sortedList, 9300, "Rusviet Innovative 4th");
-							break;
-					}
-					break;
-				
-				case Faction.Crimea:
-					switch (this.player.matPlayer.matType)
-					{
-						case PlayerMatType.Industrial:
-							TryPushDeployStar(sortedList, 9600, "Crimea Industrial 1st");
-							TryPushUpgradeStar(sortedList, 9500, "Crimea Industrial 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Crimea Industrial 3rd");
-							break;
-						case PlayerMatType.Engineering:
-							TryPushEnlistStar(sortedList, 9600, "Crimea Engineering 1st");
-							TryPushBuildStar(sortedList, 9500, "Crimea Engineering 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Crimea Engineering 3rd");
-							TryPushUpgradeStar(sortedList, 9300, "Crimea Engineering 4th");
-							break;
-						case PlayerMatType.Patriotic:
-							TryPushDeployStar(sortedList, 9600, "Crimea Patriotic 1st");
-							TryPushEnlistStar(sortedList, 9500, "Crimea Patriotic 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Crimea Patriotic 3rd");
-							break;
-						case PlayerMatType.Mechanical:
-							TryPushDeployStar(sortedList, 9600, "Crimea Mechanical 1st");
-							TryPushEnlistStar(sortedList, 9500, "Crimea Mechanical 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Crimea Mechanical 3rd");
-							break;
-						case PlayerMatType.Agricultural:
-							TryPushEnlistStar(sortedList, 9600, "Crimea Agricultural 1st");
-							TryPushDeployStar(sortedList, 9500, "Crimea Agricultural 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Crimea Agricultural 3rd");
-							break;
-						case PlayerMatType.Militant:
-							TryPushDeployStar(sortedList, 9600, "Crimea Militant 1st");
-							TryPushEnlistStar(sortedList, 9500, "Crimea Militant 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Crimea Militant 3rd");
-							break;
-						case PlayerMatType.Innovative:
-							// Crimea Innovative has custom logic in Bot() as well, but this sets base priorities
-							TryPushUpgradeStar(sortedList, 9600, "Crimea Innovative 1st");
-							TryPushEnlistStar(sortedList, 9500, "Crimea Innovative 2nd");
-							TryPushDeployStar(sortedList, 9400, "Crimea Innovative 3rd");
-							TryPushWorkerStar(sortedList, 9300, "Crimea Innovative 4th");
-							break;
-					}
-					break;
-				
-				case Faction.Saxony:
-					switch (this.player.matPlayer.matType)
-					{
-						case PlayerMatType.Industrial:
-							TryPushDeployStar(sortedList, 9600, "Saxony Industrial 1st");
-							TryPushUpgradeStar(sortedList, 9500, "Saxony Industrial 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Saxony Industrial 3rd");
-							break;
-						case PlayerMatType.Engineering:
-							TryPushEnlistStar(sortedList, 9600, "Saxony Engineering 1st");
-							TryPushBuildStar(sortedList, 9500, "Saxony Engineering 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Saxony Engineering 3rd");
-							TryPushUpgradeStar(sortedList, 9300, "Saxony Engineering 4th");
-							break;
-						case PlayerMatType.Patriotic:
-							TryPushDeployStar(sortedList, 9600, "Saxony Patriotic 1st");
-							TryPushEnlistStar(sortedList, 9500, "Saxony Patriotic 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Saxony Patriotic 3rd");
-							break;
-						case PlayerMatType.Mechanical:
-							TryPushDeployStar(sortedList, 9600, "Saxony Mechanical 1st");
-							TryPushEnlistStar(sortedList, 9500, "Saxony Mechanical 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Saxony Mechanical 3rd");
-							break;
-						case PlayerMatType.Agricultural:
-							TryPushEnlistStar(sortedList, 9600, "Saxony Agricultural 1st");
-							TryPushDeployStar(sortedList, 9500, "Saxony Agricultural 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Saxony Agricultural 3rd");
-							break;
-						case PlayerMatType.Militant:
-							TryPushDeployStar(sortedList, 9600, "Saxony Militant 1st");
-							TryPushEnlistStar(sortedList, 9500, "Saxony Militant 2nd");
-							TryPushUpgradeStar(sortedList, 9400, "Saxony Militant 3rd");
-							break;
-						case PlayerMatType.Innovative:
-							TryPushUpgradeStar(sortedList, 9600, "Saxony Innovative 1st");
-							TryPushEnlistStar(sortedList, 9500, "Saxony Innovative 2nd");
-							TryPushDeployStar(sortedList, 9400, "Saxony Innovative 3rd");
-							TryPushWorkerStar(sortedList, 9300, "Saxony Innovative 4th");
-							break;
-					}
-					break;
-				
-				case Faction.Albion:
-					switch (this.player.matPlayer.matType)
-					{
-						case PlayerMatType.Industrial:
-							TryPushDeployStar(sortedList, 9600, "Albion Industrial 1st");
-							TryPushUpgradeStar(sortedList, 9500, "Albion Industrial 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Albion Industrial 3rd");
-							break;
-						case PlayerMatType.Engineering:
-							TryPushEnlistStar(sortedList, 9600, "Albion Engineering 1st");
-							TryPushBuildStar(sortedList, 9500, "Albion Engineering 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Albion Engineering 3rd");
-							TryPushUpgradeStar(sortedList, 9300, "Albion Engineering 4th");
-							break;
-						case PlayerMatType.Patriotic:
-							TryPushDeployStar(sortedList, 9600, "Albion Patriotic 1st");
-							TryPushEnlistStar(sortedList, 9500, "Albion Patriotic 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Albion Patriotic 3rd");
-							break;
-						case PlayerMatType.Mechanical:
-							TryPushDeployStar(sortedList, 9600, "Albion Mechanical 1st");
-							TryPushEnlistStar(sortedList, 9500, "Albion Mechanical 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Albion Mechanical 3rd");
-							break;
-						case PlayerMatType.Agricultural:
-							TryPushEnlistStar(sortedList, 9600, "Albion Agricultural 1st");
-							TryPushDeployStar(sortedList, 9500, "Albion Agricultural 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Albion Agricultural 3rd");
-							break;
-						case PlayerMatType.Militant:
-							TryPushDeployStar(sortedList, 9600, "Albion Militant 1st");
-							TryPushEnlistStar(sortedList, 9500, "Albion Militant 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Albion Militant 3rd");
-							break;
-						case PlayerMatType.Innovative:
-							TryPushUpgradeStar(sortedList, 9600, "Albion Innovative 1st");
-							TryPushEnlistStar(sortedList, 9500, "Albion Innovative 2nd");
-							TryPushDeployStar(sortedList, 9400, "Albion Innovative 3rd");
-							TryPushWorkerStar(sortedList, 9300, "Albion Innovative 4th");
-							break;
-					}
-					break;
-				
-				case Faction.Togawa:
-					switch (this.player.matPlayer.matType)
-					{
-						case PlayerMatType.Industrial:
-							TryPushDeployStar(sortedList, 9600, "Togawa Industrial 1st");
-							TryPushUpgradeStar(sortedList, 9500, "Togawa Industrial 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Togawa Industrial 3rd");
-							break;
-						case PlayerMatType.Engineering:
-							TryPushEnlistStar(sortedList, 9600, "Togawa Engineering 1st");
-							TryPushBuildStar(sortedList, 9500, "Togawa Engineering 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Togawa Engineering 3rd");
-							TryPushUpgradeStar(sortedList, 9300, "Togawa Engineering 4th");
-							break;
-						case PlayerMatType.Patriotic:
-							TryPushDeployStar(sortedList, 9600, "Togawa Patriotic 1st");
-							TryPushEnlistStar(sortedList, 9500, "Togawa Patriotic 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Togawa Patriotic 3rd");
-							break;
-						case PlayerMatType.Mechanical:
-							TryPushDeployStar(sortedList, 9600, "Togawa Mechanical 1st");
-							TryPushEnlistStar(sortedList, 9500, "Togawa Mechanical 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Togawa Mechanical 3rd");
-							break;
-						case PlayerMatType.Agricultural:
-							TryPushEnlistStar(sortedList, 9600, "Togawa Agricultural 1st");
-							TryPushDeployStar(sortedList, 9500, "Togawa Agricultural 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Togawa Agricultural 3rd");
-							break;
-						case PlayerMatType.Militant:
-							TryPushDeployStar(sortedList, 9600, "Togawa Militant 1st");
-							TryPushEnlistStar(sortedList, 9500, "Togawa Militant 2nd");
-							TryPushWorkerStar(sortedList, 9400, "Togawa Militant 3rd");
-							break;
-						case PlayerMatType.Innovative:
-							TryPushUpgradeStar(sortedList, 9600, "Togawa Innovative 1st");
-							TryPushEnlistStar(sortedList, 9500, "Togawa Innovative 2nd");
-							TryPushDeployStar(sortedList, 9400, "Togawa Innovative 3rd");
-							TryPushWorkerStar(sortedList, 9300, "Togawa Innovative 4th");
-							break;
-					}
-					break;
-			}
-		}
 
 		private bool AreAllObjectivesImpossible()
 		{

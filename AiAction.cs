@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Scythe.GameLogic.Actions;
 
@@ -1250,13 +1250,13 @@ namespace Scythe.GameLogic
 				case GainType.CombatCard:
 					return 160;
 				case GainType.Produce:
-					return 170;
-				case GainType.Move:
 					return 180;
+				case GainType.Move:
+					return 200;
 				case GainType.Upgrade:
 					return 70;
 				case GainType.Mech:
-					return 60;
+					return 110;
 				case GainType.Building:
 					return 80;
 				case GainType.Recruit:
@@ -1544,7 +1544,7 @@ namespace Scythe.GameLogic
 				case GainType.CombatCard:
 					return 160;
 				case GainType.Produce:
-					return 170;
+					return 190;
 				case GainType.Move:
 					return 180;
 				case GainType.Upgrade:
@@ -1554,7 +1554,7 @@ namespace Scythe.GameLogic
 					}
 					return 80;
 				case GainType.Mech:
-					return 70;
+					return 120;
 				case GainType.Building:
 					return 10;
 				case GainType.Recruit:
@@ -1911,29 +1911,25 @@ namespace Scythe.GameLogic
 				switch (gainType)
 				{
 				case GainType.Coin:
-					return 140;
-				case GainType.Popularity:
 					return 150;
-				case GainType.Power:
-					return 190;
-				case GainType.CombatCard:
-					return 160;
-				case GainType.Produce:
+				case GainType.Popularity:
 					return 170;
-				case GainType.Move:
+				case GainType.Power:
 					return 180;
+				case GainType.CombatCard:
+					return 200;
+				case GainType.Produce:
+					return 160;
+				case GainType.Move:
+					return 190;
 				case GainType.Upgrade:
 					return 80;
 				case GainType.Mech:
-					return 70;
+					return 140;
 				case GainType.Building:
 					return 10;
 				case GainType.Recruit:
-					if (player.player.matFaction.mechs.Count >= 2)
-					{
-						return 85;
-					}
-					return 60;
+					return 130;
 				}
 				return 1;
 			}
@@ -1962,7 +1958,7 @@ namespace Scythe.GameLogic
 				case GainType.Mech:
 					return 70;
 				case GainType.Building:
-					return 10;
+					return 1;
 				case GainType.Recruit:
 					if (player.player.matFaction.mechs.Count >= 2)
 					{
@@ -1997,7 +1993,7 @@ namespace Scythe.GameLogic
 				case GainType.Mech:
 					return 70;
 				case GainType.Building:
-					return 10;
+					return 1;
 				case GainType.Recruit:
 					if (player.player.matFaction.mechs.Count >= 2)
 					{
@@ -2028,7 +2024,7 @@ namespace Scythe.GameLogic
 				case GainType.Mech:
 					return 80;
 				case GainType.Building:
-					return 10;
+					return 1;
 				case GainType.Recruit:
 					return 60;
 				}
@@ -2097,17 +2093,17 @@ namespace Scythe.GameLogic
 				case GainType.Popularity:
 					return 150;
 				case GainType.Power:
-					return 180;
+					return 140;
 				case GainType.CombatCard:
-					return 160;
-				case GainType.Produce:
 					return 170;
+				case GainType.Produce:
+					return 160;
 				case GainType.Move:
-					return 190;
+					return 200;
 				case GainType.Upgrade:
-					return 90;
+					return 70;
 				case GainType.Mech:
-					return 85;
+					return 115;
 				case GainType.Building:
 					return 60;
 				case GainType.Recruit:

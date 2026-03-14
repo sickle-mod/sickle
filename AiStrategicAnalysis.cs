@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Scythe.GameLogic.Actions;
@@ -17,6 +17,8 @@ namespace Scythe.GameLogic
 		// Token: 0x06002DFD RID: 11773 RVA: 0x00112770 File Offset: 0x00110970
 		public virtual void Run(AiPlayer aiPlayer, int priMoveToProduction1, int priMoveToProduction2, int priMoveToEncounter, int priMoveToFight, int priMoveToBuild)
 		{
+			this.workersOutOfBase = 0;
+			this.workersInaVillage = 0;
 			this.priorityFight = priMoveToFight;
 			this.preferredDeployPosition = null;
 			this.UpdateEncounterAndFactory(aiPlayer);
@@ -132,6 +134,7 @@ namespace Scythe.GameLogic
 			int num = this.resourceCostSingleAction[ResourceType.oil] * (6 - aiPlayer.player.matPlayer.UpgradesDone);
 			int num2 = this.resourceCostSingleAction[ResourceType.metal] * (4 - aiPlayer.player.matFaction.mechs.Count);
 			int num3 = this.resourceCostSingleAction[ResourceType.wood] * (4 - aiPlayer.player.matPlayer.buildings.Count);
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea) num3 = 0; // Crimea ignores wood and buildings
 			int num4 = this.resourceCostSingleAction[ResourceType.food] * (4 - aiPlayer.player.matPlayer.RecruitsEnlisted);
 			Dictionary<ResourceType, int> dictionary = aiPlayer.player.Resources(false);
 			this.resourceDemandTotal[ResourceType.oil] = num - dictionary[ResourceType.oil];
@@ -530,7 +533,7 @@ namespace Scythe.GameLogic
 			float num7 = (float)(hex.GetResourceCount() / 2);
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
 			{
-				num7 += 1.5f - 1.5f * (float)hex.GetOwnerWorkers().Count;
+				num7 += 1.51f - 1.5f * (float)hex.GetOwnerWorkers().Count;
 			}
 			else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matFaction.SkillUnlocked[2])
 			{
@@ -538,7 +541,7 @@ namespace Scythe.GameLogic
 			}
 			else
 			{
-				num7 += (float)(2 - hex.GetOwnerWorkers().Count);
+				num7 += (float)(2.01f - hex.GetOwnerWorkers().Count);
 			}
 			if (num7 > 0f && this.enemyCanBeAttackedBy[hex].Count<Unit>() > 1)
 			{
@@ -595,7 +598,7 @@ namespace Scythe.GameLogic
 				this.moveRange.Add(mech, dictionary);
 				foreach (GameHex gameHex in this.moveRange[mech].Keys)
 				{
-					if (gameHex.Owner != null && gameHex.Owner != aiPlayer.player && (gameHex.HasOwnerCharacter() || gameHex.GetOwnerMechs().Count > 0))
+					if (gameHex.Owner != null && gameHex.Owner != aiPlayer.player && gameHex.GetOwnerUnitCount() > 0)
 					{
 						if (!this.enemyCanBeAttackedBy.ContainsKey(gameHex))
 						{
@@ -612,7 +615,7 @@ namespace Scythe.GameLogic
 				this.moveRange.Add(aiPlayer.player.character, dictionary2);
 				foreach (GameHex gameHex2 in this.moveRange[aiPlayer.player.character].Keys)
 				{
-					if (gameHex2.Owner != null && gameHex2.Owner != aiPlayer.player && (gameHex2.HasOwnerCharacter() || gameHex2.GetOwnerMechs().Count > 0))
+					if (gameHex2.Owner != null && gameHex2.Owner != aiPlayer.player && gameHex2.GetOwnerUnitCount() > 0)
 					{
 						if (!this.enemyCanBeAttackedBy.ContainsKey(gameHex2))
 						{
@@ -724,6 +727,7 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
+			bool isHoardingPower = aiPlayer.player.Power >= 10 && aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2 && aiPlayer.player.matFaction.faction != Faction.Saxony;
 			if (priFight > 0 && aiPlayer.strategicAnalysis.enemyCanBeAttackedBy.Count > 0 && (aiPlayer.player.Power >= 7 || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)) && (aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2 || aiPlayer.player.matFaction.factionPerk == AbilityPerk.Dominate))
 			{
 				GameHex gameHex10 = null;
@@ -746,6 +750,16 @@ namespace Scythe.GameLogic
 				}
 				foreach (GameHex gameHex12 in this.enemyCanBeAttackedBy.Keys)
 				{
+					// Step 2c / 2d: Weak Defender Exception
+					if (isHoardingPower)
+					{
+						int enemyUnits = (gameHex12.HasOwnerCharacter() ? 1 : 0) + gameHex12.GetOwnerMechs().Count;
+						if (enemyUnits > 1 || gameHex12.Owner.Power >= 3)
+						{
+							continue; // Skip attacking if hoarding and the target is not weak
+						}
+					}
+					
 					if (this.isWorthAttacking(gameHex12, aiPlayer) > 0f)
 					{
 						gameHex10 = gameHex12;
@@ -781,6 +795,14 @@ namespace Scythe.GameLogic
 						return 0;
 					});
 					Unit unit2 = null;
+					
+					// Step 2d: Crimea Weak Defender Max Combat Cards
+					if (isHoardingPower && aiPlayer.player.matFaction.faction == Faction.Crimea)
+					{
+						// Crimea wants to send exactly 2-3 units (usually 3 if available) to combat when hoarding (weak defender) to maximize CCs
+						amount = Math.Min(amount, 3);
+					}
+					
 					foreach (Unit unit3 in list)
 					{
 						if (num4 >= amount)
@@ -796,6 +818,7 @@ namespace Scythe.GameLogic
 						}
 						num4++;
 					}
+					
 					if (unit2 != null && unit2.UnitType == UnitType.Mech && aiPlayer.player.matFaction.abilities.Contains(AbilityPerk.PeoplesArmy) && aiPlayer.player.matFaction.SkillUnlocked[2])
 					{
 						Worker worker = null;
@@ -827,20 +850,20 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
+			this.workersInaVillage = 0;
+			foreach (Worker worker3 in aiPlayer.player.matPlayer.workers)
+			{
+				if (worker3.position.hexType == HexType.village)
+				{
+					this.workersInaVillage++;
+				}
+				if (worker3.position.hexType != HexType.capital)
+				{
+					this.workersOutOfBase++;
+				}
+			}
 			if (aiPlayer.player.matPlayer.workers.Count < this.workerCountTarget)
 			{
-				this.workersInaVillage = 0;
-				foreach (Worker worker3 in aiPlayer.player.matPlayer.workers)
-				{
-					if (worker3.position.hexType == HexType.village)
-					{
-						this.workersInaVillage++;
-					}
-					if (worker3.position.hexType != HexType.capital)
-					{
-						this.workersOutOfBase++;
-					}
-				}
 				if (this.pursuingWorkerStar && this.workersInaVillage < 3)
 				{
 					int num = 0;
@@ -947,7 +970,7 @@ namespace Scythe.GameLogic
 					{
 						if (!this.moveTarget.ContainsKey(aiPlayer.player.character) && (gameHex15.Owner == null || gameHex15.Owner == aiPlayer.player) && (gameHex15.hexType == HexType.mountain || gameHex15.hasTunnel))
 						{
-							this.movePriority.Add(aiPlayer.player.character, 1);
+							this.movePriority.Add(aiPlayer.player.character, priEncounter);
 							this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { gameHex15 });
 							this.moveDistance.Add(aiPlayer.player.character, dictionary4[gameHex15]);
 						}
@@ -963,7 +986,7 @@ namespace Scythe.GameLogic
 					{
 						if (!this.moveTarget.ContainsKey(aiPlayer.player.character) && (gameHex16.Owner == null || gameHex16.Owner == aiPlayer.player) && gameHex16.hexType == HexType.lake)
 						{
-							this.movePriority.Add(aiPlayer.player.character, 1);
+							this.movePriority.Add(aiPlayer.player.character, priEncounter);
 							this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { gameHex16 });
 							this.moveDistance.Add(aiPlayer.player.character, dictionary5[gameHex16]);
 						}
@@ -976,7 +999,7 @@ namespace Scythe.GameLogic
 					{
 						if (!this.moveTarget.ContainsKey(aiPlayer.player.character) && (gameHex17.Owner == null || gameHex17.Owner == aiPlayer.player) && (gameHex17.hexType == HexType.lake || gameHex17.hasTunnel))
 						{
-							this.movePriority.Add(aiPlayer.player.character, 1);
+							this.movePriority.Add(aiPlayer.player.character, priEncounter);
 							this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { gameHex17 });
 							this.moveDistance.Add(aiPlayer.player.character, dictionary6[gameHex17]);
 						}
@@ -1058,7 +1081,7 @@ namespace Scythe.GameLogic
 					}
 					if (gameHex22 != null)
 					{
-						this.movePriority.Add(unit4, 1);
+						this.movePriority.Add(unit4, priEncounter);
 						this.moveTarget.Add(unit4, new List<GameHex> { gameHex22 });
 						this.moveDistance.Add(unit4, this.moveRangeAll[unit4][gameHex22]);
 					}
@@ -1206,9 +1229,9 @@ namespace Scythe.GameLogic
 				}
 				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
 				{
-					this.buildingPriority[BuildingType.Mill] = 8;
-					this.buildingPriority[BuildingType.Armory] = 6;
-					this.buildingPriority[BuildingType.Monument] = 4;
+					this.buildingPriority[BuildingType.Mill] = 4;
+					this.buildingPriority[BuildingType.Armory] = 8;
+					this.buildingPriority[BuildingType.Monument] = 6;
 					this.buildingPriority[BuildingType.Mine] = 10;
 				}
 			}
@@ -1441,8 +1464,8 @@ namespace Scythe.GameLogic
 			{
 				this.recruitPriority[DownActionType.Enlist] = 10;
 				this.recruitPriority[DownActionType.Build] = 4;
-				this.recruitPriority[DownActionType.Deploy] = 8;
-				this.recruitPriority[DownActionType.Upgrade] = 6;
+				this.recruitPriority[DownActionType.Deploy] = 6;
+				this.recruitPriority[DownActionType.Upgrade] = 8;
 				return;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
@@ -1487,9 +1510,9 @@ namespace Scythe.GameLogic
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
 			{
-				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Enlist] = 8;
 				this.recruitPriority[DownActionType.Build] = 4;
-				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Deploy] = 10;
 				this.recruitPriority[DownActionType.Upgrade] = 6;
 				return;
 			}
@@ -1651,6 +1674,13 @@ namespace Scythe.GameLogic
 		{
 			this.workerCountTarget = 5;
 			this.pursuingWorkerStar = false;
+			// Saxony and Crimea always want 8 workers from the start
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony || aiPlayer.player.matFaction.faction == Faction.Crimea)
+			{
+				this.workerCountTarget = 8;
+				this.pursuingWorkerStar = true;
+				return;
+			}
 			// Once 2+ of the 4 bottom-row stars (Mechs, Recruits, Structures, Upgrades) are earned,
 			// raise the worker count target to 8 and pursue the Workers star
 			int bottomRowStars = 0;
@@ -1905,11 +1935,11 @@ namespace Scythe.GameLogic
 			},
 			{
 				GainType.Popularity,
-				7
+				8
 			},
 			{
 				GainType.Coin,
-				8
+				5
 			},
 			{
 				GainType.Power,
