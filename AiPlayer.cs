@@ -324,6 +324,7 @@ namespace Scythe.GameLogic
 			{
 				this.PlayBottomAction(action);
 			}
+			this.InformAboutEndedTurn();
 		}
 
 		// Token: 0x06002DAE RID: 11694 RVA: 0x0010D414 File Offset: 0x0010B614
@@ -334,6 +335,7 @@ namespace Scythe.GameLogic
 				this.gameManager.actionManager.SetSectionAction(action.topAction, null, action.gainActionId);
 				action.ActionTopExecute(recipe, this);
 			}
+			this.gameManager.actionManager.PrepareNextAction();
 		}
 
 		// Token: 0x06002DAF RID: 11695 RVA: 0x0010D46C File Offset: 0x0010B66C
@@ -355,6 +357,7 @@ namespace Scythe.GameLogic
 				this.TryToCompleteObjective();
 				this.InformAboutEndedTurn();
 			}
+			this.gameManager.actionManager.PrepareNextAction();
 		}
 
 		// Token: 0x06002DB0 RID: 11696 RVA: 0x0010D520 File Offset: 0x0010B720

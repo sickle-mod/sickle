@@ -205,7 +205,6 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
-			this.gameManager.actionManager.PrepareNextAction();
 		}
 
 		// Token: 0x06002C9F RID: 11423 RVA: 0x000F85F0 File Offset: 0x000F67F0
@@ -399,8 +398,7 @@ namespace Scythe.GameLogic
 			if (gameHex != null && gameHex.hexType != HexType.capital)
 			{
 				gainMech.SetMechAndLocation(mech, gameHex, aiPlayer.strategicAnalysis.mechNext);
-				this.gameManager.actionManager.PrepareNextAction();
-				text = text + " ...Mech " + mech.Owner.matFaction.abilities[mech.Id].ToString() + " deployed";
+					text = text + " ...Mech " + mech.Owner.matFaction.abilities[mech.Id].ToString() + " deployed";
 				return;
 			}
 			text += "...No suitable place to Deploy";
@@ -505,7 +503,6 @@ namespace Scythe.GameLogic
 			if (building != null && gameHex != null)
 			{
 				gainBuilding.SetStructureAndLocation(building, gameHex);
-				this.gameManager.actionManager.PrepareNextAction();
 				text = text + " ..." + building.buildingType.ToString() + " built";
 				return;
 			}
@@ -553,7 +550,6 @@ namespace Scythe.GameLogic
 				}
 				GainAction oneTimeBonus = aiPlayer.player.matFaction.GetOneTimeBonus(gainType);
 				gainRecruit.SetSectionAndBonus(downActionType, oneTimeBonus);
-				this.gameManager.actionManager.PrepareNextAction();
 				text += " ...Recruit enlisted";
 				return;
 			}
@@ -1082,7 +1078,6 @@ namespace Scythe.GameLogic
 				gainUpgrade.Clear();
 				return;
 			}
-			this.gameManager.actionManager.PrepareNextAction();
 			text += " ...Upgrade performed";
 		}
 
@@ -1099,7 +1094,6 @@ namespace Scythe.GameLogic
 				text += " ...Upgrade logic failed";
 				return;
 			}
-			this.gameManager.actionManager.PrepareNextAction();
 			text += " ...Upgrade performed";
 		}
 
@@ -1170,7 +1164,6 @@ namespace Scythe.GameLogic
 					gainAnyResource.AddResourceToField(receipe.tradeResource[1], gameHex, 1);
 				}
 			}
-			this.gameManager.actionManager.PrepareNextAction();
 		}
 
 		// Token: 0x06002CAE RID: 11438 RVA: 0x000FA368 File Offset: 0x000F8568
@@ -1197,7 +1190,6 @@ namespace Scythe.GameLogic
 				}
 			}
 			gainProduce.SelectAction();
-			this.gameManager.actionManager.PrepareNextAction();
 			gainProduce.Clear();
 		}
 
@@ -1411,7 +1403,7 @@ namespace Scythe.GameLogic
 				}
 				return 1;
 			}
-			if (player.player.matFaction.faction == Faction.Polania && player.player.matPlayer.matType == PlayerMatType.Innovative)
+			if (player.player.matFaction.faction == Faction.Rusviet && player.player.matPlayer.matType == PlayerMatType.Innovative)
 			{
 				switch (gainType)
 				{
@@ -1478,25 +1470,23 @@ namespace Scythe.GameLogic
 				case GainType.Popularity:
 					return 150;
 				case GainType.Power:
-					return 190;
+					return 195;
 				case GainType.CombatCard:
 					return 160;
 				case GainType.Produce:
-					return 180;
+					return 185;
+				case GainType.AnyResource:
+					return 175;
 				case GainType.Move:
 					return 200;
 				case GainType.Upgrade:
-					return 10;
+					return 90;
 				case GainType.Mech:
-					return 70;
+					return 110;
 				case GainType.Building:
-					return 65;
+					return 80;
 				case GainType.Recruit:
-					if (player.player.matFaction.mechs.Count >= 2)
-					{
-						return 85;
-					}
-					return 60;
+					return 120;
 				}
 				return 1;
 			}
@@ -1948,7 +1938,7 @@ namespace Scythe.GameLogic
 				case GainType.Produce:
 					return 170;
 				case GainType.Move:
-					return 180;
+					return 200;
 				case GainType.Upgrade:
 					if (player.player.matPlayer.UpgradesDone >= 2)
 					{
@@ -1956,7 +1946,7 @@ namespace Scythe.GameLogic
 					}
 					return 80;
 				case GainType.Mech:
-					return 70;
+					return 180;
 				case GainType.Building:
 					return 1;
 				case GainType.Recruit:
@@ -2806,8 +2796,7 @@ namespace Scythe.GameLogic
 			if (gameHex != null && gameHex.hexType != HexType.capital)
 			{
 				gainMech.SetMechAndLocation(mech, gameHex, aiPlayer.strategicAnalysis.mechNext);
-				this.gameManager.actionManager.PrepareNextAction();
-				text = text + " ...Mech " + mech.Owner.matFaction.abilities[mech.Id].ToString() + " deployed";
+					text = text + " ...Mech " + mech.Owner.matFaction.abilities[mech.Id].ToString() + " deployed";
 				return;
 			}
 			text += "...No suitable place to Deploy";
@@ -2822,7 +2811,6 @@ namespace Scythe.GameLogic
 				return;
 			}
 			gainCombatCard.SetCards(gainCombatCard.Amount);
-			this.gameManager.actionManager.PrepareNextAction();
 		}
 
 		// Token: 0x06002CB3 RID: 11443 RVA: 0x00044562 File Offset: 0x00042762

@@ -429,10 +429,10 @@ namespace Scythe.GameLogic
 			}
 			else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
 			{
-				this.mechPriority[0] = 6;
+				this.mechPriority[0] = 11;
 				this.mechPriority[1] = 8;
-				this.mechPriority[2] = 4;
-				this.mechPriority[3] = 10;
+				this.mechPriority[2] = 10;
+				this.mechPriority[3] = 9;
 			}
 			else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
 			{
@@ -513,10 +513,10 @@ namespace Scythe.GameLogic
 			}
 			else if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
 			{
-				this.mechPriority[0] = 4;
-				this.mechPriority[1] = 8;
-				this.mechPriority[2] = 6;
-				this.mechPriority[3] = 10;
+				this.mechPriority[0] = 10; // Riverwalk
+				this.mechPriority[1] = 8;  // Township
+				this.mechPriority[2] = 6;  // Peoples Army
+				this.mechPriority[3] = 4;  // Speed
 			}
 			else if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 			{

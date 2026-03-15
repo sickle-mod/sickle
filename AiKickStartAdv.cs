@@ -262,8 +262,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 1], null, null);
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[2, 1].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 1], this.HexResources(this.gameManager.gameBoard.hexMap[2, 1]), null);
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
 					});
 					return;
@@ -312,8 +310,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 1], null, null);
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[2, 1].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 1], this.HexResources(this.gameManager.gameBoard.hexMap[2, 1]), null);
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
 					});
 					return;
@@ -363,8 +359,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 1], null, null);
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[2, 1].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 1], this.HexResources(this.gameManager.gameBoard.hexMap[2, 1]), null);
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
 					});
 					return;
@@ -427,8 +421,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(mech2);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 1], this.HexResources(mech2.position), list2);
 							this.gameManager.moveManager.UnloadAllWorkersFromMech(mech2);
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
 					});
 					return;
@@ -461,8 +453,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 1], null, null);
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[2, 1].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 1], this.HexResources(this.gameManager.gameBoard.hexMap[2, 1]), null);
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
 					});
 					return;
@@ -522,8 +512,6 @@ namespace Scythe.GameLogic
 								this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 1], this.HexResources(mech.position), list);
 								this.gameManager.moveManager.UnloadAllWorkersFromMech(mech);
 							}
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
 					});
 					return;
@@ -565,8 +553,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[1, 1].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 1], this.HexResources(this.gameManager.gameBoard.hexMap[1, 1]), null);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[3, 1];
@@ -597,8 +583,6 @@ namespace Scythe.GameLogic
 						}
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 1], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -637,8 +621,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 7], this.HexResources(this.gameManager.gameBoard.hexMap[6, 7]), null);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 7], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -676,8 +658,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 6], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[6, 7].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 7], this.HexResources(this.gameManager.gameBoard.hexMap[6, 7]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -722,8 +702,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SetMoveAction(gainMove);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 6], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -748,8 +726,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 6], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[6, 6].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 6], this.HexResources(this.gameManager.gameBoard.hexMap[6, 6]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -798,8 +774,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 7], this.HexResources(this.gameManager.gameBoard.hexMap[6, 7]), null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[6, 6].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 6], this.HexResources(this.gameManager.gameBoard.hexMap[6, 6]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -836,8 +810,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 7], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[6, 7].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 7], this.HexResources(this.gameManager.gameBoard.hexMap[6, 7]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -870,8 +842,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 6], this.HexResources(this.gameManager.gameBoard.hexMap[5, 7]), null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[5, 7].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 6], this.HexResources(this.gameManager.gameBoard.hexMap[5, 7]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -922,8 +892,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SetMoveAction(gainMove);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 6], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -985,8 +953,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 7], null, null);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 7], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1004,8 +970,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 7], null, null);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1028,8 +992,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(hex.GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, null);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1063,8 +1025,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(mech);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 6], this.HexResources(mech.position), list);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1126,8 +1086,6 @@ namespace Scythe.GameLogic
 					this.gameManager.moveManager.SetMoveAction(gainMove);
 					this.gameManager.moveManager.SelectUnit(player.player.character);
 					this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, null);
-					this.gameManager.moveManager.Clear();
-					this.gameManager.actionManager.PrepareNextAction();
 				}
 			});
 		}
@@ -1173,8 +1131,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SelectUnit(worker2);
 						this.gameManager.moveManager.SelectUnit(worker3);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 2], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1188,8 +1144,6 @@ namespace Scythe.GameLogic
 						Worker worker4 = this.gameManager.gameBoard.hexMap[6, 3].GetOwnerWorkers()[0];
 						this.gameManager.moveManager.SelectUnit(worker4);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1271,8 +1225,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SetMoveAction(gainMove);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1334,8 +1286,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(mech);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 2], this.HexResources(mech.position), list);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1363,7 +1313,7 @@ namespace Scythe.GameLogic
 				});
 				return;
 			default:
-				return;
+				break;
 			}
 		}
 
@@ -1416,8 +1366,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SelectUnit(mech);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 6], this.HexResources(this.gameManager.gameBoard.hexMap[0, 6]), list);
 						this.gameManager.moveManager.UnloadAllWorkersFromMech(mech);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1472,8 +1420,6 @@ namespace Scythe.GameLogic
 				this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 6], null, null);
 				this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[1, 7].GetOwnerWorkers()[0]);
 				this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 6], null, null);
-				this.gameManager.moveManager.Clear();
-				this.gameManager.actionManager.PrepareNextAction();
 			}
 		});
 		return;
@@ -1518,8 +1464,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[0, 6], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[0, 6].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 6], this.HexResources(this.gameManager.gameBoard.hexMap[0, 6]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1552,8 +1496,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[0, 6], null, null);
 						this.gameManager.moveManager.SelectUnit(ownerWorkers[2]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 7], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1607,8 +1549,6 @@ namespace Scythe.GameLogic
 						}
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 6], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1644,8 +1584,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[0, 6], null, null);
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[1, 7].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 6], this.HexResources(this.gameManager.gameBoard.hexMap[1, 7]), null);
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
 					});
 					return;
@@ -1704,8 +1642,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[0, 6], null, null);
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[0, 6].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 7], null, null);
-							this.gameManager.moveManager.Clear();
-							this.gameManager.actionManager.PrepareNextAction();
 						}
 					});
 					return;
@@ -1769,8 +1705,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[0, 6], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[1, 7].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 6], this.HexResources(this.gameManager.gameBoard.hexMap[1, 7]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1833,8 +1767,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 4], this.HexResources(this.gameManager.gameBoard.hexMap[1, 3]), null);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 3], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1859,8 +1791,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(ownerWorkers[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 4], this.HexResources(this.gameManager.gameBoard.hexMap[0, 4]), null);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1918,8 +1848,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 3], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[1, 3].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1953,8 +1881,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 3], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[0, 4].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -1993,8 +1919,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 3], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[1, 4].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 3], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2028,8 +1952,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[0, 3].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 3], this.HexResources(this.gameManager.gameBoard.hexMap[0, 3]), null);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2051,8 +1973,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SetMoveAction(gainMove2);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2083,8 +2003,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SetMoveAction(gainMove3);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2120,8 +2038,6 @@ namespace Scythe.GameLogic
 						Worker worker = this.gameManager.gameBoard.hexMap[1, 3].GetOwnerWorkers()[0];
 						this.gameManager.moveManager.SelectUnit(worker);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 4], this.HexResources(this.gameManager.gameBoard.hexMap[1, 3]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2147,8 +2063,6 @@ namespace Scythe.GameLogic
 						Worker worker2 = this.gameManager.gameBoard.hexMap[0, 4].GetOwnerWorkers()[0];
 						this.gameManager.moveManager.SelectUnit(worker2);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 4], this.HexResources(this.gameManager.gameBoard.hexMap[0, 4]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2175,8 +2089,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(worker3);
 						}
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 3], this.HexResources(this.gameManager.gameBoard.hexMap[1, 4]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2198,8 +2110,6 @@ namespace Scythe.GameLogic
 						Mech mech2 = this.gameManager.gameBoard.hexMap[2, 3].GetOwnerMechs()[0];
 						this.gameManager.moveManager.SelectUnit(mech2);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2226,8 +2136,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 1], this.HexResources(this.gameManager.gameBoard.hexMap[5, 1]), null);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 1], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2275,8 +2183,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[6, 1].GetOwnerWorkers()[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 2], this.HexResources(this.gameManager.gameBoard.hexMap[6, 1]), null);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2293,8 +2199,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SetMoveAction(gainMove3);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2313,63 +2217,76 @@ namespace Scythe.GameLogic
 			switch (this.gameManager.TurnCount)
 			{
 			case 0:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Nordic Engine Kickstart")
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
+				{
+					tradeResource = new ResourceType[]
+					{
+						ResourceType.oil,
+						ResourceType.oil
+					}
+				});
+				return;
+			case 1:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				return;
+			case 2:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
+				{
+					tradeResource = new ResourceType[]
+					{
+						ResourceType.oil,
+						ResourceType.metal
+					}
+				});
+				return;
+			case 3:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				return;
+			case 4:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Power], "Kickstart"));
+				player.strategicAnalysis.preferredBuildPosition = this.gameManager.gameBoard.hexMap[5, 1];
+				return;
+			case 5:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				return;
+			case 6:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
+				{
+					tradeResource = new ResourceType[]
+					{
+						ResourceType.metal,
+						ResourceType.metal
+					}
+				});
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[4, 1];
+				return;
+			case 7:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
 				{
 					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
 					{
 						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
 						this.gameManager.moveManager.SetMoveAction(gainMove);
-						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[5, 1].GetOwnerWorkers()[0]);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 1], this.HexResources(this.gameManager.gameBoard.hexMap[5, 1]), null);
-						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[4, 1].GetOwnerWorkers()[0]);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 2], this.HexResources(this.gameManager.gameBoard.hexMap[4, 1]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
-					}
-				});
-				return;
-			case 1:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Nordic Engine Kickstart")
-				{
-					tradeResource = new ResourceType[]
-					{
-						ResourceType.metal,
-						ResourceType.metal
-					}
-				});
-				return;
-			case 2:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Nordic Engine Kickstart"));
-				return;
-			case 3:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Nordic Engine Kickstart")
-				{
-					tradeResource = new ResourceType[]
-					{
-						ResourceType.metal,
-						ResourceType.metal
-					}
-				});
-				return;
-			case 4:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Nordic Engine Kickstart")
-				{
-					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
-					{
-						GainMove gainMove2 = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
-						this.gameManager.moveManager.SetMoveAction(gainMove2);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 2], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 2], null, null);
+						if (this.gameManager.gameBoard.hexMap[4, 1].GetOwnerMechs().Count > 0)
+						{
+							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[4, 1].GetOwnerMechs()[0]);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 2], null, null);
+						}
+						if (this.gameManager.gameBoard.hexMap[4, 1].GetOwnerWorkers().Count > 0)
+						{
+							this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[4, 1].GetOwnerWorkers()[0]);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 1], null, null);
+						}
 					}
 				});
 				return;
-			case 5:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Nordic Engine Kickstart"));
+			case 8:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
 				return;
-			case 6:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Nordic Engine Kickstart")
+			case 9:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
 				{
 					tradeResource = new ResourceType[]
 					{
@@ -2377,25 +2294,13 @@ namespace Scythe.GameLogic
 						ResourceType.metal
 					}
 				});
-				return;
-			case 7:
-				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Nordic Engine Kickstart")
-				{
-					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
-					{
-						GainMove gainMove3 = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
-						this.gameManager.moveManager.SetMoveAction(gainMove3);
-						this.gameManager.moveManager.SelectUnit(player.player.character);
-						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
-					}
-				});
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[3, 1];
 				return;
 			default:
 				return;
 			}
 		}
+
 
 		// Token: 0x06002D29 RID: 11561 RVA: 0x00106ABC File Offset: 0x00104CBC
 		private void NordIndustrial(SortedList<int, AiRecipe> actionOptions, AiPlayer player)
@@ -2428,8 +2333,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 1], this.HexResources(this.gameManager.gameBoard.hexMap[6, 1]), null);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 2], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2442,8 +2345,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SetMoveAction(gainMove);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2490,8 +2391,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 1], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[4, 1].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 1], this.HexResources(this.gameManager.gameBoard.hexMap[4, 1]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2509,8 +2408,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 2], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[5, 1].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 2], this.HexResources(this.gameManager.gameBoard.hexMap[5, 1]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2535,8 +2432,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 3], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[5, 2].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 2], this.HexResources(this.gameManager.gameBoard.hexMap[5, 2]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2559,8 +2454,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.SetMoveAction(gainMove4);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 4], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2597,8 +2490,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 2], this.HexResources(this.gameManager.gameBoard.hexMap[4, 1]), null);
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 1], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2621,8 +2512,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 2], null, null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[5, 1].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 2], this.HexResources(this.gameManager.gameBoard.hexMap[5, 1]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2659,8 +2548,6 @@ namespace Scythe.GameLogic
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 2], this.HexResources(this.gameManager.gameBoard.hexMap[4, 1]), null);
 						this.gameManager.moveManager.SelectUnit(this.gameManager.gameBoard.hexMap[5, 1].GetOwnerWorkers()[0]);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[6, 1], this.HexResources(this.gameManager.gameBoard.hexMap[5, 1]), null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2749,8 +2636,6 @@ namespace Scythe.GameLogic
 						}
 						this.gameManager.moveManager.SelectUnit(player.player.character);
 						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[1, 6], null, null);
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2886,8 +2771,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 4], null, new List<Unit>(mech.LoadedWorkers));
 						}
 						
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2917,7 +2800,88 @@ namespace Scythe.GameLogic
 		// Token: 0x06002D35 RID: 11573 RVA: 0x000445B3 File Offset: 0x000427B3
 		private void RusvietInnovative(SortedList<int, AiRecipe> actionOptions, AiPlayer player)
 		{
-			this.RusvietAgro(actionOptions, player);
+			switch (this.gameManager.TurnCount)
+			{
+			case 0:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Rusviet Innovative: Produce 1 worker, 1 metal")
+				{
+					// Produce at 6,4 (metal) and 6,3 (workers)
+				});
+				return;
+			case 1:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Rusviet Innovative: Produce 2 workers, 1 metal"));
+				return;
+			case 2:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiActions[player.SelectTopActionFlavor(player.gainMechActionPosition)], "Rusviet Innovative: Produce -> Deploy Riverwalk at (6,3)")
+				{
+					// Produce 3 workers, 1 metal. Deploy Riverwalk.
+				});
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[6, 3];
+				return;
+			case 3:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Rusviet Innovative: Move Character to (5,4), Mech+Workers to (5,4) -> Enlist")
+				{
+					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
+					{
+						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
+						this.gameManager.moveManager.SetMoveAction(gainMove);
+						// Hero to (5,4) tundra encounter
+						this.gameManager.moveManager.SelectUnit(player.player.character);
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 4], null, null);
+						
+						// Mech from (6,3) carrying workers to (5,4)
+						if (player.player.matFaction.mechs.Count > 0)
+						{
+							Mech mech = player.player.matFaction.mechs[0];
+							List<Unit> workers = new List<Unit>();
+							foreach (Worker w in this.gameManager.gameBoard.hexMap[6, 3].GetOwnerWorkers())
+							{
+								workers.Add(w);
+							}
+							this.gameManager.moveManager.SelectUnit(mech);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 4], null, workers);
+						}
+					}
+				});
+				return;
+			case 4:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiActions[player.SelectTopActionFlavor(player.gainMechActionPosition)], "Rusviet Innovative: Produce -> Deploy Township at (6,4)")
+				{
+					// Produce metal at (6,4), oil at (5,4). Deploy Township.
+				});
+				player.strategicAnalysis.preferredDeployPosition = this.gameManager.gameBoard.hexMap[6, 4];
+				return;
+			case 5:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiActions[player.SelectTopActionFlavor(player.gainUpgradeActionPosition)], "Rusviet Innovative: Trade for 2 food -> Upgrade (Bolster/Recruit)")
+				{
+					tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food }
+				});
+				return;
+			case 6:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Rusviet Innovative: Hero to (5,6) Combat, Mech to (5,5) -> Enlist")
+				{
+					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
+					{
+						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
+						this.gameManager.moveManager.SetMoveAction(gainMove);
+						// Hero to (5,6) mountain encounter/combat
+						this.gameManager.moveManager.SelectUnit(player.player.character);
+						this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 6], null, null);
+						
+						// Mech from (5,4) to (5,5) village tunnel
+						if (player.player.matFaction.mechs.Count > 0)
+						{
+							Mech mech = player.player.matFaction.mechs[0];
+							this.gameManager.moveManager.SelectUnit(mech);
+							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 5], null, null);
+						}
+					}
+				});
+				return;
+			default:
+				this.RusvietAgro(actionOptions, player);
+				return;
+			}
 		}
 
 		// Token: 0x06002D36 RID: 11574 RVA: 0x000445BD File Offset: 0x000427BD
@@ -2960,8 +2924,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(workers[0]);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[3, 7], null, null);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -2998,8 +2960,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, new List<Unit>(workers));
 						}
 						
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -3028,7 +2988,11 @@ namespace Scythe.GameLogic
 			case 1:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
 				{
-					tradeResource = new ResourceType[] { ResourceType.food, ResourceType.food }
+					tradeResource = new ResourceType[]
+					{
+						ResourceType.food,
+						ResourceType.food
+					}
 				});
 				return;
 			case 2:
@@ -3037,11 +3001,57 @@ namespace Scythe.GameLogic
 			case 3:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
 				{
-					tradeResource = new ResourceType[] { ResourceType.metal, ResourceType.metal }
+					tradeResource = new ResourceType[]
+					{
+						ResourceType.oil,
+						ResourceType.oil
+					}
 				});
 				return;
 			case 4:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Move], "Kickstart")
+				{
+					moveAction = delegate(AiRecipe recipe, AiPlayer aiPlayer)
+					{
+						GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
+						this.gameManager.moveManager.SetMoveAction(gainMove);
+						var hexFrom = this.gameManager.gameBoard.hexMap[3, 8];
+						var hexTo = this.gameManager.gameBoard.hexMap[3, 7];
+						var workers = hexFrom.GetOwnerWorkers();
+						var list = new List<Unit>();
+						for (int i = 0; i < Math.Min(workers.Count, 3); i++)
+						{
+							list.Add(workers[i]);
+						}
+						foreach (var unit in list)
+						{
+							this.gameManager.moveManager.SelectUnit(unit);
+							this.gameManager.moveManager.MoveSelectedUnit(hexTo, null, null);
+						}
+					}
+				});
+				return;
+			case 5:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.AnyResource], "Kickstart")
+				{
+					tradeResource = new ResourceType[]
+					{
+						ResourceType.oil,
+						ResourceType.oil
+					}
+				});
+				return;
+			case 6:
 				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Power], "Kickstart"));
+				return;
+			case 7:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
+				return;
+			case 8:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Power], "Kickstart"));
+				return;
+			case 9:
+				actionOptions.Add(int.MaxValue, new AiRecipe(player.AiTopActions[GainType.Produce], "Kickstart"));
 				return;
 			default:
 				return;
@@ -3100,8 +3110,6 @@ namespace Scythe.GameLogic
 							else { subset = passengers; }
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[4, 7], null, subset);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -3134,8 +3142,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(mech);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[2, 6], null, null);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;
@@ -3163,8 +3169,6 @@ namespace Scythe.GameLogic
 							this.gameManager.moveManager.SelectUnit(mech);
 							this.gameManager.moveManager.MoveSelectedUnit(this.gameManager.gameBoard.hexMap[5, 5], this.HexResources(mech.position), workers);
 						}
-						this.gameManager.moveManager.Clear();
-						this.gameManager.actionManager.PrepareNextAction();
 					}
 				});
 				return;

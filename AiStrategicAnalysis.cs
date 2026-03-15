@@ -1197,7 +1197,7 @@ namespace Scythe.GameLogic
 			{
 				this.buildingPriority[BuildingType.Mill] = 12;
 			}
-			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative))
 			{
 				this.buildingPriority[BuildingType.Mill] = 10;
 				this.buildingPriority[BuildingType.Armory] = 8;
@@ -1340,36 +1340,20 @@ namespace Scythe.GameLogic
 				this.recruitPriority[DownActionType.Upgrade] = 6;
 				return;
 			}
-			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
-			{
-				this.recruitPriority[DownActionType.Enlist] = 10;
-				this.recruitPriority[DownActionType.Build] = 8;
-				this.recruitPriority[DownActionType.Deploy] = 6;
-				this.recruitPriority[DownActionType.Upgrade] = 4;
-				return;
-			}
-			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
-			{
-				this.recruitPriority[DownActionType.Enlist] = 10;
-				this.recruitPriority[DownActionType.Build] = 4;
-				this.recruitPriority[DownActionType.Deploy] = 8;
-				this.recruitPriority[DownActionType.Upgrade] = 6;
-				return;
-			}
-			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical)
-			{
-				this.recruitPriority[DownActionType.Enlist] = 10;
-				this.recruitPriority[DownActionType.Build] = 4;
-				this.recruitPriority[DownActionType.Deploy] = 8;
-				this.recruitPriority[DownActionType.Upgrade] = 6;
-				return;
-			}
 			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
 			{
 				this.recruitPriority[DownActionType.Enlist] = 10;
 				this.recruitPriority[DownActionType.Build] = 4;
 				this.recruitPriority[DownActionType.Deploy] = 8;
 				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 12;
+				this.recruitPriority[DownActionType.Deploy] = 10;
+				this.recruitPriority[DownActionType.Upgrade] = 8;
+				this.recruitPriority[DownActionType.Build] = 6;
 				return;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
@@ -1438,10 +1422,10 @@ namespace Scythe.GameLogic
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
 			{
-				this.recruitPriority[DownActionType.Enlist] = 10;
-				this.recruitPriority[DownActionType.Build] = 4;
-				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Deploy] = 10;
+				this.recruitPriority[DownActionType.Enlist] = 8;
 				this.recruitPriority[DownActionType.Upgrade] = 6;
+				this.recruitPriority[DownActionType.Build] = 4;
 				return;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
@@ -1715,6 +1699,20 @@ namespace Scythe.GameLogic
 			{
 				this.recruitOneTimePriority[GainType.Power] = 20;
 			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.recruitOneTimePriority[GainType.Power] = 25;
+				this.recruitOneTimePriority[GainType.CombatCard] = 22;
+				this.recruitOneTimePriority[GainType.Popularity] = 5;
+				this.recruitOneTimePriority[GainType.Coin] = 10;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				this.recruitOneTimePriority[GainType.CombatCard] = 25;
+				this.recruitOneTimePriority[GainType.Power] = 22;
+				this.recruitOneTimePriority[GainType.Coin] = 15;
+				this.recruitOneTimePriority[GainType.Popularity] = 10;
+			}
 		}
 
 		// Token: 0x04001F17 RID: 7959
@@ -1964,6 +1962,8 @@ namespace Scythe.GameLogic
 
 		// Token: 0x04001F3B RID: 7995
 		public GameHex preferredDeployPosition;
+
+		public GameHex preferredBuildPosition;
 
 		// Token: 0x04001F3C RID: 7996
 		public bool gottaMoveToBuild;
