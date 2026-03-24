@@ -12,7 +12,11 @@ namespace Scythe.GameLogic
 		public AiStrategicAnalysis(GameManager gameManager)
 		{
 			this.gameManager = gameManager;
+			this.spreadingTriggered = false;
 		}
+
+		public bool spreadingTriggered;
+		public bool winDesperation;
 
 		// Token: 0x06002DFD RID: 11773 RVA: 0x00112770 File Offset: 0x00110970
 		public virtual void Run(AiPlayer aiPlayer, int priMoveToProduction1, int priMoveToProduction2, int priMoveToEncounter, int priMoveToFight, int priMoveToBuild)
@@ -23,18 +27,18 @@ namespace Scythe.GameLogic
 			this.preferredDeployPosition = null;
 			this.UpdateEncounterAndFactory(aiPlayer);
 			this.UpdateResourceAccess(aiPlayer);
-			this.UpdateTradeLoop(aiPlayer);
 			this.UpdateResourceDemand(aiPlayer);
+			this.UpdateTradeLoop(aiPlayer);
 			this.UpdateResourceDemandPriority(aiPlayer, this.resourceDemandTotal);
 			this.SortResourcePriority();
 			this.UpdateProduceLoop(aiPlayer);
-			this.canUpgrade = aiPlayer.player.GetNumberOfStars(StarType.Upgrades) == 0 && aiPlayer.AiActions[aiPlayer.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions();
-			this.canDeploy = aiPlayer.player.GetNumberOfStars(StarType.Mechs) == 0 && aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.CanPlayerPayActions();
-			this.canBuild = aiPlayer.player.GetNumberOfStars(StarType.Structures) == 0 && aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions() && ((GainBuilding)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetGainAction(0)).GainAvaliable();
-			this.canEnlist = aiPlayer.player.GetNumberOfStars(StarType.Recruits) == 0 && aiPlayer.AiActions[aiPlayer.gainRecruitActionPosition[0]].downAction.CanPlayerPayActions();
+			this.canUpgrade = aiPlayer.player.GetNumberOfStars(StarType.Upgrades) == 0 && aiPlayer.CanPlayerPayPredictive(aiPlayer.AiActions[aiPlayer.gainUpgradeActionPosition[0]]);
+			this.canDeploy = aiPlayer.player.GetNumberOfStars(StarType.Mechs) == 0 && aiPlayer.CanPlayerPayPredictive(aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]]);
+			this.canBuild = aiPlayer.player.GetNumberOfStars(StarType.Structures) == 0 && aiPlayer.CanPlayerPayPredictive(aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]]) && ((GainBuilding)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetGainAction(0)).GainAvaliable();
+			this.canEnlist = aiPlayer.player.GetNumberOfStars(StarType.Recruits) == 0 && aiPlayer.CanPlayerPayPredictive(aiPlayer.AiActions[aiPlayer.gainRecruitActionPosition[0]]);
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 			{
-				this.gottaMoveToBuild = !this.canBuild && aiPlayer.player.GetNumberOfStars(StarType.Structures) == 0 && aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.CanPlayerPayActions() && aiPlayer.CanPlayTopAction(GainType.Move);
+				this.gottaMoveToBuild = !this.canBuild && aiPlayer.player.GetNumberOfStars(StarType.Structures) == 0 && aiPlayer.CanPlayerPayPredictive(aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]]) && aiPlayer.CanPlayTopAction(GainType.Move);
 			}
 			else
 			{
@@ -95,10 +99,10 @@ namespace Scythe.GameLogic
 			}
 			if ((aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant) || (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant))
 			{
-				this.tradeLoopPresent = amount <= 2 + aiPlayer.player.Resources(false)[this.tradeLoopResource] && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable();
+				this.tradeLoopPresent = amount <= 2 + aiPlayer.player.Resources(false)[this.tradeLoopResource] && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable() && this.resourceDemandTotal[this.tradeLoopResource] > 0;
 				return;
 			}
-			this.tradeLoopPresent = amount <= 3 && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable();
+			this.tradeLoopPresent = amount <= 3 && aiPlayer.AiTopActions[GainType.AnyResource].downAction.GetGainAction(0).GainAvaliable() && this.resourceDemandTotal[this.tradeLoopResource] > 0;
 		}
 
 		// Token: 0x06002E00 RID: 11776 RVA: 0x00112B9C File Offset: 0x00110D9C
@@ -134,7 +138,7 @@ namespace Scythe.GameLogic
 			int num = this.resourceCostSingleAction[ResourceType.oil] * (6 - aiPlayer.player.matPlayer.UpgradesDone);
 			int num2 = this.resourceCostSingleAction[ResourceType.metal] * (4 - aiPlayer.player.matFaction.mechs.Count);
 			int num3 = this.resourceCostSingleAction[ResourceType.wood] * (4 - aiPlayer.player.matPlayer.buildings.Count);
-			if (aiPlayer.player.matFaction.faction == Faction.Crimea) num3 = 0; // Crimea ignores wood and buildings
+			if (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Albion) num3 = 0; // Crimea, Rusviet, and Albion ignore wood and buildings
 			int num4 = this.resourceCostSingleAction[ResourceType.food] * (4 - aiPlayer.player.matPlayer.RecruitsEnlisted);
 			Dictionary<ResourceType, int> dictionary = aiPlayer.player.Resources(false);
 			this.resourceDemandTotal[ResourceType.oil] = num - dictionary[ResourceType.oil];
@@ -200,9 +204,22 @@ namespace Scythe.GameLogic
 						this.resourceDemandPriority[ResourceType.food] = 10;
 					}
 				}
-				else if (aiPlayer.player.matFaction.mechs.Count <= 1)
+				
+				// Apply Metal priority boost if low on mechs
+				if (aiPlayer.player.matFaction.mechs.Count <= 1)
 				{
 					this.resourceDemandPriority[ResourceType.metal] = 8;
+				}
+
+				// Nordic Patriotic/Agricultural specific overrides
+				if (faction == Faction.Nordic && (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic || aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural))
+				{
+					this.resourceDemandPriority[ResourceType.wood] = 8;
+					this.resourceDemandPriority[ResourceType.food] = 9;
+					if (this.resourceAccess[ResourceType.food] > 0)
+					{
+						this.resourceDemandPriority[ResourceType.metal] = 10;
+					}
 				}
 			}
 			else
@@ -225,15 +242,18 @@ namespace Scythe.GameLogic
 			}
 			this.resourceHighestPriority = ResourceType.oil;
 			this.resourceHighestPriorityNoProduce = ResourceType.oil;
-			foreach (ResourceType resourceType2 in resourceDemand.Keys)
+			if (this.resourceDemandPriority.Values.Max() > 0)
 			{
-				if (this.resourceDemandPriority[resourceType2] > this.resourceDemandPriority[this.resourceHighestPriority])
+				foreach (ResourceType resourceType2 in resourceDemand.Keys)
 				{
-					this.resourceHighestPriority = resourceType2;
-				}
-				if ((this.resourceDemandPriority[resourceType2] > this.resourceDemandPriority[this.resourceHighestPriorityNoProduce] || this.resourceAccess[this.resourceHighestPriorityNoProduce] > 0) && (this.resourceAccess[resourceType2] == 0 || (this.resourceDemandPriority[resourceType2] >= 10 && this.resourceDemandPriority[this.resourceHighestPriorityNoProduce] < 10)))
-				{
-					this.resourceHighestPriorityNoProduce = resourceType2;
+					if (this.resourceDemandPriority[resourceType2] > this.resourceDemandPriority[this.resourceHighestPriority])
+					{
+						this.resourceHighestPriority = resourceType2;
+					}
+					if ((this.resourceDemandPriority[resourceType2] > this.resourceDemandPriority[this.resourceHighestPriorityNoProduce] || this.resourceAccess[this.resourceHighestPriorityNoProduce] > 0) && (this.resourceAccess[resourceType2] == 0 || (this.resourceDemandPriority[resourceType2] >= 10 && this.resourceDemandPriority[this.resourceHighestPriorityNoProduce] < 10)))
+					{
+						this.resourceHighestPriorityNoProduce = resourceType2;
+					}
 				}
 			}
 			if (this.resourceDemandPriority[this.resourceHighestPriority] == 0)
@@ -340,11 +360,51 @@ namespace Scythe.GameLogic
 			this.uselessWorkers4Production.Clear();
 			this.uselessWorkersTargets.Clear();
 			this.moveMechPassengers.Clear();
+			int bottomStarsEarned = aiPlayer.player.stars[StarType.Upgrades] + aiPlayer.player.stars[StarType.Mechs] + aiPlayer.player.stars[StarType.Structures] + aiPlayer.player.stars[StarType.Recruits] + aiPlayer.player.stars[StarType.Workers];
+			bool spreadingTriggered = bottomStarsEarned >= 3;
+			if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.GetNumberOfStars(StarType.Mechs) > 0 && aiPlayer.player.GetNumberOfStars(StarType.Workers) > 0)
+			{
+				spreadingTriggered = true;
+			}
 			foreach (Worker worker in aiPlayer.player.matPlayer.workers)
 			{
-				if (worker.position != null && this.ResourcePriority(aiPlayer, worker.position) <= 0f)
+				if (worker.position != null)
 				{
-					this.uselessWorkers4Production.Add(worker);
+					bool isUseless = this.ResourcePriority(aiPlayer, worker.position) <= 0f;
+					if (spreadingTriggered)
+					{
+						int workersOnHex = worker.position.GetOwnerWorkers().Count;
+						int uselessOnHex = this.uselessWorkers4Production.Count((Worker w) => w.position == worker.position);
+						if (uselessOnHex + 1 < workersOnHex)
+						{
+							isUseless = true;
+						}
+					}
+					else if (isUseless)
+					{
+						// Even if not globally triggered, if a hex is "useless" (resource not needed), 
+						// only mark workers as useless if we can leave one behind.
+						int workersOnHex = worker.position.GetOwnerWorkers().Count;
+						int uselessOnHex = this.uselessWorkers4Production.Count((Worker w) => w.position == worker.position);
+						if (uselessOnHex + 1 >= workersOnHex)
+						{
+							isUseless = false;
+						}
+					}
+					if (isUseless)
+					{
+						if (worker.position.GetResourceCount() > 0)
+						{
+							int workersOnHex2 = worker.position.GetOwnerWorkers().Count;
+							int mechsOnHex = worker.position.GetOwnerMechs().Count;
+							int uselessOnHex2 = this.uselessWorkers4Production.Count((Worker w) => w.position == worker.position);
+							if (uselessOnHex2 + 1 >= workersOnHex2 && mechsOnHex == 0)
+							{
+								continue;
+							}
+						}
+						this.uselessWorkers4Production.Add(worker);
+					}
 				}
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
@@ -640,60 +700,43 @@ namespace Scythe.GameLogic
 					bool flag = false;
 					GameHex gameHex5 = null;
 					GameHex gameHex6 = null;
-					if (aiPlayer.player.matFaction.SkillUnlocked[3] && aiPlayer.player.matFaction.faction == Faction.Saxony && (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical || aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural))
+					int bottomStarsEarned2 = aiPlayer.player.stars[StarType.Upgrades] + aiPlayer.player.stars[StarType.Mechs] + aiPlayer.player.stars[StarType.Structures] + aiPlayer.player.stars[StarType.Recruits] + aiPlayer.player.stars[StarType.Workers];
+					bool spreadingTriggered2 = bottomStarsEarned2 >= 3;
+					if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.GetNumberOfStars(StarType.Mechs) > 0 && aiPlayer.player.GetNumberOfStars(StarType.Workers) > 0)
 					{
-						if (aiPlayer.player.matFaction.faction != Faction.Saxony || aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial)
+						spreadingTriggered2 = true;
+					}
+					if (spreadingTriggered2 && aiPlayer.player.matFaction.SkillUnlocked[3])
+					{
+						foreach (GameHex gameHex7 in this.moveRange[mech2].Keys)
 						{
-							using (Dictionary<GameHex, int>.KeyCollection.Enumerator enumerator5 = this.moveRange[mech2].Keys.GetEnumerator())
+							if (this.ResourcePriority(aiPlayer, gameHex7) > 0f && (gameHex7.Owner == null || gameHex7.Owner == aiPlayer.player) && this.moveRange[mech2][gameHex7] == 1 && AiStrategicAnalysis.ResourceProduced(gameHex7.hexType) != ResourceType.combatCard && (gameHex5 == null || this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex7.hexType)] <= this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex5.hexType)]) && (gameHex5 == null || this.ResourcePriority(aiPlayer, gameHex7) > this.ResourcePriority(aiPlayer, gameHex5)))
 							{
-								while (enumerator5.MoveNext())
+								gameHex5 = gameHex7;
+							}
+						}
+						
+						if (gameHex5 != null)
+						{
+							ResourceType resourceType = AiStrategicAnalysis.ResourceProduced(gameHex5.hexType);
+							int num2 = this.resourceCostSingleAction[resourceType];
+							if (this.moveMechPassengers[mech2].Count > num2)
+							{
+								Dictionary<GameHex, int> dictionary3;
+								this.gameManager.gameBoard.MoveRange(mech2, gameHex5, 1, out dictionary3);
+								foreach (GameHex gameHex8 in dictionary3.Keys)
 								{
-									GameHex gameHex7 = enumerator5.Current;
-									if (this.ResourcePriority(aiPlayer, gameHex7) > 0f && (gameHex7.Owner == null || gameHex7.Owner == aiPlayer.player) && this.moveRange[mech2][gameHex7] == 1 && AiStrategicAnalysis.ResourceProduced(gameHex7.hexType) != ResourceType.combatCard && (gameHex5 == null || this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex7.hexType)] <= this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex5.hexType)]) && (gameHex5 == null || this.ResourcePriority(aiPlayer, gameHex7) > this.ResourcePriority(aiPlayer, gameHex5)))
+									if (this.ResourcePriority(aiPlayer, gameHex8) > 0f && (gameHex8.Owner == null || gameHex8.Owner == aiPlayer.player) && gameHex8.hexType != gameHex5.hexType && AiStrategicAnalysis.ResourceProduced(gameHex8.hexType) != ResourceType.combatCard && this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex8.hexType)] == 0 && (gameHex6 == null || this.ResourcePriority(aiPlayer, gameHex8) > this.ResourcePriority(aiPlayer, gameHex6)))
 									{
-										gameHex5 = gameHex7;
+										gameHex6 = gameHex8;
 									}
 								}
-								goto IL_061F;
-							}
-							goto IL_053B;
-						}
-						goto IL_053B;
-						IL_061F:
-						if (gameHex5 == null)
-						{
-							goto IL_072F;
-						}
-						ResourceType resourceType = AiStrategicAnalysis.ResourceProduced(gameHex5.hexType);
-						int num2 = this.resourceCostSingleAction[resourceType];
-						if (this.moveMechPassengers[mech2].Count <= num2)
-						{
-							goto IL_072F;
-						}
-						Dictionary<GameHex, int> dictionary3;
-						this.gameManager.gameBoard.MoveRange(mech2, gameHex5, 1, out dictionary3);
-						foreach (GameHex gameHex8 in dictionary3.Keys)
-						{
-							if (this.ResourcePriority(aiPlayer, gameHex8) > 0f && (gameHex8.Owner == null || gameHex8.Owner == aiPlayer.player) && gameHex8.hexType != gameHex5.hexType && AiStrategicAnalysis.ResourceProduced(gameHex8.hexType) != ResourceType.combatCard && this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex8.hexType)] == 0 && (gameHex6 == null || this.ResourcePriority(aiPlayer, gameHex8) > this.ResourcePriority(aiPlayer, gameHex6)))
-							{
-								gameHex6 = gameHex8;
+								if (gameHex6 != null)
+								{
+									flag = true;
+								}
 							}
 						}
-						if (gameHex6 != null)
-						{
-							flag = true;
-							goto IL_072F;
-						}
-						goto IL_072F;
-						IL_053B:
-						foreach (GameHex gameHex9 in this.moveRange[mech2].Keys)
-						{
-							if (this.ResourcePriority(aiPlayer, gameHex9) > 0f && (gameHex9.Owner == null || gameHex9.Owner == aiPlayer.player) && this.moveRange[mech2][gameHex9] == 1 && AiStrategicAnalysis.ResourceProduced(gameHex9.hexType) != ResourceType.combatCard && (gameHex5 == null || this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex9.hexType)] <= this.resourceAccess[AiStrategicAnalysis.ResourceProduced(gameHex5.hexType)]) && (gameHex5 == null || this.ResourcePriority(aiPlayer, gameHex9) > this.ResourcePriority(aiPlayer, gameHex5)))
-							{
-								gameHex5 = gameHex9;
-							}
-						}
-						goto IL_061F;
 					}
 					IL_072F:
 					if (flag)
@@ -1211,6 +1254,13 @@ namespace Scythe.GameLogic
 				this.buildingPriority[BuildingType.Armory] = 6;
 				this.buildingPriority[BuildingType.Monument] = 4;
 			}
+			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.buildingPriority[BuildingType.Mine] = 10;
+				this.buildingPriority[BuildingType.Mill] = 8;
+				this.buildingPriority[BuildingType.Armory] = 6;
+				this.buildingPriority[BuildingType.Monument] = 4;
+			}
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
 			{
 				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic || aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)
@@ -1247,7 +1297,7 @@ namespace Scythe.GameLogic
 			if (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Albion) {
 				ignoreBuilding = true;
 			}
-			if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative || aiPlayer.player.matPlayer.matType == PlayerMatType.Militant || aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) {
+			if (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial || aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && aiPlayer.player.matFaction.faction != Faction.Polania) || aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) {
 				ignoreBuilding = true;
 			}
 			if (ignoreBuilding) {
@@ -1672,7 +1722,10 @@ namespace Scythe.GameLogic
 			if (aiPlayer.player.GetNumberOfStars(StarType.Recruits) > 0) bottomRowStars++;
 			if (aiPlayer.player.GetNumberOfStars(StarType.Structures) > 0) bottomRowStars++;
 			if (aiPlayer.player.GetNumberOfStars(StarType.Upgrades) > 0) bottomRowStars++;
-			if (bottomRowStars >= 2 && aiPlayer.player.GetNumberOfStars(StarType.Workers) == 0)
+			
+			int totalStars = aiPlayer.player.GetNumberOfStars();
+
+			if ((bottomRowStars >= 2 || (totalStars >= 5 && aiPlayer.player.matPlayer.workers.Count >= 5)) && aiPlayer.player.GetNumberOfStars(StarType.Workers) == 0)
 			{
 				this.workerCountTarget = 8;
 				this.pursuingWorkerStar = true;
@@ -1713,6 +1766,14 @@ namespace Scythe.GameLogic
 				this.recruitOneTimePriority[GainType.Coin] = 15;
 				this.recruitOneTimePriority[GainType.Popularity] = 10;
 			}
+			if (aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
+						{
+				this.recruitOneTimePriority[GainType.CombatCard] = 23;
+				this.recruitOneTimePriority[GainType.Power] = 22;
+				this.recruitOneTimePriority[GainType.Coin] = 15;
+				this.recruitOneTimePriority[GainType.Popularity] = 25;
+			}
+			
 		}
 
 		// Token: 0x04001F17 RID: 7959

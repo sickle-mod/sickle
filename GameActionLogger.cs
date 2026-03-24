@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -685,6 +685,22 @@ namespace Scythe.GameLogic
 						list.Add(GameActionLogger.DetailString(logInfo2));
 					}
 				}
+				// Include the base LogInfo's own gain (it is often the first
+				// encounter gain, e.g. +2 oil, +2 Coin, etc.).
+				// Skip bare LogInfo and the empty placeholder (Amount=0)
+				// created by CreateEmptyEncounterActionLog.
+				if (logInfo.GetType() != typeof(LogInfo))
+				{
+					GainNonboardResourceLogInfo gnbrBase = logInfo as GainNonboardResourceLogInfo;
+					if (gnbrBase == null || gnbrBase.Amount > 0)
+					{
+						string baseGain = GameActionLogger.GainSummary(logInfo);
+						if (!string.IsNullOrEmpty(baseGain))
+						{
+							list2.Add(baseGain);
+						}
+					}
+				}
 				if (logInfo.AdditionalGain != null)
 				{
 					foreach (LogInfo logInfo3 in logInfo.AdditionalGain)
@@ -905,7 +921,13 @@ namespace Scythe.GameLogic
 			{
 				if (mech != null && mech.Owner != null && mech.Owner.matFaction != null && mech.Owner.matFaction.abilities != null && mech.Id < mech.Owner.matFaction.abilities.Count)
 				{
-					return mech.Owner.matFaction.abilities[mech.Id].ToString();
+					AbilityPerk abilityPerk = mech.Owner.matFaction.abilities[mech.Id];
+					int num = (int)abilityPerk;
+					if (num == 3 || num == 12 || num == 17 || num == 20)
+					{
+						return "Riverwalk";
+					}
+					return abilityPerk.ToString();
 				}
 			}
 			catch

@@ -35,7 +35,7 @@ namespace Scythe.GameLogic
 				this.GainCombatCard(recipe, player);
 				return;
 			case GainType.Produce:
-				this.GainProduce(player);
+				this.GainProduce(recipe, player);
 				return;
 			case GainType.AnyResource:
 				this.GainTrade(recipe, player);
@@ -135,7 +135,7 @@ namespace Scythe.GameLogic
 			{
 				if (gameHex.Owner != null && gameHex.Owner != unit.Owner)
 				{
-					return false;
+					return unit.position.GetResourceCount() > 0 && unit.position.GetOwnerUnitCount() == 1;
 				}
 			}
 			if (unit.Owner.matFaction.faction == Faction.Nordic || unit.Owner.matFaction.faction == Faction.Saxony)
@@ -165,6 +165,11 @@ namespace Scythe.GameLogic
 				if (i < player.strategicAnalysis.movePrioritySorted.Count)
 				{
 					Unit unit = player.strategicAnalysis.movePrioritySorted.Values[i];
+					// Fix 2: Passenger workers are added to movePriority at priority -1 so they
+					// ride on their mech, but they never receive a moveTarget entry of their own.
+					// Accessing moveTarget[unit] for such a worker throws KeyNotFoundException,
+					// which escapes uncaught and deadlocks the game. Skip any unit without a target.
+					if (!player.strategicAnalysis.moveTarget.ContainsKey(unit)) continue;
 					this.gameManager.moveManager.SelectUnit(unit);
 					Dictionary<ResourceType, int> dictionary = null;
 					if (this.ShouldTakeResources(unit, player.strategicAnalysis.moveTarget[unit]) && unit.position.GetResourceCount() > 0)
@@ -176,35 +181,89 @@ namespace Scythe.GameLogic
 						dictionary.Add(ResourceType.wood, unit.position.resources[ResourceType.wood]);
 					}
 					List<Unit> list = new List<Unit>();
-					if (unit.UnitType == UnitType.Mech && player.strategicAnalysis.moveMechPassengers.ContainsKey((Mech)unit))
+					if (unit.UnitType == UnitType.Mech)
 					{
-						foreach (Worker worker in player.strategicAnalysis.moveMechPassengers[(Mech)unit])
+						Mech mech = (Mech)unit;
+						// Passenger Spreading: If some workers should stay behind, unload them now.
+						// This ensures we only carry those in the intended passenger list.
+						if (player.strategicAnalysis.moveMechPassengers.ContainsKey(mech))
 						{
-							list.Add(worker);
+							foreach (Worker workerOnMech in new List<Worker>(mech.LoadedWorkers))
+							{
+								if (!player.strategicAnalysis.moveMechPassengers[mech].Contains(workerOnMech))
+								{
+									this.gameManager.moveManager.UnloadWorkerFromSelectedMech(workerOnMech);
+								}
+							}
+							foreach (Worker worker in player.strategicAnalysis.moveMechPassengers[mech])
+							{
+								list.Add(worker);
+							}
+						}
+						else
+						{
+							// If no passengers assigned, ensure ALL workers are unloaded for max spreading
+							this.gameManager.moveManager.UnloadAllWorkersFromMech(mech);
 						}
 					}
 					this.gameManager.moveManager.MoveSelectedUnit(player.strategicAnalysis.moveTarget[unit][0], dictionary, list);
-					if (unit.UnitType == UnitType.Mech && player.strategicAnalysis.moveTarget[unit].Count > 1)
+					// Fix C: Crimea Wayfare+Speed capital-hop execution.
+					// When moveTarget[0] is an unoccupied enemy capital (Wayfare move), the workers
+					// remain on the mech and must be carried to moveTarget[1] (the Speed landing hex)
+					// where they are dropped for territory scoring.
+					// This branch must come BEFORE the production two-target branch because
+					// ResourceProduced(HexType.capital) returns combatCard which gives a nonsensical
+					// `num` value and would either skip the second hop or drop workers at the capital.
+					if (unit.UnitType == UnitType.Mech
+						&& player.strategicAnalysis.moveTarget[unit].Count > 1
+						&& player.strategicAnalysis.moveTarget[unit][0].hexType == HexType.capital
+						&& player.strategicAnalysis.moveTarget[unit][0].Owner != null
+						&& player.strategicAnalysis.moveTarget[unit][0].Owner != player.player)
 					{
-						ResourceType resourceType = AiStrategicAnalysis.ResourceProduced(player.strategicAnalysis.moveTarget[unit][0].hexType);
-						int num = player.strategicAnalysis.resourceCostSingleAction[resourceType];
-						if (list.Count > num)
+						// Workers are still on the mech after the Wayfare hop (they are not
+						// automatically dropped; the engine waits for an explicit unload call).
+						// Carry them to the landing hex using the same passenger list.
+						List<Unit> list2 = new List<Unit>(list);
+						this.gameManager.moveManager.MoveSelectedUnit(
+							player.strategicAnalysis.moveTarget[unit][1], dictionary, list2);
+						// Drop all workers at the landing hex so they score that territory.
+						this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
+						dictionary = null; // Don't try to take resources again
+					}
+					else if (unit.UnitType == UnitType.Mech && player.strategicAnalysis.moveTarget[unit].Count > 1)
+					{
+						// Spreading logic: if we have multiple targets, drop one worker at the first target
+						// and carry the rest to the next targets.
+						if (list != null && list.Count > 0)
 						{
-							this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
-							List<Unit> list2 = new List<Unit>();
-							if (player.strategicAnalysis.moveMechPassengers.ContainsKey((Mech)unit))
+							// If we have 1 unit to move 2 hexes, drop at hex 1.
+							// If we have 2 units to move 2 hexes, drop 1 at hex 1 and carry 1 to hex 2.
+							if (list.Count == 1)
 							{
-								foreach (Worker worker2 in player.strategicAnalysis.moveTarget[unit][0].GetOwnerWorkers())
-								{
-									list2.Add(worker2);
-								}
+								this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
 							}
-							list2.RemoveRange(0, num);
-							this.gameManager.moveManager.MoveSelectedUnit(player.strategicAnalysis.moveTarget[unit][1], dictionary, list2);
+							else if (list.Count >= 2 && (unit.MovesLeft > 0 || gainMove.MovesLeft > 0))
+							{
+								// Drop exactly one worker at the first stop
+								this.gameManager.moveManager.UnloadWorkerFromSelectedMech(list[0]);
+								
+								// Prepare to carry the rest
+								List<Unit> carryForward = new List<Unit>();
+								for (int j = 1; j < list.Count; j++)
+								{
+									carryForward.Add(list[j]);
+								}
+								this.gameManager.moveManager.MoveSelectedUnit(player.strategicAnalysis.moveTarget[unit][1], null, carryForward);
+							}
+							
+							// Final unload at destination
+							this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
+							dictionary = null; // Don't try to take resources again
 						}
 					}
 				}
 			}
+			this.gameManager.moveManager.Clear();
 		}
 
 		// Token: 0x06002C9F RID: 11423 RVA: 0x000F85F0 File Offset: 0x000F67F0
@@ -223,9 +282,20 @@ namespace Scythe.GameLogic
 					goto IL_002A;
 				}
 			}
-			this.MoveByAnalysisPriority(recipe, aiPlayer);
+			// Fix 3: Wrap MoveByAnalysisPriority in try-catch. Any unhandled exception here
+			// (KeyNotFoundException from a missing moveRange or moveTarget entry, or any other
+			// analysis edge case) would escape all the way up through Bot() without calling
+			// InformAboutEndedTurn(), permanently deadlocking the game. Better to take no move
+			// and end the turn cleanly than to hang forever.
+			try
+			{
+				this.MoveByAnalysisPriority(recipe, aiPlayer);
+			}
+			catch (Exception)
+			{
+				// Analysis produced bad data — skip the move, clear state, and continue.
+			}
 			IL_002A:
-			this.gameManager.moveManager.Clear();
 			aiPlayer.HandleEncounterAndFactory();
 		}
 
@@ -322,13 +392,19 @@ namespace Scythe.GameLogic
 		private void GainMechBasic(AiPlayer aiPlayer)
 		{
 			string text = "Gain Mech";
+			GainMech gainMech = (GainMech)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetGainAction(0);
+			this.PerformGainMechBasic(aiPlayer, gainMech, text);
+			if (!gainMech.ActionSelected)
+			{
+				return;
+			}
 			if (!aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
+				gainMech.Clear();
 				return;
 			}
-			GainMech gainMech = (GainMech)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetGainAction(0);
-			this.PerformGainMechBasic(aiPlayer, gainMech, text);
+			gainMech.Execute();
 		}
 
 		private void PerformGainMechBasic(AiPlayer aiPlayer, GainMech gainMech, string text)
@@ -374,7 +450,7 @@ namespace Scythe.GameLogic
 						}
 					}
 				}
-				if ((aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || aiPlayer.player.matFaction.faction == Faction.Crimea)
+				if ((aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Rusviet)
 				{
 					foreach (Worker worker3 in aiPlayer.player.matPlayer.workers)
 					{
@@ -408,15 +484,19 @@ namespace Scythe.GameLogic
 		public void GainBuilding(AiPlayer aiPlayer)
 		{
 			string text = "Gain Building";
-			if (aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetPayAction(0)))
+			GainBuilding gainBuilding = (GainBuilding)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetGainAction(0);
+			this.PerformGainBuilding(aiPlayer, gainBuilding, text);
+			if (!gainBuilding.ActionSelected)
 			{
-				GainBuilding gainBuilding = (GainBuilding)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetGainAction(0);
-				this.PerformGainBuilding(aiPlayer, gainBuilding, text);
+				return;
 			}
-			else
+			if (!aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
+				gainBuilding.Clear();
+				return;
 			}
+			gainBuilding.Execute();
 		}
 
 		private void PerformGainBuilding(AiPlayer aiPlayer, GainBuilding gainBuilding, string text)
@@ -512,13 +592,19 @@ namespace Scythe.GameLogic
 		public void GainRecruit(AiPlayer aiPlayer)
 		{
 			string text = "Gain Recruit";
+			GainRecruit gainRecruit = (GainRecruit)aiPlayer.AiActions[aiPlayer.gainRecruitActionPosition[0]].downAction.GetGainAction(0);
+			this.PerformGainRecruit(aiPlayer, gainRecruit, text);
+			if (!gainRecruit.ActionSelected)
+			{
+				return;
+			}
 			if (!aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainRecruitActionPosition[0]].downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
+				gainRecruit.Clear();
 				return;
 			}
-			GainRecruit gainRecruit = (GainRecruit)aiPlayer.AiActions[aiPlayer.gainRecruitActionPosition[0]].downAction.GetGainAction(0);
-			this.PerformGainRecruit(aiPlayer, gainRecruit, text);
+			gainRecruit.Execute();
 		}
 
 		private void PerformGainRecruit(AiPlayer aiPlayer, GainRecruit gainRecruit, string text)
@@ -1079,6 +1165,7 @@ namespace Scythe.GameLogic
 				return;
 			}
 			text += " ...Upgrade performed";
+			gainUpgrade.Execute();
 		}
 
 		private void PerformGainUpgrade(AiPlayer player, GainUpgrade gainUpgrade, string text)
@@ -1092,9 +1179,11 @@ namespace Scythe.GameLogic
 			if (gainUpgrade.GainToUpgrade == null || gainUpgrade.PayToUpgrade == null)
 			{
 				text += " ...Upgrade logic failed";
+				gainUpgrade.Clear();
 				return;
 			}
 			text += " ...Upgrade performed";
+			gainUpgrade.Execute();
 		}
 
 		public void SetUpgradeActions(AiPlayer player, GainUpgrade gainUpgrade)
@@ -1108,7 +1197,7 @@ namespace Scythe.GameLogic
 				{
 					gainAction = player.AiActions[i].topAction.GetGainAction(player.AiActions[i].gainActionId);
 				}
-				if (player.AiActions[i].downAction.GetPayAction(0).CanUpgrade() && (payAction == null || this.UpgradePriority(player.AiActions[i].downAction.GetGainAction(0).GetGainType(), player) > this.UpgradePriority(gainAction2.GetGainType(), player)))
+				if (player.AiActions[i].downAction.GetNumberOfPayActions() > 0 && player.AiActions[i].downAction.GetPayAction(0).CanUpgrade() && (payAction == null || this.UpgradePriority(player.AiActions[i].downAction.GetGainAction(0).GetGainType(), player) > this.UpgradePriority(gainAction2.GetGainType(), player)))
 				{
 					payAction = player.AiActions[i].downAction.GetPayAction(0);
 					gainAction2 = player.AiActions[i].downAction.GetGainAction(0);
@@ -1126,6 +1215,7 @@ namespace Scythe.GameLogic
 			}
 			string text = "Gain Trade: ";
 			GainAnyResource gainAnyResource = (GainAnyResource)aiPlayer.AiTopActions[GainType.AnyResource].GetTopGainAction();
+			gainAnyResource.Clear();
 			ResourceType resourceType = aiPlayer.TradeResourceType();
 			if (resourceType == ResourceType.combatCard)
 			{
@@ -1167,13 +1257,19 @@ namespace Scythe.GameLogic
 		}
 
 		// Token: 0x06002CAE RID: 11438 RVA: 0x000FA368 File Offset: 0x000F8568
-		public void GainProduce(AiPlayer aiPlayer)
+		public void GainProduce(AiRecipe recipe, AiPlayer aiPlayer)
 		{
 			if (!this.topAction.ActionPayed())
 			{
 				return;
 			}
+			if (recipe.moveAction != null)
+			{
+				recipe.moveAction(recipe, aiPlayer);
+				return;
+			}
 			GainProduce gainProduce = (GainProduce)aiPlayer.AiTopActions[GainType.Produce].GetTopGainAction();
+			gainProduce.Clear();
 			foreach (GameHex gameHex in aiPlayer.player.OwnedFields(false))
 			{
 				int count = gameHex.GetOwnerWorkers().Count;
@@ -1190,7 +1286,6 @@ namespace Scythe.GameLogic
 				}
 			}
 			gainProduce.SelectAction();
-			gainProduce.Clear();
 		}
 
 		// Token: 0x06002CAF RID: 11439 RVA: 0x0004452A File Offset: 0x0004272A
@@ -1573,15 +1668,15 @@ namespace Scythe.GameLogic
 				case GainType.Move:
 					return 190;
 				case GainType.Upgrade:
-					return 90;
+					return 10;
 				case GainType.Mech:
+					if (player.player.matFaction.mechs.Count >= 1)
+					{
+						return 20;
+					}
 					return 70;
 				case GainType.Building:
-					if (player.player.matPlayer.buildings.Count >= 1)
-					{
-						return 50;
-					}
-					return 80;
+					return 30;
 				case GainType.Recruit:
 					return 60;
 				}
@@ -1631,7 +1726,7 @@ namespace Scythe.GameLogic
 				case GainType.Move:
 					return 200;
 				case GainType.Upgrade:
-					return 80;
+					return 65;
 				case GainType.Mech:
 					return 70;
 				case GainType.Building:
@@ -1708,21 +1803,21 @@ namespace Scythe.GameLogic
 				case GainType.Popularity:
 					return 150;
 				case GainType.Power:
-					return 180;
+					return 170;
 				case GainType.CombatCard:
 					return 160;
 				case GainType.Produce:
-					return 170;
-				case GainType.Move:
 					return 190;
+				case GainType.Move:
+					return 180;
 				case GainType.Upgrade:
-					return 90;
+					return 10;
 				case GainType.Mech:
-					return 70;
+					return 80;
 				case GainType.Building:
 					return 60;
 				case GainType.Recruit:
-					return 80;
+					return 70;
 				}
 				return 1;
 			}
@@ -2261,17 +2356,17 @@ namespace Scythe.GameLogic
 				case GainType.Popularity:
 					return 150;
 				case GainType.Power:
-					return 190;
+					return 180;
 				case GainType.CombatCard:
 					return 160;
 				case GainType.Produce:
 					return 170;
 				case GainType.Move:
-					return 180;
+					return 190;
 				case GainType.Upgrade:
-					return 80;
-				case GainType.Mech:
 					return 70;
+				case GainType.Mech:
+					return 90;
 				case GainType.Building:
 					return 10;
 				case GainType.Recruit:
@@ -2322,22 +2417,16 @@ namespace Scythe.GameLogic
 					return 140;
 				case GainType.Popularity:
 					return 150;
-				case GainType.Power:
-					return 180;
-				case GainType.CombatCard:
-					return 160;
-				case GainType.Produce:
-					return 170;
-				case GainType.Move:
-					return 190;
 				case GainType.Upgrade:
-					return 90;
+					return 145;
 				case GainType.Mech:
-					return 70;
+					return 185;
 				case GainType.Building:
-					return 60;
+					return 130;
 				case GainType.Recruit:
-					return 80;
+					return 155;
+				case GainType.Power:
+					return 205;
 				}
 				return 1;
 			}
@@ -2720,13 +2809,19 @@ namespace Scythe.GameLogic
 		private void GainMechAdvanced(AiPlayer aiPlayer)
 		{
 			string text = "Gain Mech";
+			GainMech gainMech = (GainMech)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetGainAction(0);
+			this.PerformGainMechAdvanced(aiPlayer, gainMech, text);
+			if (!gainMech.ActionSelected)
+			{
+				return;
+			}
 			if (!aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
+				gainMech.Clear();
 				return;
 			}
-			GainMech gainMech = (GainMech)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetGainAction(0);
-			this.PerformGainMechAdvanced(aiPlayer, gainMech, text);
+			gainMech.Execute();
 		}
 
 		private void PerformGainMechAdvanced(AiPlayer aiPlayer, GainMech gainMech, string text)
@@ -2772,7 +2867,7 @@ namespace Scythe.GameLogic
 						}
 					}
 				}
-				if ((aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || aiPlayer.player.matFaction.faction == Faction.Crimea)
+				if ((aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Rusviet)
 				{
 					foreach (Worker worker3 in aiPlayer.player.matPlayer.workers)
 					{
