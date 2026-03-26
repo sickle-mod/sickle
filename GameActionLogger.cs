@@ -444,7 +444,7 @@ namespace Scythe.GameLogic
 											if (deployLogInfo != null)
 											{
 												string text = ((deployLogInfo.Position != null) ? string.Format("Hex({0},{1})", deployLogInfo.Position.posX, deployLogInfo.Position.posY) : "");
-												string text2 = ((deployLogInfo.DeployedMech != null) ? GameActionLogger.MechName(deployLogInfo.DeployedMech) : "");
+												string text2 = ((deployLogInfo.DeployedMech != null) ? GameActionLogger.MechName(deployLogInfo.DeployedMech, deployLogInfo.MechBonus) : "");
 												string text3 = ((deployLogInfo.MechBonus != 0) ? string.Format(" +{0}bonus", deployLogInfo.MechBonus) : "");
 												return (text2 + " " + text + text3).Trim();
 											}
@@ -915,19 +915,23 @@ namespace Scythe.GameLogic
 		}
 
 		// Token: 0x060042C7 RID: 17095 RVA: 0x0016D068 File Offset: 0x0016B268
-		private static string MechName(Mech mech)
+		private static string MechName(Mech mech, int abilityIndex = -1)
 		{
 			try
 			{
-				if (mech != null && mech.Owner != null && mech.Owner.matFaction != null && mech.Owner.matFaction.abilities != null && mech.Id < mech.Owner.matFaction.abilities.Count)
+				if (mech != null && mech.Owner != null && mech.Owner.matFaction != null && mech.Owner.matFaction.abilities != null)
 				{
-					AbilityPerk abilityPerk = mech.Owner.matFaction.abilities[mech.Id];
-					int num = (int)abilityPerk;
-					if (num == 3 || num == 12 || num == 17 || num == 20)
+					int num2 = (abilityIndex != -1) ? abilityIndex : mech.Id;
+					if (num2 >= 0 && num2 < mech.Owner.matFaction.abilities.Count)
 					{
-						return "Riverwalk";
+						AbilityPerk abilityPerk = mech.Owner.matFaction.abilities[num2];
+						int num = (int)abilityPerk;
+						if (num == 3 || num == 12 || num == 17 || num == 20)
+						{
+							return "Riverwalk";
+						}
+						return abilityPerk.ToString();
 					}
-					return abilityPerk.ToString();
 				}
 			}
 			catch

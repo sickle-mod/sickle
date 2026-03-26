@@ -1236,7 +1236,7 @@ namespace Scythe.GameLogic
 		public void UpdateBuildingOrder(AiPlayer aiPlayer)
 		{
 			BuildingType buildingType = BuildingType.Mine;
-			if ((aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial))
+			if ((aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial))
 			{
 				this.buildingPriority[BuildingType.Mill] = 12;
 			}
@@ -1279,10 +1279,10 @@ namespace Scythe.GameLogic
 				}
 				else if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
 				{
-					this.buildingPriority[BuildingType.Mill] = 4;
-					this.buildingPriority[BuildingType.Armory] = 8;
+					this.buildingPriority[BuildingType.Armory] = 10;
+					this.buildingPriority[BuildingType.Mine] = 8;
 					this.buildingPriority[BuildingType.Monument] = 6;
-					this.buildingPriority[BuildingType.Mine] = 10;
+					this.buildingPriority[BuildingType.Mill] = 4;
 				}
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType != PlayerMatType.Agricultural && aiPlayer.player.matPlayer.matType != PlayerMatType.Industrial)
@@ -1388,6 +1388,14 @@ namespace Scythe.GameLogic
 				this.recruitPriority[DownActionType.Build] = 4;
 				this.recruitPriority[DownActionType.Deploy] = 8;
 				this.recruitPriority[DownActionType.Upgrade] = 6;
+				return;
+			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitPriority[DownActionType.Enlist] = 10;
+				this.recruitPriority[DownActionType.Deploy] = 8;
+				this.recruitPriority[DownActionType.Upgrade] = 6;
+				this.recruitPriority[DownActionType.Build] = 4;
 				return;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural)

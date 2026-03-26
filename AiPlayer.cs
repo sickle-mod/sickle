@@ -1830,7 +1830,7 @@ namespace Scythe.GameLogic
 		{
 			if (this.strategicAnalysis.pursuingWorkerStar && this.strategicAnalysis.workersInaVillage > 0 && this.player.matPlayer.workers.Count < 8 && this.CanPlayTopAction(GainType.Produce) && this.player.OwnedFields(false).Count > 0 && this.ProduceWillYieldSomething())
 			{
-				int p = 430; // High priority for final workers (aligned with Saxony/Crimea core priorities)
+				int p = priority; // Correctly use the passed priority
 				this.SafeAdd(actionOptions, p, new AiRecipe(this.AiTopActions[GainType.Produce], "Produce for worker star"));
 			}
 		}
@@ -1872,14 +1872,21 @@ namespace Scythe.GameLogic
 					case DownActionType.Enlist: resourceType = ResourceType.food; break;
 					}
 
-					// Improvement: If wood is low priority (as usual), and we need something else, trade for that!
+					// Improvement: If we already have enough, or if wood is low priority (as usual), trade for something else!
 					// ALSO: Boost priority if we are escalated
 					int p = priority;
 					if (this.strategicAnalysis.resourcePrioritySorted.Count > 0)
 					{
 						ResourceType bestResource = this.strategicAnalysis.resourcePrioritySorted.Values[0];
-						// Only switch away from Wood if it's actually low priority
-						if (resourceType == ResourceType.wood && this.strategicAnalysis.resourceDemandPriority[ResourceType.wood] < 10)
+						
+						int currentResources = this.player.Resources(false)[resourceType];
+						int costPerAction = (int)aiAction.downAction.GetPayAction(0).Amount;
+						
+						// Switch away if:
+						// 1. Defualt is Wood and Wood is low priority
+						// 2. We already have enough for 2 or more actions of this type
+						if ((resourceType == ResourceType.wood && this.strategicAnalysis.resourceDemandPriority[ResourceType.wood] < 10) ||
+							(currentResources >= costPerAction * 2))
 						{
 							resourceType = bestResource;
 						}
@@ -2184,6 +2191,10 @@ namespace Scythe.GameLogic
 				dictionary[DownActionType.Enlist] = 285;
 				num3 = 250;
 			}
+			if (this.player.matPlayer.matType == PlayerMatType.Industrial || this.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				dictionary[DownActionType.Deploy] += 100; // Industrial/Innovative Mech Priority
+			}
 			if (this.player.matPlayer.UpgradesDone >= 3)
 			{
 				if (this.player.matPlayer.matType == PlayerMatType.Industrial)
@@ -2352,7 +2363,14 @@ namespace Scythe.GameLogic
 					this.SafeAdd(sortedList, 440, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Saxony: Core Mech Priority"));
 				}
 
-				if (count4 < 5)
+				if (count4 < 8 && this.player.matPlayer.matType == PlayerMatType.Engineering)
+				{
+					if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage > 0 && this.player.OwnedFields(false).Count > 0)
+					{
+						this.SafeAdd(sortedList, 95, new AiRecipe(this.AiTopActions[GainType.Produce], "Saxony Engineering: Low Priority Workers (" + count4.ToString() + "/8)"));
+					}
+				}
+				else if (count4 < 5)
 				{
 					if (this.CanPlayTopAction(GainType.Produce) && this.strategicAnalysis.workersInaVillage > 0 && this.player.OwnedFields(false).Count > 0)
 					{
@@ -2366,8 +2384,8 @@ namespace Scythe.GameLogic
 					int powerThreshold = (num == 5) ? 7 : 3; // Increase threshold if missing 6th star
 					if (this.player.Power < powerThreshold && this.CanPlayTopAction(GainType.Power))
 					{
-						// Engineering avoids power star, so use lower priority for generic power gain
-						int powPri = (this.player.matPlayer.matType == PlayerMatType.Engineering) ? 250 : 255;
+						// Engineering prioritizes Power for combat readiness
+						int powPri = 300;
 						this.SafeAdd(sortedList, powPri, new AiRecipe(this.AiTopActions[GainType.Power], "Saxony: Gain power for combat"));
 					}
 					else if (count5 < 3 && this.strategicAnalysis.enemyCanBeAttackedBy.Count > 0 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
@@ -2404,8 +2422,32 @@ namespace Scythe.GameLogic
 					// Popularity (if missing, but only if we have high popularity already)
 					if (this.player.GetNumberOfStars(StarType.Popularity) == 0 && this.player.Popularity >= 13 && this.CanPlayTopAction(GainType.Popularity))
 					{
-						this.SafeAdd(sortedList, 300, new AiRecipe(this.AiTopActions[GainType.Popularity], "Saxony: Priority Popularity Star"));
+						this.SafeAdd(sortedList, 93, new AiRecipe(this.AiTopActions[GainType.Popularity], "Saxony: Priority Popularity Star (Low)"));
 					}
+				}
+			}
+
+			// Albion Innovative Core Star Priorities
+			if (this.player.matFaction.faction == Faction.Albion && this.player.matPlayer.matType == PlayerMatType.Innovative)
+			{
+				int upgradesDone = this.player.matPlayer.UpgradesDone;
+				int mechsDeployed = this.player.matFaction.mechs.Count;
+				int recruitsEnlisted = this.player.matPlayer.RecruitsEnlisted;
+
+				// Upgrades (Trade Column)
+				if (upgradesDone < 6 && this.AiActions[this.gainUpgradeActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					this.SafeAdd(sortedList, 400, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainUpgradeActionPosition)], "Albion Innovative: Core Upgrade Priority"));
+				}
+				// Mechs (Produce Column)
+				if (mechsDeployed < 4 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					this.SafeAdd(sortedList, 395, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Albion Innovative: Core Mech Priority"));
+				}
+				// Recruits (Move Column)
+				if (recruitsEnlisted < 4 && this.AiActions[this.gainRecruitActionPosition[0]].downAction.CanPlayerPayActions())
+				{
+					this.SafeAdd(sortedList, 390, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainRecruitActionPosition)], "Albion Innovative: Core Recruit Priority"));
 				}
 			}
 			if (this.player.matFaction.faction == Faction.Polania)
@@ -2716,6 +2758,21 @@ namespace Scythe.GameLogic
 
 				int produceDemandWeight = (spreadingTriggered && !this.strategicAnalysis.pursuingWorkerStar) ? 50 : 132;
 				int produceWorkerWeight = (spreadingTriggered && !this.strategicAnalysis.pursuingWorkerStar) ? 50 : 205;
+				if (this.player.aiDifficulty == AIDifficulty.Hard)
+				{
+					produceDemandWeight += 1000;
+					produceWorkerWeight += 1000;
+					if (this.player.matPlayer.matType == PlayerMatType.Industrial || this.player.matPlayer.matType == PlayerMatType.Innovative)
+					{
+						produceDemandWeight += 100;
+						produceWorkerWeight += 100;
+					}
+					// Suppress high-priority worker star push for Saxony Engineering
+					if (this.player.matFaction.faction == Faction.Saxony && this.player.matPlayer.matType == PlayerMatType.Engineering)
+					{
+						produceWorkerWeight = 95;
+					}
+				}
 				this.ProduceForDemand(sortedList, produceDemandWeight);
 				this.ProduceForWorkerStar(sortedList, produceWorkerWeight);
 				this.MoveByAnalysisPriority(sortedList);
@@ -3414,46 +3471,28 @@ namespace Scythe.GameLogic
 					}
 				}
 
-				if (faction == Faction.Saxony && matType == PlayerMatType.Engineering)
+				if (faction == Faction.Nordic && matType == PlayerMatType.Militant)
 				{
 					switch (gt)
 					{
-					case GainType.Building:
-						if (this.player.matPlayer.buildings.Count < 1)
-						{
-							weight += 300; // Highest priority before first building
-						}
-						else
-						{
-							weight += 10; // Drop to low after 1 built
-						}
-						break;
-					case GainType.Power:
-						weight += 290;
+					case GainType.Recruit:
+						weight += 300;
 						break;
 					case GainType.Resource:
 						if (ga is GainResource)
 						{
 							GainResource gainResource = (GainResource)ga;
-							if (gainResource.ResourceToGain == ResourceType.wood && ga.Amount >= 3)
+							if (gainResource.ResourceToGain == ResourceType.food)
 							{
-								weight += 280; // Wood only high if 3+ can be gained
-							}
-							else if (gainResource.ResourceToGain == ResourceType.wood)
-							{
-								weight += 50; // Low wood if < 3
-							}
-							else if (gainResource.ResourceToGain == ResourceType.food)
-							{
-								weight += 260;
-							}
-							else if (gainResource.ResourceToGain == ResourceType.oil)
-							{
-								weight += 220;
+								weight += 290;
 							}
 							else if (gainResource.ResourceToGain == ResourceType.metal)
 							{
-								weight += 200;
+								weight += 280;
+							}
+							else if (gainResource.ResourceToGain == ResourceType.oil)
+							{
+								weight += 260;
 							}
 							else
 							{
@@ -3461,31 +3500,111 @@ namespace Scythe.GameLogic
 							}
 						}
 						break;
-					case GainType.CombatCard:
+					case GainType.Upgrade:
+						weight += 270;
+						break;
+					case GainType.Mech:
+						weight += 250;
+						break;
+					case GainType.Power:
 						weight += 240;
+						break;
+					case GainType.CombatCard:
+						weight += 230;
+						break;
+					default:
+						weight += 50;
+						break;
+					}
+					continue;
+				}
+
+				if (faction == Faction.Albion && matType == PlayerMatType.Innovative)
+				{
+					switch (gt)
+					{
+					case GainType.Recruit:
+						weight += 300;
+						break;
+					case GainType.Resource:
+						if (ga is GainResource)
+						{
+							GainResource gainResource = (GainResource)ga;
+							if (gainResource.ResourceToGain == ResourceType.food)
+							{
+								weight += 290;
+							}
+							else if (gainResource.ResourceToGain == ResourceType.oil)
+							{
+								weight += 280;
+							}
+							else if (gainResource.ResourceToGain == ResourceType.metal)
+							{
+								weight += 260;
+							}
+							else
+							{
+								weight += 50;
+							}
+						}
+						break;
+					case GainType.Upgrade:
+						weight += 270;
+						break;
+					case GainType.Mech:
+						weight += 250;
+						break;
+					default:
+						weight += 50;
+						break;
+					}
+					continue;
+				}
+
+				if (faction == Faction.Saxony && matType == PlayerMatType.Engineering)
+				{
+					switch (gt)
+					{
+					case GainType.Power:
+						weight += 300;
+						break;
+					case GainType.CombatCard:
+						weight += 290;
+						break;
+					case GainType.Mech:
+						weight += 280;
+						break;
+					case GainType.Resource:
+						if (ga is GainResource)
+						{
+							GainResource gainResource = (GainResource)ga;
+							if (gainResource.ResourceToGain == ResourceType.metal)
+							{
+								weight += 270;
+							}
+							else if (gainResource.ResourceToGain == ResourceType.wood)
+							{
+								weight += 260;
+							}
+							else if (gainResource.ResourceToGain == ResourceType.food)
+							{
+								if (ga.Amount > 2)
+								{
+									weight += 240;
+								}
+								else 
+								{
+									weight += 10;
+								}
+							}
+							else
+							{
+								weight += 50;
+							}
+						}
 						break;
 					case GainType.Recruit:
 						weight += 250;
-						break;
-					case GainType.Mech:
-						weight += 230;
-						break;
-					case GainType.Upgrade:
-						weight += 210;
-						break;
-					case GainType.Worker:
-						if (this.player.matPlayer.workers.Count < 5)
-						{
-							weight += 270; // High priority before 5 workers
-						}
-						else if (this.player.matPlayer.workers.Count < 8)
-						{
-							weight += 235; // Medium priority before 8 workers
-						}
-						else
-						{
-							weight += 50; // Low priority when capped
-						}
 						break;
 					default:
 						weight += 50;

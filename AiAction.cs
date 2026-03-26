@@ -405,6 +405,7 @@ namespace Scythe.GameLogic
 				return;
 			}
 			gainMech.Execute();
+			this.downAction.ReportLog(gainMech.GetLogInfo());
 		}
 
 		private void PerformGainMechBasic(AiPlayer aiPlayer, GainMech gainMech, string text)
@@ -497,6 +498,7 @@ namespace Scythe.GameLogic
 				return;
 			}
 			gainBuilding.Execute();
+			this.downAction.ReportLog(gainBuilding.GetLogInfo());
 		}
 
 		private void PerformGainBuilding(AiPlayer aiPlayer, GainBuilding gainBuilding, string text)
@@ -605,6 +607,7 @@ namespace Scythe.GameLogic
 				return;
 			}
 			gainRecruit.Execute();
+			this.downAction.ReportLog(gainRecruit.GetLogInfo());
 		}
 
 		private void PerformGainRecruit(AiPlayer aiPlayer, GainRecruit gainRecruit, string text)
@@ -1166,6 +1169,7 @@ namespace Scythe.GameLogic
 			}
 			text += " ...Upgrade performed";
 			gainUpgrade.Execute();
+			this.downAction.ReportLog(gainUpgrade.GetLogInfo());
 		}
 
 		private void PerformGainUpgrade(AiPlayer player, GainUpgrade gainUpgrade, string text)
@@ -1184,6 +1188,7 @@ namespace Scythe.GameLogic
 			}
 			text += " ...Upgrade performed";
 			gainUpgrade.Execute();
+			this.downAction.ReportLog(gainUpgrade.GetLogInfo());
 		}
 
 		public void SetUpgradeActions(AiPlayer player, GainUpgrade gainUpgrade)
@@ -1297,6 +1302,22 @@ namespace Scythe.GameLogic
 		// Token: 0x06002CB0 RID: 11440 RVA: 0x000FA50C File Offset: 0x000F870C
 		private int UpgradePriorityAdvanced(GainType gainType, AiPlayer player)
 		{
+			if (player.player.matFaction.faction == Faction.Nordic && player.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				switch (gainType)
+				{
+				case GainType.Move:
+					return 200;
+				case GainType.Power:
+				case GainType.CombatCard:
+					return 190;
+				case GainType.Upgrade:
+					return 180;
+				case GainType.Mech:
+					return 170;
+				}
+				return 1;
+			}
 			if (player.player.matFaction.faction == Faction.Nordic && player.player.matPlayer.matType == PlayerMatType.Agricultural)
 			{
 				switch (gainType)
@@ -2178,21 +2199,21 @@ namespace Scythe.GameLogic
 				case GainType.Popularity:
 					return 150;
 				case GainType.Power:
-					return 140;
+					return 180;
 				case GainType.CombatCard:
 					return 170;
 				case GainType.Produce:
 					return 160;
 				case GainType.Move:
-					return 200;
+					return 190;
 				case GainType.Upgrade:
-					return 70;
+					return 20;
 				case GainType.Mech:
-					return 115;
+					return (player.player.matPlayer.UpgradesDone == 0) ? 50 : 70;
 				case GainType.Building:
-					return 60;
+					return (player.player.matPlayer.UpgradesDone == 0) ? 60 : 40;
 				case GainType.Recruit:
-					return 80;
+					return 10;
 				}
 				return 1;
 			}
@@ -2536,21 +2557,21 @@ namespace Scythe.GameLogic
 				case GainType.Popularity:
 					return 150;
 				case GainType.Power:
-					return 180;
+					return 170;
 				case GainType.CombatCard:
 					return 160;
 				case GainType.Produce:
-					return 170;
+					return 180;
 				case GainType.Move:
 					return 190;
 				case GainType.Upgrade:
-					return 90;
+					return 70;
 				case GainType.Mech:
-					return 80;
+					return 90;
 				case GainType.Building:
 					return 60;
 				case GainType.Recruit:
-					return 70;
+					return 80;
 				}
 				return 1;
 			}
@@ -2822,6 +2843,7 @@ namespace Scythe.GameLogic
 				return;
 			}
 			gainMech.Execute();
+			this.downAction.ReportLog(gainMech.GetLogInfo());
 		}
 
 		private void PerformGainMechAdvanced(AiPlayer aiPlayer, GainMech gainMech, string text)

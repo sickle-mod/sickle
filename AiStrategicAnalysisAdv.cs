@@ -25,13 +25,8 @@ namespace Scythe.GameLogic
 			this.priorityDemand = 230;
 			this.priorityMission = 210;
 			this.priorityEncounter = 150;
-			this.priorityFight = 2000; // Boosted from 1200
+			this.priorityFight = (aiPlayer.player.matFaction.faction == Faction.Saxony) ? 1200 : 1000;
 			if (this.ShouldForceCombatCatchup(aiPlayer))
-			{
-				this.priorityFight = 12000;
-			}
-			// Rusviet Patriotic: once core stars are earned, combat should override objective travel.
-			if (this.IsRusvietPatriotic(aiPlayer) && this.RusvietPatrioticWantsCombat(aiPlayer))
 			{
 				this.priorityFight = 12000;
 			}
@@ -227,34 +222,6 @@ namespace Scythe.GameLogic
 			}
 		}
 
-		private bool IsRusvietPatriotic(AiPlayer aiPlayer)
-		{
-			return aiPlayer.player.matFaction.faction == Faction.Rusviet && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic;
-		}
-
-		// After Rusviet Patriotic has earned Workers, Mechs, and Recruits stars, it should pursue combat.
-		private bool RusvietPatrioticHasCoreStars(AiPlayer aiPlayer)
-		{
-			return aiPlayer.player.GetNumberOfStars(StarType.Workers) > 0
-				&& aiPlayer.player.GetNumberOfStars(StarType.Mechs) > 0
-				&& aiPlayer.player.GetNumberOfStars(StarType.Recruits) > 0;
-		}
-
-		// "3 of the following 4 stars: Objectives, Power, Combat, Combat"
-		private bool RusvietPatrioticWantsCombat(AiPlayer aiPlayer)
-		{
-			if (!this.RusvietPatrioticHasCoreStars(aiPlayer))
-			{
-				return false;
-			}
-
-			int objectiveDone = aiPlayer.player.GetNumberOfStars(StarType.Objective) > 0 ? 1 : 0;
-			int powerDone = aiPlayer.player.GetNumberOfStars(StarType.Power) > 0 ? 1 : 0;
-			int combatDone = Math.Min(2, aiPlayer.player.GetNumberOfStars(StarType.Combat));
-			int totalDone = objectiveDone + powerDone + combatDone;
-
-			return totalDone < 3 && combatDone < 2;
-		}
 
 		private bool AreAllOpenObjectivesImpossible(AiPlayer aiPlayer)
 		{
@@ -281,13 +248,9 @@ namespace Scythe.GameLogic
 
 		private bool ShouldForceCombatCatchup(AiPlayer aiPlayer)
 		{
-			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
-			{
-				return false;
-			}
 			int totalStars = aiPlayer.player.GetNumberOfStars();
 			int combatStars = aiPlayer.player.GetNumberOfStars(StarType.Combat);
-			return (totalStars == 4 && combatStars == 0) || (totalStars == 5 && combatStars == 1);
+			return (totalStars == 4 && combatStars == 0) || (totalStars == 5 && combatStars <= 1);
 		}
 
 		// Sets up a 3-turn repeating cycle for specific faction/mat combos.
@@ -424,14 +387,32 @@ namespace Scythe.GameLogic
 				this.recruitOneTimePriority[GainType.Coin] = 20;
 				return;
 			}
+			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.recruitOneTimePriority[GainType.CombatCard] = 50;
+				this.recruitOneTimePriority[GainType.Popularity] = 40;
+				this.recruitOneTimePriority[GainType.Power] = 30;
+				this.recruitOneTimePriority[GainType.Coin] = 20;
+				return;
+			}
 			if (aiPlayer.player.matFaction.faction == Faction.Togawa && aiPlayer.player.matPlayer.matType != PlayerMatType.Patriotic)
 			{
 				this.recruitOneTimePriority[GainType.Power] = 20;
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony)
 			{
-				this.recruitOneTimePriority[GainType.Power] = 20;
-				this.recruitOneTimePriority[GainType.CombatCard] = 20;
+				if (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+				{
+					this.recruitOneTimePriority[GainType.CombatCard] = 50;
+					this.recruitOneTimePriority[GainType.Power] = 40;
+					this.recruitOneTimePriority[GainType.Coin] = 30;
+					this.recruitOneTimePriority[GainType.Popularity] = 20;
+				}
+				else 
+				{
+					this.recruitOneTimePriority[GainType.Power] = 20;
+					this.recruitOneTimePriority[GainType.CombatCard] = 20;
+				}
 				return;
 			}
 			if ((aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)))
@@ -487,10 +468,17 @@ namespace Scythe.GameLogic
 			int num = -1;
 			if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial)
 			{
-				this.mechPriority[0] = 6;
-				this.mechPriority[1] = 10;
-				this.mechPriority[2] = 4;
-				this.mechPriority[3] = 8;
+				this.mechPriority[0] = 4;
+				this.mechPriority[1] = 8;
+				this.mechPriority[2] = 6;
+				this.mechPriority[3] = 10;
+			}
+			else if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Militant)
+			{
+				this.mechPriority[3] = 10; // Speed
+				this.mechPriority[1] = 8;  // Seaworthy
+				this.mechPriority[2] = 6;  // Artillery
+				this.mechPriority[0] = 4;  // Riverwalk
 			}
 			else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
 			{
@@ -498,6 +486,13 @@ namespace Scythe.GameLogic
 				this.mechPriority[1] = 8;
 				this.mechPriority[2] = 4;
 				this.mechPriority[3] = 10;
+			}
+			else if (aiPlayer.player.matFaction.faction == Faction.Saxony && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering)
+			{
+				this.mechPriority[3] = 10; // Speed
+				this.mechPriority[1] = 8;  // Underpass
+				this.mechPriority[2] = 6;  // Disarm
+				this.mechPriority[0] = 4;  // Riverwalk
 			}
 			else if (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic)
 			{
@@ -2042,14 +2037,7 @@ namespace Scythe.GameLogic
 				}
 			}
 
-			bool isRusvietPatriotic = this.IsRusvietPatriotic(aiPlayer);
-			bool wantsCombat = isRusvietPatriotic && this.RusvietPatrioticWantsCombat(aiPlayer);
-			bool forceCombatCatchup = this.ShouldForceCombatCatchup(aiPlayer);
-			if (isRusvietPatriotic && !wantsCombat)
-			{
-				return 0f;
-			}
-			bool allowRisk = wantsCombat || forceCombatCatchup;
+			bool allowRisk = this.ShouldForceCombatCatchup(aiPlayer);
 
 			// Step 1: Base Strength Evaluation
 			int enemyMechs = hex.GetOwnerMechs().Count<Mech>();
@@ -2203,15 +2191,6 @@ namespace Scythe.GameLogic
 		// Token: 0x06002E2A RID: 11818
 		protected void UpdateMoveTargetsCombat(AiPlayer aiPlayer, int priProduce1, int priProduce2, int priEncounter, int priFight, int priBuildSpot)
 		{
-			bool isRusvietPatriotic = this.IsRusvietPatriotic(aiPlayer);
-			bool wantsCombat = isRusvietPatriotic && this.RusvietPatrioticWantsCombat(aiPlayer);
-			// Rusviet Patriotic priority rule:
-			// - While core stars (Workers/Mechs/Recruits) aren't done, combat is suppressed.
-			// - After core stars, combat is allowed until "3 of (Objectives, Power, Combat, Combat)" is reached.
-			if (isRusvietPatriotic && !wantsCombat)
-			{
-				return;
-			}
 
 			foreach (Mech mech in aiPlayer.player.matFaction.mechs)
 			{
