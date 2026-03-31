@@ -71,7 +71,7 @@ namespace Scythe.GameLogic
 			{
 				return;
 			}
-			this.MaybeEmitTurnDivider(this._gm.TurnCount);
+			this.MaybeEmitTurnDivider(this._gm.TurnCount + 1);
 			this._pending.Add(this.FormatLogEntry(logInfo));
 			if (this._pending.Count >= 20)
 			{
@@ -109,7 +109,7 @@ namespace Scythe.GameLogic
 			}
 			else
 			{
-				this._pending.Add(string.Format("[{0,4}]  {1,-14} >> \"{2}\"", this._gm.TurnCount, playerName, text.Trim()));
+				this._pending.Add(string.Format("[{0,4}]  {1,-14} >> \"{2}\"", this._gm.TurnCount + 1, playerName, text.Trim()));
 			}
 			if (this._pending.Count >= 20)
 			{
@@ -124,7 +124,7 @@ namespace Scythe.GameLogic
 			{
 				return;
 			}
-			this.MaybeEmitTurnDivider(this._gm.TurnCount);
+			this.MaybeEmitTurnDivider(this._gm.TurnCount + 1);
 			this.FlushToDisk();
 		}
 
@@ -137,7 +137,7 @@ namespace Scythe.GameLogic
 			}
 			string text = ((this._gm.GameLength != TimeSpan.Zero) ? this._gm.GameLength.ToString("hh\\:mm\\:ss") : "unknown");
 			this._pending.Add("");
-			this._pending.Add(string.Format("=== GAME OVER === (after {0} turns, {1})", this._gm.TurnCount, text));
+			this._pending.Add(string.Format("=== GAME OVER === (after {0} turns, {1})", this._gm.TurnCount + 1, text));
 			if (this._gm.StatsCalculated)
 			{
 				this.AppendFinalScores(this._gm.CalculateStats());
@@ -196,7 +196,7 @@ namespace Scythe.GameLogic
 		// Token: 0x060042B8 RID: 17080 RVA: 0x0016B680 File Offset: 0x00169880
 		private void WriteResumeMarker()
 		{
-			string marker = string.Format("\n--- RESUMED {0:yyyy-MM-dd HH:mm:ss} ", DateTime.Now) + string.Format("(turn {0}) ---\n", this._gm.TurnCount);
+			string marker = string.Format("\n--- RESUMED {0:yyyy-MM-dd HH:mm:ss} ", DateTime.Now) + string.Format("(turn {0}) ---\n", this._gm.TurnCount + 1);
 			GameActionLogger.TryWrite(delegate
 			{
 				File.AppendAllText(this._filePath, marker);
@@ -268,7 +268,7 @@ namespace Scythe.GameLogic
 				return;
 			}
 			this._lastTurnSeen = turnNumber;
-			this._pending.Add(string.Format("\n--- TURN {0} ---", turnNumber));
+			this._pending.Add(string.Format("--- TURN {0} ---", turnNumber));
 		}
 
 		// Token: 0x060042BC RID: 17084 RVA: 0x0016B9DC File Offset: 0x00169BDC
@@ -290,8 +290,8 @@ namespace Scythe.GameLogic
 			StringBuilder stringBuilder = new StringBuilder();
 			if (logInfo.ActionPlacement == ActionPositionType.Other)
 			{
-				string text2 = GameActionLogger.OtherActionDescription(logInfo);
-				stringBuilder.Append(string.Format("[{0,4}]  {1,-14} {2}", this._gm.TurnCount, text, text2));
+				string text2 = this.OtherActionDescription(logInfo);
+				stringBuilder.Append(string.Format("[{0,4}]  {1,-14} {2}", this._gm.TurnCount + 1, text, text2));
 			}
 			else
 			{
@@ -316,7 +316,7 @@ namespace Scythe.GameLogic
 				}
 				stringBuilder.Append(string.Format("[{0,4}]  {1,-14} {2,-8} {3,-28} {4}", new object[]
 				{
-					this._gm.TurnCount,
+					this._gm.TurnCount + 1,
 					text,
 					text3,
 					text4,
@@ -457,7 +457,12 @@ namespace Scythe.GameLogic
 											EnlistLogInfo enlistLogInfo = logInfo as EnlistLogInfo;
 											if (enlistLogInfo != null)
 											{
-												return (enlistLogInfo.TypeOfDownAction != DownActionType.Factory) ? string.Format("{0} -> +{1}", enlistLogInfo.TypeOfDownAction, enlistLogInfo.OneTimeBonus) : enlistLogInfo.TypeOfDownAction.ToString();
+												if (enlistLogInfo.TypeOfDownAction == DownActionType.Factory)
+												{
+													return enlistLogInfo.TypeOfDownAction.ToString();
+												}
+												string bonusPrefix = (enlistLogInfo.OneTimeBonus == GainType.Coin || enlistLogInfo.OneTimeBonus == GainType.Popularity || enlistLogInfo.OneTimeBonus == GainType.Power || enlistLogInfo.OneTimeBonus == GainType.CombatCard) ? "+2 " : "+";
+												return string.Format("{0} -> {1}{2}", enlistLogInfo.TypeOfDownAction, bonusPrefix, enlistLogInfo.OneTimeBonus);
 											}
 											ProductionLogInfo productionLogInfo = logInfo as ProductionLogInfo;
 											if (productionLogInfo != null)
@@ -672,7 +677,7 @@ namespace Scythe.GameLogic
 		}
 
 		// Token: 0x060042C3 RID: 17091 RVA: 0x0016C914 File Offset: 0x0016AB14
-		private static string OtherActionDescription(LogInfo logInfo)
+		private string OtherActionDescription(LogInfo logInfo)
 		{
 			if (logInfo.IsEncounter)
 			{
@@ -722,7 +727,27 @@ namespace Scythe.GameLogic
 				StarLogInfo starLogInfo = logInfo as StarLogInfo;
 				if (starLogInfo != null)
 				{
-					return string.Format("★ Star: {0} ({1}/6)", starLogInfo.GainedStar, starLogInfo.starsUnlocked);
+					Player p = this._gm.GetPlayerByFaction(starLogInfo.PlayerAssigned);
+					int count = 0;
+					int max = 0;
+					switch (starLogInfo.GainedStar)
+					{
+					case StarType.Upgrades: count = p.matPlayer.UpgradesDone; max = 6; break;
+					case StarType.Mechs: count = p.matFaction.mechs.Count; max = 4; break;
+					case StarType.Structures: count = p.matPlayer.buildings.Count; max = 4; break;
+					case StarType.Recruits: count = p.matPlayer.RecruitsEnlisted; max = 4; break;
+					case StarType.Workers: count = p.matPlayer.workers.Count; max = 8; break;
+					case StarType.Objective: count = p.ObjectivesDone; max = 1; break;
+					case StarType.Combat: count = p.Victories; max = 2; break;
+					case StarType.Popularity: count = p.Popularity; max = 18; break;
+					case StarType.Power: count = p.Power; max = 16; break;
+					}
+					
+					if (max > 0)
+					{
+						return string.Format("★ Star: {0} ({1}/{2}) [Total: {3}/6]", starLogInfo.GainedStar, count, max, starLogInfo.starsUnlocked);
+					}
+					return string.Format("★ Star: {0} [Total: {1}/6]", starLogInfo.GainedStar, starLogInfo.starsUnlocked);
 				}
 				FactoryLogInfo factoryLogInfo = logInfo as FactoryLogInfo;
 				if (factoryLogInfo != null && logInfo.Type == LogInfoType.FactoryCardGain)

@@ -170,6 +170,11 @@ namespace Scythe.GameLogic
 					// Accessing moveTarget[unit] for such a worker throws KeyNotFoundException,
 					// which escapes uncaught and deadlocks the game. Skip any unit without a target.
 					if (!player.strategicAnalysis.moveTarget.ContainsKey(unit)) continue;
+					
+					// Fix 4: Skip units already at their target (distance 0).
+					// This prevents "Move (3,4) -> (3,4)" waste.
+					if (unit.position.posX == player.strategicAnalysis.moveTarget[unit][0].posX && unit.position.posY == player.strategicAnalysis.moveTarget[unit][0].posY) continue;
+
 					this.gameManager.moveManager.SelectUnit(unit);
 					Dictionary<ResourceType, int> dictionary = null;
 					if (this.ShouldTakeResources(unit, player.strategicAnalysis.moveTarget[unit]) && unit.position.GetResourceCount() > 0)
@@ -392,13 +397,20 @@ namespace Scythe.GameLogic
 		private void GainMechBasic(AiPlayer aiPlayer)
 		{
 			string text = "Gain Mech";
-			GainMech gainMech = (GainMech)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetGainAction(0);
+			GainMech gainMech = (GainMech)this.downAction.GetGainAction(0);
 			this.PerformGainMechBasic(aiPlayer, gainMech, text);
 			if (!gainMech.ActionSelected)
 			{
 				return;
 			}
-			if (!aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetPayAction(0)))
+			// Bypass payment if this is a Bonus Action (Encounter or Factory reward)
+			if (this.gameManager.actionManager.GetLastBonusAction() == gainMech)
+			{
+				gainMech.Execute();
+				this.downAction.ReportLog(gainMech.GetLogInfo());
+				return;
+			}
+			if (!aiPlayer.Pay4Action((PayResource)this.downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
 				gainMech.Clear();
@@ -485,13 +497,20 @@ namespace Scythe.GameLogic
 		public void GainBuilding(AiPlayer aiPlayer)
 		{
 			string text = "Gain Building";
-			GainBuilding gainBuilding = (GainBuilding)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetGainAction(0);
+			GainBuilding gainBuilding = (GainBuilding)this.downAction.GetGainAction(0);
 			this.PerformGainBuilding(aiPlayer, gainBuilding, text);
 			if (!gainBuilding.ActionSelected)
 			{
 				return;
 			}
-			if (!aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainBuildingActionPosition[0]].downAction.GetPayAction(0)))
+			// Bypass payment if this is a Bonus Action (Encounter or Factory reward)
+			if (this.gameManager.actionManager.GetLastBonusAction() == gainBuilding)
+			{
+				gainBuilding.Execute();
+				this.downAction.ReportLog(gainBuilding.GetLogInfo());
+				return;
+			}
+			if (!aiPlayer.Pay4Action((PayResource)this.downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
 				gainBuilding.Clear();
@@ -594,13 +613,20 @@ namespace Scythe.GameLogic
 		public void GainRecruit(AiPlayer aiPlayer)
 		{
 			string text = "Gain Recruit";
-			GainRecruit gainRecruit = (GainRecruit)aiPlayer.AiActions[aiPlayer.gainRecruitActionPosition[0]].downAction.GetGainAction(0);
+			GainRecruit gainRecruit = (GainRecruit)this.downAction.GetGainAction(0);
 			this.PerformGainRecruit(aiPlayer, gainRecruit, text);
 			if (!gainRecruit.ActionSelected)
 			{
 				return;
 			}
-			if (!aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainRecruitActionPosition[0]].downAction.GetPayAction(0)))
+			// Bypass payment if this is a Bonus Action (Encounter or Factory reward)
+			if (this.gameManager.actionManager.GetLastBonusAction() == gainRecruit)
+			{
+				gainRecruit.Execute();
+				this.downAction.ReportLog(gainRecruit.GetLogInfo());
+				return;
+			}
+			if (!aiPlayer.Pay4Action((PayResource)this.downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
 				gainRecruit.Clear();
@@ -1149,7 +1175,7 @@ namespace Scythe.GameLogic
 		public void GainUpgrade(AiPlayer player)
 		{
 			string text = "Gain Upgrade";
-			GainUpgrade gainUpgrade = (GainUpgrade)player.AiActions[player.gainUpgradeActionPosition[0]].downAction.GetGainAction(0);
+			GainUpgrade gainUpgrade = (GainUpgrade)this.downAction.GetGainAction(0);
 			if (!gainUpgrade.GainAvaliable())
 			{
 				text += " ...Upgrade gain unavailable";
@@ -1161,7 +1187,14 @@ namespace Scythe.GameLogic
 				text += " ...Upgrade logic failed";
 				return;
 			}
-			if (!player.Pay4Action((PayResource)player.AiActions[player.gainUpgradeActionPosition[0]].downAction.GetPayAction(0)))
+			// Bypass payment if this is a Bonus Action (Encounter or Factory reward)
+			if (this.gameManager.actionManager.GetLastBonusAction() == gainUpgrade)
+			{
+				gainUpgrade.Execute();
+				this.downAction.ReportLog(gainUpgrade.GetLogInfo());
+				return;
+			}
+			if (!player.Pay4Action((PayResource)this.downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
 				gainUpgrade.Clear();
@@ -2147,19 +2180,19 @@ namespace Scythe.GameLogic
 				case GainType.Power:
 					return 180;
 				case GainType.CombatCard:
-					return 160;
-				case GainType.Produce:
 					return 170;
+				case GainType.Produce:
+					return 160;
 				case GainType.Move:
 					return 190;
 				case GainType.Upgrade:
-					return 80;
-				case GainType.Mech:
 					return 70;
+				case GainType.Mech:
+					return 80;
 				case GainType.Building:
-					return 10;
-				case GainType.Recruit:
 					return 90;
+				case GainType.Recruit:
+					return 60;
 				}
 				return 1;
 			}
@@ -2830,13 +2863,20 @@ namespace Scythe.GameLogic
 		private void GainMechAdvanced(AiPlayer aiPlayer)
 		{
 			string text = "Gain Mech";
-			GainMech gainMech = (GainMech)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetGainAction(0);
+			GainMech gainMech = (GainMech)this.downAction.GetGainAction(0);
 			this.PerformGainMechAdvanced(aiPlayer, gainMech, text);
 			if (!gainMech.ActionSelected)
 			{
 				return;
 			}
-			if (!aiPlayer.Pay4Action((PayResource)aiPlayer.AiActions[aiPlayer.gainMechActionPosition[0]].downAction.GetPayAction(0)))
+			// Bypass payment if this is a Bonus Action (Encounter or Factory reward)
+			if (this.gameManager.actionManager.GetLastBonusAction() == gainMech)
+			{
+				gainMech.Execute();
+				this.downAction.ReportLog(gainMech.GetLogInfo());
+				return;
+			}
+			if (!aiPlayer.Pay4Action((PayResource)this.downAction.GetPayAction(0)))
 			{
 				text += " ...too poor";
 				gainMech.Clear();

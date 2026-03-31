@@ -334,6 +334,14 @@ namespace Scythe.GameLogic
 			{
 				this.gameManager.actionManager.SetSectionAction(action.topAction, null, action.gainActionId);
 				action.ActionTopExecute(recipe, this);
+				// For non-Move top actions (e.g. Bolster) that have a moveAction delegate,
+				// we must invoke it here because AiAction.GainMove() is never called.
+				// For Move top actions, AiAction.GainMove() already calls recipe.moveAction,
+				// so we skip it here to avoid double-invocation.
+				if (recipe.moveAction != null && action.topAction.GetGainAction(action.gainActionId).GetGainType() != GainType.Move)
+				{
+					recipe.moveAction(recipe, this);
+				}
 			}
 			this.gameManager.actionManager.PrepareNextAction();
 		}
@@ -341,7 +349,7 @@ namespace Scythe.GameLogic
 		// Token: 0x06002DAF RID: 11695 RVA: 0x0010D46C File Offset: 0x0010B66C
 		private void PlayBottomAction(AiAction action)
 		{
-			if (this.player.currentMatSection == -1 || this.gameManager.actionManager.GetLastBonusAction() != null || this.WaitingForCard || this.bottomActionExecuted)
+			if (this.player.currentMatSection == -1 || this.WaitingForCard || this.bottomActionExecuted)
 			{
 				return;
 			}
@@ -1562,9 +1570,25 @@ namespace Scythe.GameLogic
 		// Token: 0x06002DC4 RID: 11716 RVA: 0x00044757 File Offset: 0x00042957
 		private void CoinIfPoor(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			if (this.player.Coins == 0 && this.CanPlayTopAction(GainType.Coin))
+			// User request: ONLY gain coins if 0 coins
+			if (this.player.Coins <= 0 && this.CanPlayTopAction(GainType.Coin))
 			{
-				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Coin], "No cash -> get Coin"));
+				// Check if any available action also performs a bottom action that gains coins
+				bool hasBottomActionCoinOption = false;
+				foreach (var recipe in actionOptions.Values)
+				{
+					if (recipe.action.downAction.GetGainAction(0) is GainCoin)
+					{
+						hasBottomActionCoinOption = true;
+						break;
+					}
+				}
+				
+				// If we have a bottom action that gives coins, we don't need the top action GainCoin (which is wasteful)
+				if (!hasBottomActionCoinOption)
+				{
+					this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Coin], "No cash -> get Coin"));
+				}
 			}
 		}
 
@@ -1594,9 +1618,25 @@ namespace Scythe.GameLogic
 		// Token: 0x06002DC7 RID: 11719 RVA: 0x000447AD File Offset: 0x000429AD
 		private void MoveByAnalysisPriority(SortedList<int, AiRecipe> actionOptions)
 		{
-			if (this.CanPlayTopAction(GainType.Move))
+			if (this.CanPlayTopAction(GainType.Move) && this.strategicAnalysis.movePrioritySorted.Count > 0 && this.strategicAnalysis.movePriorityHighest > -1)
 			{
-				this.SafeAdd(actionOptions, this.strategicAnalysis.movePriorityHighest, new AiRecipe(this.AiTopActions[GainType.Move], "Move by priority"));
+				bool hasMeaningfulMove = false;
+				foreach (Unit unit in this.strategicAnalysis.movePrioritySorted.Values)
+				{
+					if (this.strategicAnalysis.moveTarget.ContainsKey(unit))
+					{
+						GameHex hexTo = this.strategicAnalysis.moveTarget[unit][0];
+						if (unit.position.posX != hexTo.posX || unit.position.posY != hexTo.posY)
+						{
+							hasMeaningfulMove = true;
+							break;
+						}
+					}
+				}
+				if (hasMeaningfulMove)
+				{
+					this.SafeAdd(actionOptions, this.strategicAnalysis.movePriorityHighest, new AiRecipe(this.AiTopActions[GainType.Move], "Move by priority"));
+				}
 			}
 		}
 
@@ -1625,15 +1665,29 @@ namespace Scythe.GameLogic
 					return index;
 				}
 			}
-			if (this.AiActions[options[0]].topAction.Type == TopActionType.Bolster && this.player.matFaction.faction == Faction.Saxony)
+			if (this.AiActions[options[0]].topAction.Type == TopActionType.Bolster)
 			{
-				int num = options[0];
-				int num2 = options[1];
-				if (this.player.Power <= this.player.combatCards.Count * 2)
+				if (this.player.matFaction.faction == Faction.Saxony)
 				{
-					return num;
+					int num = options[0];
+					int num2 = options[1];
+					if (this.player.Power <= this.player.combatCards.Count * 2)
+					{
+						return num;
+					}
+					return num2;
 				}
-				return num2;
+				if (this.player.matFaction.faction == Faction.Crimea && this.player.matPlayer.matType == PlayerMatType.Innovative && this.gameManager.TurnCount < 11)
+				{
+					// For Innovative Crimea kickstart, prefer Combat Cards to enable Coercion
+					foreach (int index2 in options)
+					{
+						if (this.AiActions[index2].gainActionId == 1) // Traditionally, gainActionId 1 is Combat Cards for Bolster
+						{
+							return index2;
+						}
+					}
+				}
 			}
 			else
 			{
@@ -1644,6 +1698,7 @@ namespace Scythe.GameLogic
 				// Saxony trade: always pick resources, never fall back to popularity
 				return options[0];
 			}
+			return options[0];
 		}
 
 		// Token: 0x06002DCA RID: 11722 RVA: 0x0010FBB4 File Offset: 0x0010DDB4
@@ -2112,6 +2167,12 @@ namespace Scythe.GameLogic
 							this.SafeAdd(sortedList, 10000, new AiRecipe(this.AiTopActions[GainType.Produce], "WIN: 6th Star - Workers (Finishing)"));
 						}
 					}
+
+					// Desperation Pivot: If we are close to the Power star and it is the easiest path, Bolster even if not finishing
+					if (this.strategicAnalysis.winDesperation && this.strategicAnalysis.desperationStar == StarType.Power && this.CanPlayTopAction(GainType.Power))
+					{
+						this.SafeAdd(sortedList, 9990, new AiRecipe(this.AiTopActions[GainType.Power], "WIN: Desperation Pivot - Power Star"));
+					}
 				}
 
 				if (sortedList.Count > 0)
@@ -2381,11 +2442,11 @@ namespace Scythe.GameLogic
 				// Post-core priorities
 				if (upgradesDone >= 1 && count5 >= 2)
 				{
-					int powerThreshold = (num == 5) ? 7 : 3; // Increase threshold if missing 6th star
+					int powerThreshold = (num == 5) ? 10 : 3; // Increase threshold significantly if missing 6th star
 					if (this.player.Power < powerThreshold && this.CanPlayTopAction(GainType.Power))
 					{
 						// Engineering prioritizes Power for combat readiness
-						int powPri = 300;
+						int powPri = (num == 5) ? 1200 : 300;
 						this.SafeAdd(sortedList, powPri, new AiRecipe(this.AiTopActions[GainType.Power], "Saxony: Gain power for combat"));
 					}
 					else if (count5 < 3 && this.strategicAnalysis.enemyCanBeAttackedBy.Count > 0 && this.AiActions[this.gainMechActionPosition[0]].downAction.CanPlayerPayActions())
@@ -2723,12 +2784,16 @@ namespace Scythe.GameLogic
 				AiStrategicAnalysisAdv adv = this.strategicAnalysis as AiStrategicAnalysisAdv;
 				if (adv != null)
 				{
-					if (adv.coinPanic) this.CoinIfPoor(sortedList, 500);
+					this.CoinIfPoor(sortedList, 500);
 					if (adv.powerPanic) this.PowerIfWeak(sortedList, 490);
 					if (adv.popularityPanic) this.PopularityIfHated(sortedList, 480);
 				}
 
-				this.CoinIfPoor(sortedList, 142);
+				// USER rule: only call if actually poor, and prefer bottom actions
+				if (this.player.Coins <= 0)
+				{
+					this.CoinIfPoor(sortedList, 142);
+				}
 				if (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Agricultural)
 				{
 					this.PowerIfWeak(sortedList, 114);
@@ -3605,6 +3670,78 @@ namespace Scythe.GameLogic
 						break;
 					case GainType.Recruit:
 						weight += 250;
+						break;
+					default:
+						weight += 50;
+						break;
+					}
+					continue;
+				}
+
+				if (faction == Faction.Rusviet && matType == PlayerMatType.Militant)
+				{
+					switch (gt)
+					{
+					case GainType.Power:
+						weight += 300;
+						break;
+					case GainType.CombatCard:
+						weight += 290;
+						break;
+					case GainType.Upgrade:
+						weight += 280;
+						break;
+					case GainType.Resource:
+						if (ga is GainResource)
+						{
+							GainResource gainResource = (GainResource)ga;
+							if (gainResource.ResourceToGain == ResourceType.oil)
+							{
+								weight += 270;
+							}
+							else if (gainResource.ResourceToGain == ResourceType.metal && this.player.GetNumberOfStars(StarType.Mechs) == 0)
+							{
+								weight += 260; // Standard Militant boost
+							}
+							else
+							{
+								weight += 120; // Default resource weight
+							}
+						}
+						else
+						{
+							weight += 120;
+						}
+						break;
+					case GainType.Mech:
+						if (this.player.GetNumberOfStars(StarType.Mechs) == 0)
+						{
+							weight += 250; // Standard Rusviet boost
+						}
+						break;
+					case GainType.Recruit:
+						if (this.player.GetNumberOfStars(StarType.Recruits) == 0)
+						{
+							weight += 200; // Standard Rusviet boost
+						}
+						break;
+					case GainType.Building:
+						if (this.player.GetNumberOfStars(StarType.Structures) == 0)
+						{
+							weight += 160;
+						}
+						break;
+					case GainType.Popularity:
+						weight += 90;
+						break;
+					case GainType.Coin:
+						weight += 80;
+						break;
+					case GainType.Worker:
+						if (this.player.matPlayer.workers.Count < 5)
+						{
+							weight += 70;
+						}
 						break;
 					default:
 						weight += 50;
