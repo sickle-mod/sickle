@@ -19,12 +19,6 @@ namespace Scythe.GameLogic
 		{
 			this.workersOutOfBase = 0;
 			this.workersInaVillage = 0;
-			this.priorityBuilding = 1500;
-			this.prioritySpreading = 220;
-			this.priorityWorker = 205;
-			this.priorityDemand = 230;
-			this.priorityMission = 210;
-			this.priorityEncounter = 150;
 			this.priorityFight = (aiPlayer.player.matFaction.faction == Faction.Saxony) ? 1200 : 1000;
 			if (this.ShouldForceCombatCatchup(aiPlayer))
 			{
@@ -140,7 +134,7 @@ namespace Scythe.GameLogic
 				}
 			}
 
-			// Global <30 Turn Escalator: Force AIs to aggressively pursue board interaction (Combat/Encounters/Factory) after Turn 20.
+			// Global <26 Turn Escalator: Force AIs to aggressively pursue board interaction (Combat/Encounters/Factory) after Turn 20.
 			if (this.gameManager.TurnCount >= 20 && aiPlayer.player.GetNumberOfStars() >= 3)
 			{
 				foreach (Unit unit in this.movePriority.Keys.ToList<Unit>())
@@ -148,7 +142,30 @@ namespace Scythe.GameLogic
 					// Boost any targeted move > 100 (covers encounters, combat, and factory targets)
 					if (this.movePriority[unit] >= 100 && this.movePriority[unit] < 5000)
 					{
-						this.movePriority[unit] += 1000; // Force Move action to override stagnant Produce loops
+						this.movePriority[unit] += 2000; // Force Move action to override stagnant Produce loops
+					}
+				}
+			}
+
+			// Togawa Trap Priority: Reserve traps for Tunnel (5,5) and Factory (3,4)
+			if (aiPlayer.player.matFaction.faction == Faction.Togawa)
+			{
+				Unit hero = aiPlayer.player.character;
+				if (!this.movePriority.ContainsKey(hero) || this.movePriority[hero] < 1500)
+				{
+					GameHex targetTunnel = this.gameManager.gameBoard.hexMap[5, 5];
+					GameHex targetFactory = this.gameManager.gameBoard.factory;
+
+					GameHex bestTrapHex = null;
+					if (targetFactory.Owner != aiPlayer.player) bestTrapHex = targetFactory;
+					else if (targetTunnel.Owner != aiPlayer.player) bestTrapHex = targetTunnel;
+
+					if (bestTrapHex != null && this.moveRangeAll[hero].ContainsKey(bestTrapHex))
+					{
+						if (this.movePriority.ContainsKey(hero)) this.movePriority.Remove(hero);
+						this.movePriority.Add(hero, 1500); 
+						this.moveTarget[hero] = new List<GameHex> { bestTrapHex };
+						this.moveDistance[hero] = this.moveRangeAll[hero][bestTrapHex];
 					}
 				}
 			}
@@ -170,17 +187,54 @@ namespace Scythe.GameLogic
 			this.UpdateResourcePressure(aiPlayer);
 			// UpdateWinDesperation(aiPlayer); // Moved to earlier in Run() to inform UpdateWorkerCountTarget
 			this.UpdateTurnCycle(aiPlayer);
+			this.EnforceFactoryGuard(aiPlayer);
+		}
+
+		private void EnforceFactoryGuard(AiPlayer aiPlayer)
+		{
+			if (this.gameManager.gameBoard.factory.Owner != aiPlayer.player) return;
+			
+			// Identify units on the factory
+			List<Unit> unitsOnFactory = this.gameManager.gameBoard.factory.GetOwnerUnits();
+			if (unitsOnFactory.Count == 0) return;
+
+			// If no combat star is the final win condition, keep at least one unit here.
+			// Special case: if we have 5 stars and need a combat star, allow moving off if prioritizing combat.
+			bool needsCombatStarForVictory = this.winDesperation && (aiPlayer.player.GetNumberOfStars(StarType.Combat) < (aiPlayer.player.matFaction.faction == Faction.Saxony ? 6 : 2));
+
+			// Standard Rule: Keep one unit on the factory.
+			// We check if ANY unit on the factory already has a high-priority move (Combat/Encounter).
+			// If not, we lock the lowest-ID unit there by giving it a 'Hold' priority or removing its move.
+			
+			Unit bestGuard = null;
+			bool guardAlreadyStaying = false;
+
+			foreach (Unit u in unitsOnFactory)
+			{
+				if (!this.movePriority.ContainsKey(u) || this.movePriority[u] < 100)
+				{
+					guardAlreadyStaying = true;
+					break;
+				}
+				if (bestGuard == null || u.Id < bestGuard.Id) bestGuard = u;
+			}
+
+			if (!guardAlreadyStaying && bestGuard != null && !needsCombatStarForVictory)
+			{
+				// Force the best candidate to stay
+				if (this.movePriority.ContainsKey(bestGuard))
+				{
+					this.movePriority.Remove(bestGuard);
+					this.moveTarget.Remove(bestGuard);
+					this.moveDistance.Remove(bestGuard);
+				}
+			}
 		}
 
 		public bool coinPanic;
 		public bool powerPanic;
 		public bool popularityPanic;
-		private int priorityBuilding;
-		private int prioritySpreading;
-		private int priorityWorker;
-		private int priorityDemand;
-		private int priorityMission;
-		private int priorityEncounter;
+
 
 		private void UpdateResourcePressure(AiPlayer aiPlayer)
 		{
@@ -189,7 +243,25 @@ namespace Scythe.GameLogic
 			this.popularityPanic = (aiPlayer.player.Popularity < 1);
 		}
 
-		private void UpdateWinDesperation(AiPlayer aiPlayer)
+		private int GetDownActionCoins(AiPlayer aiPlayer, DownActionType type)
+		{
+			DownAction action = aiPlayer.player.matPlayer.GetDownAction(type);
+			if (action != null)
+			{
+				try
+				{
+					GainAction ga = action.GetGainAction(1);
+					if (ga != null && ga.GetGainType() == GainType.Coin)
+					{
+						return ga.Amount;
+					}
+				}
+				catch { }
+			}
+			return 0;
+		}
+
+		public override void UpdateWinDesperation(AiPlayer aiPlayer)
 		{
 			this.winDesperation = (aiPlayer.player.GetNumberOfStars() >= 5) || (aiPlayer.player.GetNumberOfStars() == 4 && aiPlayer.player.GetNumberOfStars(StarType.Combat) == 0);
 			if (!this.winDesperation)
@@ -198,35 +270,130 @@ namespace Scythe.GameLogic
 				return;
 			}
 
-			// Identify the "easiest" 6th star
+			float minCost = float.MaxValue;
+			int maxCoinYield = int.MinValue;
+			StarType bestStar = StarType.Combat; // Fallback
+
+			Action<float, int, StarType> EvaluateStar = (cost, coinYield, starType) =>
+			{
+				if (cost < minCost - 0.05f) 
+				{
+					minCost = cost;
+					maxCoinYield = coinYield;
+					bestStar = starType;
+				}
+				else if (System.Math.Abs(cost - minCost) <= 0.05f)
+				{
+					if (coinYield > maxCoinYield)
+					{
+						minCost = cost;
+						maxCoinYield = coinYield;
+						bestStar = starType;
+					}
+				}
+			};
+
 			if (aiPlayer.player.GetNumberOfStars(StarType.Workers) == 0)
 			{
-				this.desperationStar = StarType.Workers;
+				float cost = (8f - aiPlayer.player.matPlayer.workers.Count) / 2f; 
+				int coinYield = (aiPlayer.player.matPlayer.workers.Count >= 6) ? -1 : 0;
+				EvaluateStar(cost, coinYield, StarType.Workers);
 			}
-			else if (aiPlayer.player.GetNumberOfStars(StarType.Power) == 0 && aiPlayer.player.Power >= 11)
+			
+			if (aiPlayer.player.GetNumberOfStars(StarType.Power) == 0)
 			{
-				this.desperationStar = StarType.Power;
+				TopAction bolsterAction = aiPlayer.player.matPlayer.GetTopAction(TopActionType.Bolster);
+				float powerPerAction = 2f;
+				if (bolsterAction != null)
+				{
+					try {
+						for (int i = 0; i < 2; i++)
+						{
+							GainAction ga = bolsterAction.GetGainAction(i);
+							if (ga != null && ga.GetGainType() == GainType.Power)
+							{
+								powerPerAction = ga.Amount;
+								break;
+							}
+						}
+					} catch { }
+				}
+				float cost = (16f - aiPlayer.player.Power) / Math.Max(1f, powerPerAction);
+				EvaluateStar(cost, -1, StarType.Power);
 			}
-			else if (aiPlayer.player.GetNumberOfStars(StarType.Upgrades) == 0 && aiPlayer.player.matPlayer.UpgradesDone >= 4)
+
+			if (aiPlayer.player.GetNumberOfStars(StarType.Popularity) == 0)
 			{
-				this.desperationStar = StarType.Upgrades;
+				TopAction tradeAction = aiPlayer.player.matPlayer.GetTopAction(TopActionType.Trade);
+				float popPerAction = 1f;
+				if (tradeAction != null)
+				{
+					try {
+						for (int i = 0; i < 3; i++) 
+						{
+							GainAction ga = tradeAction.GetGainAction(i);
+							if (ga != null && ga.GetGainType() == GainType.Popularity)
+							{
+								popPerAction = ga.Amount;
+								break;
+							}
+						}
+					} catch { }
+				}
+				float cost = (18f - aiPlayer.player.Popularity) / Math.Max(1f, popPerAction);
+				EvaluateStar(cost, -1, StarType.Popularity);
 			}
-			else if (aiPlayer.player.GetNumberOfStars(StarType.Mechs) == 0 && aiPlayer.player.matFaction.mechs.Count >= 2)
+
+			if (aiPlayer.player.GetNumberOfStars(StarType.Upgrades) == 0)
 			{
-				this.desperationStar = StarType.Mechs;
+				float cost = 6f - aiPlayer.player.matPlayer.UpgradesDone;
+				int coinYield = this.GetDownActionCoins(aiPlayer, DownActionType.Upgrade);
+				EvaluateStar(cost, coinYield, StarType.Upgrades);
 			}
-			else if (aiPlayer.player.GetNumberOfStars(StarType.Recruits) == 0 && aiPlayer.player.matPlayer.RecruitsEnlisted >= 2)
+			
+			if (aiPlayer.player.GetNumberOfStars(StarType.Mechs) == 0)
 			{
-				this.desperationStar = StarType.Recruits;
+				float cost = 4f - aiPlayer.player.matFaction.mechs.Count;
+				int coinYield = this.GetDownActionCoins(aiPlayer, DownActionType.Deploy);
+				EvaluateStar(cost, coinYield, StarType.Mechs);
 			}
-			else if (aiPlayer.player.GetNumberOfStars(StarType.Structures) == 0 && aiPlayer.player.matPlayer.buildings.Count >= 2)
+			
+			if (aiPlayer.player.GetNumberOfStars(StarType.Recruits) == 0)
 			{
-				this.desperationStar = StarType.Structures;
+				float cost = 4f - aiPlayer.player.matPlayer.RecruitsEnlisted;
+				int coinYield = this.GetDownActionCoins(aiPlayer, DownActionType.Enlist);
+				EvaluateStar(cost, coinYield, StarType.Recruits);
 			}
-			else
+			
+			if (aiPlayer.player.GetNumberOfStars(StarType.Structures) == 0)
 			{
-				this.desperationStar = StarType.Combat; // Fallback to combat
+				float cost = 4f - aiPlayer.player.matPlayer.buildings.Count;
+				int coinYield = this.GetDownActionCoins(aiPlayer, DownActionType.Build);
+				EvaluateStar(cost, coinYield, StarType.Structures);
 			}
+
+			if (aiPlayer.player.GetNumberOfStars(StarType.Combat) < (aiPlayer.player.matFaction.faction == Faction.Saxony ? 6 : 2))
+			{
+				float cost = 3.5f; // Baseline combat cost
+				int coinYield = 0;
+				if (this.enemyCanBeAttackedBy != null && this.enemyCanBeAttackedBy.Count > 0) 
+				{
+					cost = 1.5f; // Target immediately available
+					coinYield = 1; // Slight tie-breaker preference
+				}
+				EvaluateStar(cost, coinYield, StarType.Combat);
+			}
+
+			if (aiPlayer.player.objectiveCards != null && aiPlayer.player.objectiveCards.Count > 0 && aiPlayer.player.GetNumberOfStars(StarType.Objective) == 0)
+			{
+				if (!this.AreAllOpenObjectivesImpossible(aiPlayer))
+				{
+					float cost = 3f; // Objective fallback
+					EvaluateStar(cost, 0, StarType.Objective);
+				}
+			}
+
+			this.desperationStar = bestStar;
 		}
 
 
@@ -1294,6 +1461,28 @@ namespace Scythe.GameLogic
 						break;
 				}
 			}
+
+			// Global star-based resource priority reduction:
+			// Once a star is earned, reduce the priority of its primary resource to 1
+			// so bots stop over-producing resources they no longer need.
+			// (Skip if winDesperation targets that specific star, since the desperation block above already boosted it.)
+			if (aiPlayer.player.GetNumberOfStars(StarType.Mechs) > 0 && !(this.winDesperation && this.desperationStar == StarType.Mechs))
+			{
+				this.resourceDemandPriority[ResourceType.metal] = Math.Min(this.resourceDemandPriority[ResourceType.metal], 1);
+			}
+			if (aiPlayer.player.GetNumberOfStars(StarType.Recruits) > 0 && !(this.winDesperation && this.desperationStar == StarType.Recruits))
+			{
+				this.resourceDemandPriority[ResourceType.food] = Math.Min(this.resourceDemandPriority[ResourceType.food], 1);
+			}
+			if (aiPlayer.player.GetNumberOfStars(StarType.Upgrades) > 0 && !(this.winDesperation && this.desperationStar == StarType.Upgrades))
+			{
+				this.resourceDemandPriority[ResourceType.oil] = Math.Min(this.resourceDemandPriority[ResourceType.oil], 1);
+			}
+			if (aiPlayer.player.GetNumberOfStars(StarType.Structures) > 0 && !(this.winDesperation && this.desperationStar == StarType.Structures))
+			{
+				this.resourceDemandPriority[ResourceType.wood] = Math.Min(this.resourceDemandPriority[ResourceType.wood], 1);
+			}
+
 			this.resourceHighestPriority = ResourceType.oil;
 			this.resourceHighestPriorityNoProduce = ResourceType.oil;
 
@@ -1900,7 +2089,7 @@ namespace Scythe.GameLogic
 		// Token: 0x06002E26 RID: 11814
 		protected void UpdateMoveTargetsObjective(AiPlayer aiPlayer, int priProduce1, int priProduce2, int priEncounter, int priFight, int priBuildSpot)
 		{
-			if (this.objectiveArea.Count > 0 && (aiPlayer.player.matFaction.faction == Faction.Saxony || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative)))
+			if (this.objectiveArea.Count > 0)
 			{
 				int num = 0;
 				Dictionary<Unit, int> dictionary = new Dictionary<Unit, int>();
@@ -2208,6 +2397,18 @@ namespace Scythe.GameLogic
 				valuation += baseAggression;
 			}
 
+			// Weakest Enemy Bonus: Prioritize targets with lowest Power + Combat Cards
+			int enemyBaseStrength = hex.Owner.Power + hex.Owner.combatCards.Count;
+			int weakestOverall = this.gameManager.GetPlayers().Where(p => p != aiPlayer.player).Min(p => p.Power + p.combatCards.Count);
+			if (enemyBaseStrength <= weakestOverall + 2)
+			{
+				valuation += 5f; // Reward routing towards the weak
+			}
+			else if (enemyBaseStrength >= 12)
+			{
+				valuation -= 5f; // Deter attacking the fortress unless desperate
+			}
+
 			// Factory Priority Boost (Global)
 			if (hex == this.gameManager.gameBoard.factory)
 			{
@@ -2233,12 +2434,9 @@ namespace Scythe.GameLogic
 
 			foreach (Mech mech in aiPlayer.player.matFaction.mechs)
 			{
-				// Fix 1: Always scan for attackable enemies regardless of whether the mech is already
-				// assigned to a production move. The movePriority guard was preventing enemyCanBeAttackedBy
-				// from being populated when all mechs were pre-assigned by UpdateMoveTargetsProduction,
-				// which caused the entire combat block below to be skipped (Count > 0 gate failed).
-				// The existing assignment guards at the unit-selection loops below still prevent a
-				// pre-assigned mech from being chosen; we only decouple the detection phase here.
+				bool wayfareUnlocked = aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matFaction.SkillUnlocked[1];
+				bool isLargeGame = this.gameManager.GetPlayers().Count > 5;
+
 				if (!this.moveRange.ContainsKey(mech))
 				{
 					this.moveRange.Add(mech, this.moveRangeAll[mech]);
@@ -2247,19 +2445,46 @@ namespace Scythe.GameLogic
 				{
 					if (gameHex.Owner != null && gameHex.Owner != aiPlayer.player && gameHex.GetOwnerUnitCount() > 0)
 					{
-						if (!this.enemyCanBeAttackedBy.ContainsKey(gameHex))
+						bool legalCombatHex = true;
+						if (wayfareUnlocked)
 						{
-							this.enemyCanBeAttackedBy.Add(gameHex, new List<Unit>());
+							bool isWayfareDropZone = isLargeGame && gameHex.hexType == HexType.farm;
+							if (isWayfareDropZone)
+							{
+								legalCombatHex = false;
+								if (mech.position.GetNeighboursAll().Contains(gameHex))
+								{
+									legalCombatHex = true;
+								}
+								else if (aiPlayer.player.matFaction.SkillUnlocked[3]) // Speed
+								{
+									foreach (GameHex step1 in mech.position.GetNeighboursAll())
+									{
+										if (step1.GetNeighboursAll().Contains(gameHex)) { legalCombatHex = true; break; }
+									}
+								}
+							}
 						}
-						if (!this.enemyCanBeAttackedBy[gameHex].Contains(mech))
+
+						if (legalCombatHex)
 						{
-							this.enemyCanBeAttackedBy[gameHex].Add(mech);
+							if (!this.enemyCanBeAttackedBy.ContainsKey(gameHex))
+							{
+								this.enemyCanBeAttackedBy.Add(gameHex, new List<Unit>());
+							}
+							if (!this.enemyCanBeAttackedBy[gameHex].Contains(mech))
+							{
+								this.enemyCanBeAttackedBy[gameHex].Add(mech);
+							}
 						}
 					}
 				}
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Saxony || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Polania && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering) || (aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial) || (aiPlayer.player.matFaction.faction == Faction.Albion && aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural))
 			{
+				bool wayfareUnlocked = aiPlayer.player.matFaction.faction == Faction.Crimea && aiPlayer.player.matFaction.SkillUnlocked[1];
+				bool isLargeGame = this.gameManager.GetPlayers().Count > 5;
+
 				if (!this.moveRange.ContainsKey(aiPlayer.player.character))
 				{
 					this.moveRange.Add(aiPlayer.player.character, this.moveRangeAll[aiPlayer.player.character]);
@@ -2268,11 +2493,35 @@ namespace Scythe.GameLogic
 				{
 					if (gameHex2.Owner != null && gameHex2.Owner != aiPlayer.player && gameHex2.GetOwnerUnitCount() > 0)
 					{
-						if (!this.enemyCanBeAttackedBy.ContainsKey(gameHex2))
+						bool legalCombatHex = true;
+						if (wayfareUnlocked)
 						{
-							this.enemyCanBeAttackedBy.Add(gameHex2, new List<Unit>());
+							bool isWayfareDropZone = isLargeGame && gameHex2.hexType == HexType.farm;
+							if (isWayfareDropZone)
+							{
+								legalCombatHex = false;
+								if (aiPlayer.player.character.position.GetNeighboursAll().Contains(gameHex2))
+								{
+									legalCombatHex = true;
+								}
+								else if (aiPlayer.player.matFaction.SkillUnlocked[3]) // Speed
+								{
+									foreach (GameHex step1 in aiPlayer.player.character.position.GetNeighboursAll())
+									{
+										if (step1.GetNeighboursAll().Contains(gameHex2)) { legalCombatHex = true; break; }
+									}
+								}
+							}
 						}
-						this.enemyCanBeAttackedBy[gameHex2].Add(aiPlayer.player.character);
+
+						if (legalCombatHex)
+						{
+							if (!this.enemyCanBeAttackedBy.ContainsKey(gameHex2))
+							{
+								this.enemyCanBeAttackedBy.Add(gameHex2, new List<Unit>());
+							}
+							this.enemyCanBeAttackedBy[gameHex2].Add(aiPlayer.player.character);
+						}
 					}
 				}
 			}
@@ -2292,7 +2541,10 @@ namespace Scythe.GameLogic
 			}
 
 			bool isHoardingPower = aiPlayer.player.Power >= 13 && aiPlayer.player.GetNumberOfStars(StarType.Combat) < 2 && aiPlayer.player.matFaction.faction != Faction.Saxony && !this.winDesperation;
-			if (priFight > 0 && !rusvietPatriotCombatRestricted && aiPlayer.strategicAnalysis.enemyCanBeAttackedBy.Count > 0 && (aiPlayer.player.Power >= 7 || aiPlayer.player.GetNumberOfStars(StarType.Power) > 0 || aiPlayer.player.matFaction.faction == Faction.Saxony || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa))) && (aiPlayer.player.GetNumberOfStars(StarType.Combat) < ((aiPlayer.player.matFaction.faction == Faction.Saxony) ? 6 : 2) || aiPlayer.player.matFaction.factionPerk == AbilityPerk.Dominate))
+			// Win-desperation bypass: When a bot has 5+ stars, bypass the Power >= 7 gate entirely
+			// so it can pursue its final combat star regardless of current power level.
+			bool powerGateMet = aiPlayer.player.Power >= 7 || aiPlayer.player.GetNumberOfStars(StarType.Power) > 0 || aiPlayer.player.matFaction.faction == Faction.Saxony || this.winDesperation || (aiPlayer.player.matPlayer.matType == PlayerMatType.Industrial && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Engineering && (aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Patriotic && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Mechanical && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Agricultural && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Militant && (aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Polania)) || (aiPlayer.player.matPlayer.matType == PlayerMatType.Innovative && (aiPlayer.player.matFaction.faction == Faction.Polania || aiPlayer.player.matFaction.faction == Faction.Crimea || aiPlayer.player.matFaction.faction == Faction.Albion || aiPlayer.player.matFaction.faction == Faction.Nordic || aiPlayer.player.matFaction.faction == Faction.Rusviet || aiPlayer.player.matFaction.faction == Faction.Togawa));
+			if (priFight > 0 && !rusvietPatriotCombatRestricted && aiPlayer.strategicAnalysis.enemyCanBeAttackedBy.Count > 0 && powerGateMet && (aiPlayer.player.GetNumberOfStars(StarType.Combat) < ((aiPlayer.player.matFaction.faction == Faction.Saxony) ? 6 : 2) || aiPlayer.player.matFaction.factionPerk == AbilityPerk.Dominate))
 			{
 				GameHex gameHex3 = null;
 				float num = 0f;
@@ -2549,12 +2801,31 @@ namespace Scythe.GameLogic
 				}
 			}
 
-			// Strategic Hunting: Any unassigned combat unit (Hero/Mechs) should move toward enemies or the Factory when aggressive.
+			// Strategic Hunting: Any unassigned combat unit (Hero/Mechs) should move toward the Factory or the weakest enemy.
 			if (priFight > 600 && aiPlayer.player.GetNumberOfStars(StarType.Combat) < ((aiPlayer.player.matFaction.faction == Faction.Saxony) ? 6 : 2))
 			{
 				List<Unit> combatUnits = new List<Unit>();
 				combatUnits.Add(aiPlayer.player.character);
 				foreach (Mech m in aiPlayer.player.matFaction.mechs) combatUnits.Add(m);
+
+				bool ownsFactory = this.gameManager.gameBoard.factory.Owner == aiPlayer.player;
+				bool factoryGuardAssigned = false;
+
+				// Find weakest enemy: lowest power, fewest combat cards as tiebreaker
+				Player weakestEnemy = null;
+				if (ownsFactory)
+				{
+					foreach (Player enemy in this.gameManager.GetPlayers())
+					{
+						if (enemy == aiPlayer.player) continue;
+						if (weakestEnemy == null
+							|| enemy.Power < weakestEnemy.Power
+							|| (enemy.Power == weakestEnemy.Power && enemy.combatCards.Count < weakestEnemy.combatCards.Count))
+						{
+							weakestEnemy = enemy;
+						}
+					}
+				}
 
 				foreach (Unit unit in combatUnits)
 				{
@@ -2564,19 +2835,25 @@ namespace Scythe.GameLogic
 						GameHex huntTarget = null;
 						int minDistance = 100;
 
-						// Prioritize Factory for Rusviet hunting
-						if (aiPlayer.player.matFaction.faction == Faction.Rusviet && this.gameManager.gameBoard.factory.Owner != aiPlayer.player)
+						if (!ownsFactory)
 						{
+							// Don't own factory → move towards it
 							huntTarget = this.gameManager.gameBoard.factory;
 							minDistance = (unit.position == null) ? 100 : this.CalculateHexDistance(unit.position, huntTarget);
 						}
 						else
 						{
-							// Find closest enemy
-							foreach (Player enemy in this.gameManager.GetPlayers())
+							// Own factory → keep one unit on it, route others towards weakest enemy
+							if (!factoryGuardAssigned && unit.position == this.gameManager.gameBoard.factory)
 							{
-								if (enemy == aiPlayer.player) continue;
-								foreach (Unit enemyUnit in enemy.GetAllUnits())
+								factoryGuardAssigned = true;
+								continue; // This unit stays to defend the factory
+							}
+
+							// Target closest unit of the weakest enemy
+							if (weakestEnemy != null)
+							{
+								foreach (Unit enemyUnit in weakestEnemy.GetAllUnits())
 								{
 									if (enemyUnit.position == null || enemyUnit.position.hexType == HexType.capital) continue;
 									int dist = (unit.position == null) ? 100 : this.CalculateHexDistance(unit.position, enemyUnit.position);
@@ -2627,20 +2904,22 @@ namespace Scythe.GameLogic
 				this.moveRange.Add(aiPlayer.player.character, this.moveRangeAll[aiPlayer.player.character]);
 			}
 
+			this.workersInaVillage = 0;
+			this.workersOutOfBase = 0;
+			foreach (Worker worker10 in aiPlayer.player.matPlayer.workers)
+			{
+				if (worker10.position.hexType == HexType.village)
+				{
+					this.workersInaVillage++;
+				}
+				if (worker10.position.hexType != HexType.capital)
+				{
+					this.workersOutOfBase++;
+				}
+			}
+
 			if (aiPlayer.player.matPlayer.workers.Count < this.workerCountTarget)
 			{
-				this.workersInaVillage = 0;
-				foreach (Worker worker10 in aiPlayer.player.matPlayer.workers)
-				{
-					if (worker10.position.hexType == HexType.village)
-					{
-						this.workersInaVillage++;
-					}
-					if (worker10.position.hexType != HexType.capital)
-					{
-						this.workersOutOfBase++;
-					}
-				}
 				if (this.pursuingWorkerStar && this.workersInaVillage < 3)
 				{
 					int num = 0;
@@ -2663,7 +2942,7 @@ namespace Scythe.GameLogic
 							}
 							if (gameHex != null)
 							{
-								this.movePriority.Add(worker4, 9790);
+								this.movePriority.Add(worker4, priFight - 50);
 								this.moveTarget.Add(worker4, new List<GameHex> { gameHex });
 								this.moveDistance.Add(worker4, this.moveRangeAll[worker4][gameHex]);
 								num++;
@@ -2691,7 +2970,7 @@ namespace Scythe.GameLogic
 					}
 					if (worker5 != null)
 					{
-						int movePri = (this.pursuingWorkerStar ? 9790 : (priProduce2 + 1));
+						int movePri = (this.pursuingWorkerStar ? (priFight - 50) : (priProduce2 + 1));
 						if (!this.movePriority.ContainsKey(worker5))
 						{
 							this.movePriority.Add(worker5, movePri);
@@ -2823,11 +3102,11 @@ namespace Scythe.GameLogic
 				}
 			}
 			IL_0680:
-			if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null && this.characterDistance.ContainsKey(this.encounterNearestHex) && this.characterDistance[this.encounterNearestHex] <= (int)aiPlayer.player.character.MaxMoveCount)
+			if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null)
 			{
 				this.movePriority.Add(aiPlayer.player.character, priEncounter);
 				this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { this.encounterNearestHex });
-				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance[this.encounterNearestHex]);
+				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance.ContainsKey(this.encounterNearestHex) ? this.characterDistance[this.encounterNearestHex] : 99);
 			}
 			foreach (KeyValuePair<Unit, int> keyValuePair in this.movePriority.ToList<KeyValuePair<Unit, int>>())
 			{

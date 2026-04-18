@@ -787,7 +787,6 @@ namespace Scythe.GameLogic
 							}
 						}
 					}
-					IL_072F:
 					if (flag)
 					{
 						this.movePriority.Add(mech2, (this.moveMechPassengers[mech2].Count < 2) ? priProduce1 : (priProduce2 + 2));
@@ -1023,11 +1022,11 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
-			if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null && aiPlayer.player.character.position != this.encounterNearestHex && this.characterDistance[this.encounterNearestHex] <= (int)aiPlayer.player.character.MaxMoveCount)
+			if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null && aiPlayer.player.character.position != this.encounterNearestHex)
 			{
 				this.movePriority.Add(aiPlayer.player.character, priEncounter);
 				this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { this.encounterNearestHex });
-				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance[this.encounterNearestHex]);
+				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance.ContainsKey(this.encounterNearestHex) ? this.characterDistance[this.encounterNearestHex] : 99);
 			}
 			if (aiPlayer.player.matFaction.faction == Faction.Nordic && aiPlayer.player.matPlayer.matPlayerSectionsCount <= 4 && aiPlayer.player.character.position != this.gameManager.gameBoard.factory && this.factoryDistance <= (int)aiPlayer.player.character.MaxMoveCount && !this.movePriority.ContainsKey(aiPlayer.player.character) && (this.gameManager.gameBoard.factory.Owner == aiPlayer.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0))
 			{
@@ -1181,7 +1180,7 @@ namespace Scythe.GameLogic
 					}
 				}
 			}
-			if (aiPlayer.player.matPlayer.matPlayerSectionsCount <= 4 && !this.movePriority.ContainsKey(aiPlayer.player.character))
+			if ((aiPlayer.player.matPlayer.matPlayerSectionsCount <= 4 || this.gameManager.TurnCount > 25 || aiPlayer.player.GetNumberOfStars() >= 4) && !this.movePriority.ContainsKey(aiPlayer.player.character))
 			{
 				GameHex factory = this.gameManager.gameBoard.factory;
 				if (this.characterDistance.ContainsKey(factory) && (aiPlayer.player.character.position.posX != factory.posX || aiPlayer.player.character.position.posY != factory.posY))
@@ -1193,11 +1192,11 @@ namespace Scythe.GameLogic
 					this.moveDistance.Add(aiPlayer.player.character, dist);
 				}
 			}
-			else if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null && (aiPlayer.player.character.position.posX != this.encounterNearestHex.posX || aiPlayer.player.character.position.posY != this.encounterNearestHex.posY) && this.characterDistance.ContainsKey(this.encounterNearestHex) && this.characterDistance[this.encounterNearestHex] <= (int)aiPlayer.player.character.MaxMoveCount)
+			else if (!this.movePriority.ContainsKey(aiPlayer.player.character) && this.encounterNearestHex != null && (aiPlayer.player.character.position.posX != this.encounterNearestHex.posX || aiPlayer.player.character.position.posY != this.encounterNearestHex.posY))
 			{
 				this.movePriority.Add(aiPlayer.player.character, priEncounter);
 				this.moveTarget.Add(aiPlayer.player.character, new List<GameHex> { this.encounterNearestHex });
-				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance[this.encounterNearestHex]);
+				this.moveDistance.Add(aiPlayer.player.character, this.characterDistance.ContainsKey(this.encounterNearestHex) ? this.characterDistance[this.encounterNearestHex] : 99);
 			}
 			int moveTieBreaker = 0;
 			foreach (KeyValuePair<Unit, int> keyValuePair2 in this.movePriority)

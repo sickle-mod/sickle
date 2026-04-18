@@ -138,6 +138,7 @@ namespace Scythe.GameLogic
 			string text = ((this._gm.GameLength != TimeSpan.Zero) ? this._gm.GameLength.ToString("hh\\:mm\\:ss") : "unknown");
 			this._pending.Add("");
 			this._pending.Add(string.Format("=== GAME OVER === (after {0} turns, {1})", this._gm.TurnCount + 1, text));
+			this.AppendObjectiveCards();
 			if (this._gm.StatsCalculated)
 			{
 				this.AppendFinalScores(this._gm.CalculateStats());
@@ -216,6 +217,33 @@ namespace Scythe.GameLogic
 				string text4 = (player.IsHuman ? "Human" : string.Format("AI ({0})", player.aiDifficulty));
 				sb.AppendLine(string.Format("  {0,2}. {1,-14} / {2,-18} | {3,-14} | {4}", new object[] { num, text, text2, text4, text3 }));
 				num++;
+			}
+		}
+
+		private void AppendObjectiveCards()
+		{
+			this._pending.Add("");
+			this._pending.Add("--- OBJECTIVE CARDS ---");
+			foreach (Player player in this._gm.players)
+			{
+				MatFaction matFaction = player.matFaction;
+				string faction = ((matFaction != null) ? matFaction.faction.ToString() : null) ?? "?";
+				if (player.objectiveCards != null && player.objectiveCards.Count > 0)
+				{
+					List<string> objIds = new List<string>();
+					foreach (ObjectiveCard obj in player.objectiveCards)
+					{
+						string status = "";
+						if (obj.status == ObjectiveCard.ObjectiveStatus.Completed) status = " (completed)";
+						else if (obj.status == ObjectiveCard.ObjectiveStatus.Disabled) status = " (disabled)";
+						objIds.Add("#" + obj.CardId.ToString() + status);
+					}
+					this._pending.Add(string.Format("  {0,-14} {1}", faction, string.Join(", ", objIds)));
+				}
+				else
+				{
+					this._pending.Add(string.Format("  {0,-14} (none)", faction));
+				}
 			}
 		}
 
@@ -681,6 +709,11 @@ namespace Scythe.GameLogic
 		{
 			if (logInfo.IsEncounter)
 			{
+				// Ensure EncounterCardId is populated from the GameManager if not already set
+				if (logInfo.EncounterCardId <= 0 && this._gm.LastEncounterCard != null)
+				{
+					logInfo.EncounterCardId = this._gm.LastEncounterCard.CardId;
+				}
 				List<string> list = new List<string>();
 				List<string> list2 = new List<string>();
 				if (logInfo.PayLogInfos != null)
@@ -742,12 +775,26 @@ namespace Scythe.GameLogic
 					case StarType.Popularity: count = p.Popularity; max = 18; break;
 					case StarType.Power: count = p.Power; max = 16; break;
 					}
-					
+
+					// For Objective stars, find and include the completed objective card number
+					string objSuffix = "";
+					if (starLogInfo.GainedStar == StarType.Objective && p.objectiveCards != null)
+					{
+						foreach (ObjectiveCard obj in p.objectiveCards)
+						{
+							if (obj.status == ObjectiveCard.ObjectiveStatus.Completed)
+							{
+								objSuffix = string.Format(" [Obj #{0}]", obj.CardId);
+								break;
+							}
+						}
+					}
+
 					if (max > 0)
 					{
-						return string.Format("★ Star: {0} ({1}/{2}) [Total: {3}/6]", starLogInfo.GainedStar, count, max, starLogInfo.starsUnlocked);
+						return string.Format("★ Star: {0} ({1}/{2}) [Total: {3}/6]{4}", new object[] { starLogInfo.GainedStar, count, max, starLogInfo.starsUnlocked, objSuffix });
 					}
-					return string.Format("★ Star: {0} [Total: {1}/6]", starLogInfo.GainedStar, starLogInfo.starsUnlocked);
+					return string.Format("★ Star: {0} [Total: {1}/6]{2}", starLogInfo.GainedStar, starLogInfo.starsUnlocked, objSuffix);
 				}
 				FactoryLogInfo factoryLogInfo = logInfo as FactoryLogInfo;
 				if (factoryLogInfo != null && logInfo.Type == LogInfoType.FactoryCardGain)

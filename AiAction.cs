@@ -76,20 +76,35 @@ namespace Scythe.GameLogic
 			{
 			case GainType.Upgrade:
 				this.GainUpgrade(player);
-				return;
+				break;
 			case GainType.Mech:
 				this.GainMech(player);
-				return;
+				break;
 			case GainType.Worker:
 				return;
 			case GainType.Building:
 				this.GainBuilding(player);
-				return;
+				break;
 			case GainType.Recruit:
 				this.GainRecruit(player);
-				return;
+				break;
 			default:
 				return;
+			}
+
+			// Execute any remaining gain actions (like Coin) for the bottom action
+			// Only if the main action was successfully paid for and gained
+			if (this.downAction.GetGainAction(0).Gained)
+			{
+				for (int i = 1; i < this.downAction.gainActionsCount; i++)
+				{
+					GainAction bonusGain = this.downAction.GetGainAction(i);
+					if (bonusGain.GetGainType() == GainType.Coin)
+					{
+						bonusGain.Execute();
+						this.downAction.ReportLog(bonusGain.GetLogInfo());
+					}
+				}
 			}
 		}
 
@@ -160,111 +175,138 @@ namespace Scythe.GameLogic
 		{
 			GainMove gainMove = (GainMove)player.AiTopActions[GainType.Move].GetTopGainAction();
 			this.gameManager.moveManager.SetMoveAction(gainMove);
-			for (int i = 0; i < (int)gainMove.Amount; i++)
+			int movesUsed = 0;
+			for (int i = 0; movesUsed < (int)gainMove.Amount && i < player.strategicAnalysis.movePrioritySorted.Count; i++)
 			{
-				if (i < player.strategicAnalysis.movePrioritySorted.Count)
-				{
-					Unit unit = player.strategicAnalysis.movePrioritySorted.Values[i];
-					// Fix 2: Passenger workers are added to movePriority at priority -1 so they
-					// ride on their mech, but they never receive a moveTarget entry of their own.
-					// Accessing moveTarget[unit] for such a worker throws KeyNotFoundException,
-					// which escapes uncaught and deadlocks the game. Skip any unit without a target.
-					if (!player.strategicAnalysis.moveTarget.ContainsKey(unit)) continue;
-					
-					// Fix 4: Skip units already at their target (distance 0).
-					// This prevents "Move (3,4) -> (3,4)" waste.
-					if (unit.position.posX == player.strategicAnalysis.moveTarget[unit][0].posX && unit.position.posY == player.strategicAnalysis.moveTarget[unit][0].posY) continue;
+				Unit unit = player.strategicAnalysis.movePrioritySorted.Values[i];
+				if (!player.strategicAnalysis.moveTarget.ContainsKey(unit)) continue;
+				
+				List<GameHex> targets = player.strategicAnalysis.moveTarget[unit];
+				if (targets == null || targets.Count == 0 || targets[0] == null) continue;
+				
+				GameHex actualTarget = targets[0];
+				
+				if (unit.position.posX == actualTarget.posX && unit.position.posY == actualTarget.posY) continue;
 
-					this.gameManager.moveManager.SelectUnit(unit);
-					Dictionary<ResourceType, int> dictionary = null;
-					if (this.ShouldTakeResources(unit, player.strategicAnalysis.moveTarget[unit]) && unit.position.GetResourceCount() > 0)
+				this.gameManager.moveManager.SelectUnit(unit);
+				Dictionary<GameHex, GameHex> possibleMoves = this.gameManager.moveManager.GetPossibleMovesForSelectedUnit(unit);
+				
+				if (!possibleMoves.ContainsKey(actualTarget))
+				{
+					GameHex bestStep = null;
+					int currentDist = Math.Abs(unit.position.posX - actualTarget.posX) + Math.Abs(unit.position.posY - actualTarget.posY);
+					int bestDist = currentDist; // Must be strictly better than staying still!
+					
+					foreach (GameHex reachable in possibleMoves.Keys)
 					{
-						dictionary = new Dictionary<ResourceType, int>();
-						dictionary.Add(ResourceType.oil, unit.position.resources[ResourceType.oil]);
-						dictionary.Add(ResourceType.metal, unit.position.resources[ResourceType.metal]);
-						dictionary.Add(ResourceType.food, unit.position.resources[ResourceType.food]);
-						dictionary.Add(ResourceType.wood, unit.position.resources[ResourceType.wood]);
-					}
-					List<Unit> list = new List<Unit>();
-					if (unit.UnitType == UnitType.Mech)
-					{
-						Mech mech = (Mech)unit;
-						// Passenger Spreading: If some workers should stay behind, unload them now.
-						// This ensures we only carry those in the intended passenger list.
-						if (player.strategicAnalysis.moveMechPassengers.ContainsKey(mech))
+						if (reachable == unit.position) continue;
+						if (reachable.hexType == HexType.lake) continue;
+						
+						int d = Math.Abs(reachable.posX - actualTarget.posX) + Math.Abs(reachable.posY - actualTarget.posY);
+						if (d < bestDist)
 						{
-							foreach (Worker workerOnMech in new List<Worker>(mech.LoadedWorkers))
-							{
-								if (!player.strategicAnalysis.moveMechPassengers[mech].Contains(workerOnMech))
-								{
-									this.gameManager.moveManager.UnloadWorkerFromSelectedMech(workerOnMech);
-								}
-							}
-							foreach (Worker worker in player.strategicAnalysis.moveMechPassengers[mech])
-							{
-								list.Add(worker);
-							}
-						}
-						else
-						{
-							// If no passengers assigned, ensure ALL workers are unloaded for max spreading
-							this.gameManager.moveManager.UnloadAllWorkersFromMech(mech);
+							bestDist = d;
+							bestStep = reachable;
 						}
 					}
-					this.gameManager.moveManager.MoveSelectedUnit(player.strategicAnalysis.moveTarget[unit][0], dictionary, list);
-					// Fix C: Crimea Wayfare+Speed capital-hop execution.
-					// When moveTarget[0] is an unoccupied enemy capital (Wayfare move), the workers
-					// remain on the mech and must be carried to moveTarget[1] (the Speed landing hex)
-					// where they are dropped for territory scoring.
-					// This branch must come BEFORE the production two-target branch because
-					// ResourceProduced(HexType.capital) returns combatCard which gives a nonsensical
-					// `num` value and would either skip the second hop or drop workers at the capital.
-					if (unit.UnitType == UnitType.Mech
-						&& player.strategicAnalysis.moveTarget[unit].Count > 1
-						&& player.strategicAnalysis.moveTarget[unit][0].hexType == HexType.capital
-						&& player.strategicAnalysis.moveTarget[unit][0].Owner != null
-						&& player.strategicAnalysis.moveTarget[unit][0].Owner != player.player)
+					if (bestStep != null)
 					{
-						// Workers are still on the mech after the Wayfare hop (they are not
-						// automatically dropped; the engine waits for an explicit unload call).
-						// Carry them to the landing hex using the same passenger list.
-						List<Unit> list2 = new List<Unit>(list);
-						this.gameManager.moveManager.MoveSelectedUnit(
-							player.strategicAnalysis.moveTarget[unit][1], dictionary, list2);
-						// Drop all workers at the landing hex so they score that territory.
+						actualTarget = bestStep;
+					}
+					else
+					{
+						continue; // No valid step found — skip this unit
+					}
+				}
+			Dictionary<ResourceType, int> dictionary = null;
+			if (this.ShouldTakeResources(unit, player.strategicAnalysis.moveTarget[unit]) && unit.position.GetResourceCount() > 0)
+			{
+				dictionary = new Dictionary<ResourceType, int>();
+				dictionary.Add(ResourceType.oil, unit.position.resources[ResourceType.oil]);
+				dictionary.Add(ResourceType.metal, unit.position.resources[ResourceType.metal]);
+				dictionary.Add(ResourceType.food, unit.position.resources[ResourceType.food]);
+				dictionary.Add(ResourceType.wood, unit.position.resources[ResourceType.wood]);
+			}
+			List<Unit> list = new List<Unit>();
+			if (unit.UnitType == UnitType.Mech)
+			{
+				Mech mech = (Mech)unit;
+				// Passenger Spreading: If some workers should stay behind, unload them now.
+				// This ensures we only carry those in the intended passenger list.
+				if (player.strategicAnalysis.moveMechPassengers.ContainsKey(mech))
+				{
+					foreach (Worker workerOnMech in new List<Worker>(mech.LoadedWorkers))
+					{
+						if (!player.strategicAnalysis.moveMechPassengers[mech].Contains(workerOnMech))
+						{
+							this.gameManager.moveManager.UnloadWorkerFromSelectedMech(workerOnMech);
+						}
+					}
+					foreach (Worker worker in player.strategicAnalysis.moveMechPassengers[mech])
+					{
+						list.Add(worker);
+					}
+				}
+				else
+				{
+					// If no passengers assigned, ensure ALL workers are unloaded for max spreading
+					this.gameManager.moveManager.UnloadAllWorkersFromMech(mech);
+				}
+			}
+			this.gameManager.moveManager.MoveSelectedUnit(actualTarget, dictionary, list);
+				movesUsed++;
+				// Fix C: Crimea Wayfare+Speed capital-hop execution.
+				// When moveTarget[0] is an unoccupied enemy capital (Wayfare move), the workers
+				// remain on the mech and must be carried to moveTarget[1] (the Speed landing hex)
+				// where they are dropped for territory scoring.
+				// This branch must come BEFORE the production two-target branch because
+				// ResourceProduced(HexType.capital) returns combatCard which gives a nonsensical
+				// `num` value and would either skip the second hop or drop workers at the capital.
+				if (unit.UnitType == UnitType.Mech
+					&& player.strategicAnalysis.moveTarget[unit].Count > 1
+					&& player.strategicAnalysis.moveTarget[unit][0].hexType == HexType.capital
+					&& player.strategicAnalysis.moveTarget[unit][0].Owner != null
+					&& player.strategicAnalysis.moveTarget[unit][0].Owner != player.player)
+				{
+					// Workers are still on the mech after the Wayfare hop (they are not
+					// automatically dropped; the engine waits for an explicit unload call).
+					// Carry them to the landing hex using the same passenger list.
+					List<Unit> list2 = new List<Unit>(list);
+					this.gameManager.moveManager.MoveSelectedUnit(
+						player.strategicAnalysis.moveTarget[unit][1], dictionary, list2);
+					// Drop all workers at the landing hex so they score that territory.
+					this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
+					dictionary = null; // Don't try to take resources again
+				}
+				else if (unit.UnitType == UnitType.Mech && player.strategicAnalysis.moveTarget[unit].Count > 1)
+				{
+					// Spreading logic: if we have multiple targets, drop one worker at the first target
+					// and carry the rest to the next targets.
+					if (list != null && list.Count > 0)
+					{
+						// If we have 1 unit to move 2 hexes, drop at hex 1.
+						// If we have 2 units to move 2 hexes, drop 1 at hex 1 and carry 1 to hex 2.
+						if (list.Count == 1)
+						{
+							this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
+						}
+						else if (list.Count >= 2 && (unit.MovesLeft > 0 || gainMove.MovesLeft > 0))
+						{
+							// Drop exactly one worker at the first stop
+							this.gameManager.moveManager.UnloadWorkerFromSelectedMech(list[0]);
+							
+							// Prepare to carry the rest
+							List<Unit> carryForward = new List<Unit>();
+							for (int j = 1; j < list.Count; j++)
+							{
+								carryForward.Add(list[j]);
+							}
+							this.gameManager.moveManager.MoveSelectedUnit(player.strategicAnalysis.moveTarget[unit][1], null, carryForward);
+						}
+						
+						// Final unload at destination
 						this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
 						dictionary = null; // Don't try to take resources again
-					}
-					else if (unit.UnitType == UnitType.Mech && player.strategicAnalysis.moveTarget[unit].Count > 1)
-					{
-						// Spreading logic: if we have multiple targets, drop one worker at the first target
-						// and carry the rest to the next targets.
-						if (list != null && list.Count > 0)
-						{
-							// If we have 1 unit to move 2 hexes, drop at hex 1.
-							// If we have 2 units to move 2 hexes, drop 1 at hex 1 and carry 1 to hex 2.
-							if (list.Count == 1)
-							{
-								this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
-							}
-							else if (list.Count >= 2 && (unit.MovesLeft > 0 || gainMove.MovesLeft > 0))
-							{
-								// Drop exactly one worker at the first stop
-								this.gameManager.moveManager.UnloadWorkerFromSelectedMech(list[0]);
-								
-								// Prepare to carry the rest
-								List<Unit> carryForward = new List<Unit>();
-								for (int j = 1; j < list.Count; j++)
-								{
-									carryForward.Add(list[j]);
-								}
-								this.gameManager.moveManager.MoveSelectedUnit(player.strategicAnalysis.moveTarget[unit][1], null, carryForward);
-							}
-							
-							// Final unload at destination
-							this.gameManager.moveManager.UnloadAllWorkersFromMech((Mech)unit);
-							dictionary = null; // Don't try to take resources again
-						}
 					}
 				}
 			}

@@ -322,6 +322,7 @@ namespace Scythe.GameLogic
 			this.PlayTopAction(recipe, action);
 			if (!this.gameManager.combatManager.IsPlayerInCombat())
 			{
+				this.HandleEncounterAndFactory();
 				this.PlayBottomAction(action);
 			}
 			this.InformAboutEndedTurn();
@@ -330,7 +331,35 @@ namespace Scythe.GameLogic
 		// Token: 0x06002DAE RID: 11694 RVA: 0x0010D414 File Offset: 0x0010B614
 		private void PlayTopAction(AiRecipe recipe, AiAction action)
 		{
-			if (!this.forbiddenActions.Contains(action.topAction.GetGainAction(action.gainActionId).GetGainType()))
+			if (action.topAction.Type == TopActionType.Factory)
+			{
+				this.gameManager.actionManager.SetSectionAction(action.topAction, null, -1);
+				for (int i = 0; i < action.topAction.GetNumberOfPayActions(); i++)
+				{
+					PayAction payAction = action.topAction.GetPayAction(i);
+					if (payAction is PayCombatCard)
+					{
+						PayCombatCard pCC = (PayCombatCard)payAction;
+						this.player.combatCards.Sort((CombatCard A, CombatCard B) => A.CombatBonus.CompareTo(B.CombatBonus));
+						List<CombatCard> list = new List<CombatCard>();
+						for (int j = 0; j < (int)pCC.Amount; j++)
+						{
+							list.Add(this.player.combatCards[j]);
+						}
+						pCC.SetCombatCards(list);
+					}
+					else if (payAction is PayResource)
+					{
+						this.Pay4Action((PayResource)payAction);
+					}
+				}
+				for (int i = 0; i < action.topAction.gainActionsCount; i++)
+				{
+					AiAction factoryIterAction = new AiAction(action.matSectionId, action.topAction, i, action.downAction, this.gameManager);
+					factoryIterAction.ActionTopExecute(recipe, this);
+				}
+			}
+			else if (!this.forbiddenActions.Contains(action.topAction.GetGainAction(action.gainActionId).GetGainType()))
 			{
 				this.gameManager.actionManager.SetSectionAction(action.topAction, null, action.gainActionId);
 				action.ActionTopExecute(recipe, this);
@@ -808,7 +837,7 @@ namespace Scythe.GameLogic
 				{
 					flag2 = false;
 				}
-				else if (num5 >= num6 || (simulate && this.strategicAnalysis.winDesperation && num5 >= num6 - 5 && num5 >= 7))
+				else if (num5 >= num6 || (simulate && this.strategicAnalysis.winDesperation && num5 >= num6 - 2 && num5 >= 5))
 				{
 					flag2 = false;
 				}
@@ -1542,9 +1571,23 @@ namespace Scythe.GameLogic
 		// Token: 0x06002DC1 RID: 11713 RVA: 0x00044722 File Offset: 0x00042922
 		private void PowerIfWeak(SortedList<int, AiRecipe> actionOptions, int priority)
 		{
-			if (this.player.Power <= 2 && this.CanPlayTopAction(GainType.Power))
+			if (!this.CanPlayTopAction(GainType.Power)) return;
+
+			int newPriority = priority;
+			bool earnCombatStar = this.player.GetNumberOfStars(StarType.Combat) < 2 || this.player.matFaction.faction == Faction.Saxony;
+
+			if (this.player.Power == 0)
 			{
-				this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Power], "Low Power -> Bolster"));
+				newPriority = earnCombatStar ? 200 : 180;
+			}
+			else if (this.player.Power <= 3 && earnCombatStar)
+			{
+				newPriority = Math.Max(priority, 160);
+			}
+
+			if (this.player.Power <= 2 || newPriority > priority)
+			{
+				this.SafeAdd(actionOptions, newPriority, new AiRecipe(this.AiTopActions[GainType.Power], "Low Power -> Bolster"));
 			}
 		}
 
@@ -1620,27 +1663,62 @@ namespace Scythe.GameLogic
 		{
 			if (this.CanPlayTopAction(GainType.Move) && this.strategicAnalysis.movePrioritySorted.Count > 0 && this.strategicAnalysis.movePriorityHighest > -1)
 			{
-				bool hasMeaningfulMove = false;
-				foreach (Unit unit in this.strategicAnalysis.movePrioritySorted.Values)
-				{
-					if (this.strategicAnalysis.moveTarget.ContainsKey(unit))
-					{
-						GameHex hexTo = this.strategicAnalysis.moveTarget[unit][0];
-						if (unit.position.posX != hexTo.posX || unit.position.posY != hexTo.posY)
-						{
-							hasMeaningfulMove = true;
-							break;
-						}
-					}
-				}
-				if (hasMeaningfulMove)
+				if (this.HasMeaningfulMove())
 				{
 					this.SafeAdd(actionOptions, this.strategicAnalysis.movePriorityHighest, new AiRecipe(this.AiTopActions[GainType.Move], "Move by priority"));
 				}
 			}
 		}
 
-		// Token: 0x06002DC8 RID: 11720 RVA: 0x0010FAA8 File Offset: 0x0010DCA8
+		public bool HasMeaningfulMove()
+		{
+			GainMove gainMove = (GainMove)this.AiTopActions[GainType.Move].GetTopGainAction();
+			if (gainMove == null) return false;
+
+			foreach (var unit in this.strategicAnalysis.movePrioritySorted.Values)
+			{
+				if (!this.strategicAnalysis.moveTarget.ContainsKey(unit)) continue;
+				List<GameHex> targets = this.strategicAnalysis.moveTarget[unit];
+				if (targets == null || targets.Count == 0 || targets[0] == null) continue;
+				
+				GameHex actualTarget = targets[0];
+				if (unit.position == actualTarget) continue;
+
+				this.gameManager.moveManager.SelectUnit(unit);
+				Dictionary<GameHex, GameHex> possibleMoves = this.gameManager.moveManager.GetPossibleMovesForSelectedUnit(unit);
+				
+				bool canStep = false;
+				if (possibleMoves.ContainsKey(actualTarget))
+				{
+					canStep = true;
+				}
+				else
+				{
+					int currentDist = Math.Abs(unit.position.posX - actualTarget.posX) + Math.Abs(unit.position.posY - actualTarget.posY);
+					foreach (GameHex reachable in possibleMoves.Keys)
+					{
+						if (reachable == unit.position || reachable.hexType == HexType.lake) continue;
+						
+						int d = Math.Abs(reachable.posX - actualTarget.posX) + Math.Abs(reachable.posY - actualTarget.posY);
+						if (d < currentDist)
+						{
+							canStep = true;
+							break;
+						}
+					}
+				}
+
+				if (canStep)
+				{
+					this.gameManager.moveManager.Clear();
+					return true;
+				}
+			}
+			
+			this.gameManager.moveManager.Clear();
+			return false;
+		}
+
 		public ResourceType TradeResourceType()
 		{
 			ResourceType resourceType = this.strategicAnalysis.resourceHighestPriority;
@@ -1798,6 +1876,11 @@ namespace Scythe.GameLogic
 				// Step 1: Produce food and metal (Produce top action, Upgrade bottom action on Engineering)
 				if (this.CanPlayTopAction(GainType.Produce) && this.AiTopActions[GainType.Produce].topAction.CanPlayerPayActions() && this.player.OwnedFields(false).Count > 0)
 				{
+					// If the bottom action is fully exhausted (e.g. 4 buildings built), let normal priorities take over
+					if (!this.AiTopActions[GainType.Produce].downAction.GetGainAction(0).GainAvaliable())
+					{
+						break;
+					}
 					this.SafeAdd(actionOptions, priority, new AiRecipe(this.AiTopActions[GainType.Produce], "Turn Cycle: Produce"));
 				}
 				break;
@@ -2401,7 +2484,7 @@ namespace Scythe.GameLogic
 				{
 					this.SafeAdd(sortedList, 350, new AiRecipe(this.AiActions[this.SelectTopActionFlavor(this.gainMechActionPosition)], "Nordic: Deploy Mech " + (count3 + 1).ToString() + "/2"));
 				}
-				else if (count3 >= 2 && this.player.matPlayer.matPlayerSectionsCount <= 4 && this.strategicAnalysis.factoryDistance <= (int)this.player.character.MaxMoveCount && (this.gameManager.gameBoard.factory.Owner == this.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0) && this.CanPlayTopAction(GainType.Move))
+				else if (count3 >= 2 && this.player.matPlayer.matPlayerSectionsCount <= 4 && this.strategicAnalysis.factoryDistance <= (int)this.player.character.MaxMoveCount && (this.gameManager.gameBoard.factory.Owner == this.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0) && this.CanPlayTopAction(GainType.Move) && this.HasMeaningfulMove())
 				{
 					this.SafeAdd(sortedList, 340, new AiRecipe(this.AiTopActions[GainType.Move], "Nordic: Move to Factory for card"));
 				}
@@ -2471,7 +2554,7 @@ namespace Scythe.GameLogic
 				if (this.player.matPlayer.matType == PlayerMatType.Engineering)
 				{
 					// Factory Card (if missing, but have at least 1 mech to defend/carry)
-					if (count5 >= 1 && this.player.matPlayer.matPlayerSectionsCount <= 4 && this.strategicAnalysis.factoryDistance <= (int)this.player.character.MaxMoveCount && (this.gameManager.gameBoard.factory.Owner == this.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0) && this.CanPlayTopAction(GainType.Move))
+					if (count5 >= 1 && this.player.matPlayer.matPlayerSectionsCount <= 4 && this.strategicAnalysis.factoryDistance <= (int)this.player.character.MaxMoveCount && (this.gameManager.gameBoard.factory.Owner == this.player || this.gameManager.gameBoard.factory.GetOwnerUnitCount() == 0) && this.CanPlayTopAction(GainType.Move) && this.HasMeaningfulMove())
 					{
 						this.SafeAdd(sortedList, 380, new AiRecipe(this.AiTopActions[GainType.Move], "Saxony: Move to Factory for card"));
 					}
@@ -2644,7 +2727,7 @@ namespace Scythe.GameLogic
 
 				if (this.gameManager.TurnCount >= 11 && (this.player.stars[StarType.Combat] < 2 || (this.player.objectiveCards != null && this.player.objectiveCards.Count > 0 && this.player.stars[StarType.Objective] == 0 && !isObjImpossible)))
 				{
-					if (this.CanPlayTopAction(GainType.Move))
+					if (this.CanPlayTopAction(GainType.Move) && this.HasMeaningfulMove())
 					{
 						this.SafeAdd(sortedList, 420, new AiRecipe(this.AiTopActions[GainType.Move], "Crimea Innovative: Combat/Objective Focus"));
 					}
@@ -2662,7 +2745,7 @@ namespace Scythe.GameLogic
 							break;
 						}
 					}
-					if (!hasWorkersOnFarm && this.CanPlayTopAction(GainType.Move))
+					if (!hasWorkersOnFarm && this.CanPlayTopAction(GainType.Move) && this.HasMeaningfulMove())
 					{
 						this.SafeAdd(sortedList, 390, new AiRecipe(this.AiTopActions[GainType.Move], "Crimea Innovative: Move Workers to Farm for Food"));
 					}
@@ -2845,6 +2928,42 @@ namespace Scythe.GameLogic
 				this.StarPower(sortedList, num3);
 				this.RandomAllowed(sortedList, 100);
 				this.StarPopularity(sortedList, 90);
+				bool canEarnCombatStars = (this.player.matFaction.faction == Faction.Saxony)
+					? (this.player.GetNumberOfStars(StarType.Combat) < 6)
+					: (this.player.GetNumberOfStars(StarType.Combat) < 2);
+
+				if (canEarnCombatStars)
+				{
+					// Move to attack for combat stars
+					if (this.CanPlayTopAction(GainType.Move) && this.HasMeaningfulMove())
+					{
+						this.SafeAdd(sortedList, 5, new AiRecipe(this.AiTopActions[GainType.Move], "Fallback: Move to Attack"));
+					}
+					// Bolster power to prepare for combat
+					if (this.CanPlayTopAction(GainType.Power))
+					{
+						this.SafeAdd(sortedList, 3, new AiRecipe(this.AiTopActions[GainType.Power], "Fallback: Bolster for Combat"));
+					}
+				}
+
+				// Move toward objective completion (combat or not)
+				if (this.player.stars[StarType.Objective] == 0 && !this.AreAllObjectivesImpossible()
+					&& this.CanPlayTopAction(GainType.Move) && this.HasMeaningfulMove())
+				{
+					this.SafeAdd(sortedList, 4, new AiRecipe(this.AiTopActions[GainType.Move], "Fallback: Move for Objective"));
+				}
+
+				// Late-game fallback: pursue stars or centralize instead of wasting turns gaining coins.
+				if ((this.player.GetNumberOfStars() >= 4 || this.gameManager.TurnCount > 25) && this.CanPlayTopAction(GainType.Move) && this.HasMeaningfulMove())
+				{
+					this.SafeAdd(sortedList, 2, new AiRecipe(this.AiTopActions[GainType.Move], "Fallback: Centralize / Combat"));
+				}
+
+				// Gain popularity as a general fallback (always useful for scoring)
+				if (this.CanPlayTopAction(GainType.Popularity))
+				{
+					this.SafeAdd(sortedList, 1, new AiRecipe(this.AiTopActions[GainType.Popularity], "Fallback: Gain Popularity"));
+				}
 				if ((this.player.matFaction.faction == Faction.Nordic && this.player.matPlayer.matType == PlayerMatType.Industrial) || (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Patriotic) || (this.player.matFaction.faction == Faction.Polania && this.player.matPlayer.matType == PlayerMatType.Agricultural))
 				{
 					if (sortedList.Values[0].action.topAction.Type != TopActionType.MoveGain)
@@ -3004,34 +3123,17 @@ namespace Scythe.GameLogic
 				}
 				if (action.topAction != null)
 				{
-					for (int i = 0; i < action.topAction.GetNumberOfPayActions(); i++)
+					var currentGainAction = action.topAction.GetGainAction(action.gainActionId);
+					if (this.player.matFaction.faction == Faction.Crimea && num4 < 1000000)
 					{
-						PayType payType = action.topAction.GetPayAction(i).GetPayType();
-						int amount = (int)action.topAction.GetPayAction(i).GetAmount();
-						if (payType == PayType.Power && this.player.Power - amount < 1)
+						if (currentGainAction.GetGainType() == GainType.Building || (currentGainAction.GetGainType() == GainType.Resource && currentGainAction is GainResource && ((GainResource)currentGainAction).ResourceToGain == ResourceType.wood))
 						{
-							num4 -= 1000;
+							num4 = 50; // Deprioritize Crimea building/wood (below 100 as requested)
 						}
-						var currentGainAction = action.topAction.GetGainAction(action.gainActionId);
-						if (this.player.matFaction.faction == Faction.Crimea && num4 < 1000000)
+						else if (action.downAction != null && (action.downAction.Type == DownActionType.Build || (action.downAction.GetGainAction(0).GetGainType() == GainType.Resource && action.downAction.GetGainAction(0) is GainResource && ((GainResource)action.downAction.GetGainAction(0)).ResourceToGain == ResourceType.wood)))
 						{
-							if (currentGainAction.GetGainType() == GainType.Building || (currentGainAction.GetGainType() == GainType.Resource && currentGainAction is GainResource && ((GainResource)currentGainAction).ResourceToGain == ResourceType.wood))
-							{
-								num4 = 50; // Deprioritize Crimea building/wood (below 100 as requested)
-							}
-							else if (action.downAction != null && (action.downAction.Type == DownActionType.Build || (action.downAction.GetGainAction(0).GetGainType() == GainType.Resource && action.downAction.GetGainAction(0) is GainResource && ((GainResource)action.downAction.GetGainAction(0)).ResourceToGain == ResourceType.wood)))
-							{
-								// Also deprioritize IF the bottom action is build/wood
-								num4 = 40; 
-							}
-						}
-						if (payType == PayType.Popularity && this.player.Popularity - amount < 1)
-						{
-							num4 -= 1000;
-						}
-						if (payType == PayType.Coin && this.player.Coins - amount < 1)
-						{
-							num4 -= 1000;
+							// Also deprioritize IF the bottom action is build/wood
+							num4 = 40; 
 						}
 					}
 				}
@@ -3060,7 +3162,7 @@ namespace Scythe.GameLogic
 			sortedList = sortedList2;
 			if (sortedList.Count == 0)
 			{
-				if (this.CanPlayTopAction(GainType.Move))
+				if (this.CanPlayTopAction(GainType.Move) && this.HasMeaningfulMove())
 				{
 					this.SafeAdd(sortedList, 10, new AiRecipe(this.AiTopActions[GainType.Move], "Emergency Fallback: Move"));
 				}
